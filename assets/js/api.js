@@ -11,6 +11,92 @@ class UtlApiClient {
     this.baseUrl = baseUrl;
     this.isOnline = false;
     this.lastHealthCheck = null;
+    this.token = (typeof localStorage !== 'undefined') ? localStorage.getItem('utl_access_token') : null;
+  }
+
+  /**
+   * Sets or clears the active JWT access token.
+   */
+  setToken(token) {
+    this.token = token;
+    if (typeof localStorage !== 'undefined') {
+      if (token) localStorage.setItem('utl_access_token', token);
+      else localStorage.removeItem('utl_access_token');
+    }
+  }
+
+  _getHeaders(extra = {}) {
+    const headers = { 'Content-Type': 'application/json', ...extra };
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    return headers;
+  }
+
+  /**
+   * Authenticates user via OAuth2 password flow.
+   */
+  async login(email, password) {
+    try {
+      const body = new URLSearchParams();
+      body.append('username', email);
+      body.append('password', password);
+
+      const res = await fetch(`${this.baseUrl}/api/v1/auth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.setToken(data.access_token);
+        return { success: true, user: data };
+      }
+      const err = await res.json();
+      return { success: false, error: err.detail || 'Login failed' };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  /**
+   * Fetches the current authenticated user profile.
+   */
+  async getCurrentUser() {
+    if (!this.token) return null;
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/auth/me`, {
+        headers: this._getHeaders()
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {}
+    return null;
+  }
+
+  /**
+   * Terminates session and invalidates token.
+   */
+  async logout() {
+    if (this.token) {
+      try {
+        await fetch(`${this.baseUrl}/api/v1/auth/logout`, {
+          method: 'POST',
+          headers: this._getHeaders()
+        });
+      } catch (e) {}
+      this.setToken(null);
+    }
+  }
+
+  /**
+   * Fetches real-time system metrics & cache hit ratios.
+   */
+  async getSystemMetrics() {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/monitoring/metrics`);
+      if (res.ok) return await res.json();
+    } catch (e) {}
+    return null;
   }
 
   /**
@@ -265,3 +351,4 @@ if (typeof window !== 'undefined') {
   window.utlApi = utlApi;
   window.utlWs = utlWs;
 }
+

@@ -30,8 +30,10 @@ from app.analytics.rebalancing import (
     PositionInput,
     RebalancePlanResult
 )
+from app.core.cache import cache_service
 
 router = APIRouter(prefix="/analytics", tags=["Algorithmic Engine & Quantitative Analysis"])
+
 
 
 # ==============================================================================
@@ -54,7 +56,13 @@ class FundamentalEvaluationResponse(BaseModel):
 async def evaluate_fundamental_health(payload: FundamentalEvaluationRequest):
     """
     Computes DuPont ROE Decomposition, Altman Z''-Score, and Piotroski F-Score.
+    Utilizes Redis distributed caching to eliminate repetitive balance sheet matrix scans.
     """
+    cache_key = f"fundamental:{payload.ticker.upper()}:{payload.current_period.period_date.isoformat()}"
+    cached_data = await cache_service.get(cache_key)
+    if cached_data:
+        return FundamentalEvaluationResponse(**cached_data)
+
     dupont = FundamentalAnalysisEngine.calculate_dupont_3stage(payload.current_period)
     altman = FundamentalAnalysisEngine.calculate_altman_z_score(payload.current_period, use_emerging_market_model=True)
 
@@ -65,12 +73,16 @@ async def evaluate_fundamental_health(payload: FundamentalEvaluationRequest):
             previous=payload.previous_period
         )
 
-    return FundamentalEvaluationResponse(
+    response = FundamentalEvaluationResponse(
         ticker=payload.ticker.upper(),
         dupont_3stage=dupont,
         altman_z_score=altman,
         piotroski_f_score=piotroski
     )
+
+    # Cache fundamental evaluation for 15 minutes (quarterly data rarely changes intraday)
+    await cache_service.set(cache_key, response.model_dump(), ttl_seconds=900)
+    return response
 
 
 # ==============================================================================
@@ -112,7 +124,15 @@ class AlphaScoreRequest(BaseModel):
 async def compute_utl_alpha_score(payload: AlphaScoreRequest):
     """
     Computes hybrid UTL Alpha Score (0-10) with institutional recommendation logic.
+    Caches score in Redis with 10-minute TTL to shield calculation engine.
     """
+    # 0. Check cache
+    latest_bar_date = payload.bars[-1].timestamp.isoformat() if payload.bars else "latest"
+    cache_key = f"alpha:score:{payload.ticker.upper()}:{payload.current_financials.period_date.isoformat()}:{latest_bar_date}"
+    cached_alpha = await cache_service.get(cache_key)
+    if cached_alpha:
+        return UTLAlphaScoreResult(**cached_alpha)
+
     # 1. Fundamental Suite
     dupont = FundamentalAnalysisEngine.calculate_dupont_3stage(payload.current_financials)
     altman = FundamentalAnalysisEngine.calculate_altman_z_score(payload.current_financials, use_emerging_market_model=True)
@@ -135,7 +155,10 @@ async def compute_utl_alpha_score(payload: AlphaScoreRequest):
         technical_weight=payload.technical_weight
     )
 
+    # Cache calculated alpha score
+    await cache_service.set(cache_key, alpha.model_dump(), ttl_seconds=600)
     return alpha
+
 
 
 # ==============================================================================
