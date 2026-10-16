@@ -169,3 +169,4 @@ async def verify_portfolio_access(
         )
 
     return portfolio
+

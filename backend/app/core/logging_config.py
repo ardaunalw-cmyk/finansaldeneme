@@ -247,3 +247,4 @@ class RequestTracingMiddleware(BaseHTTPMiddleware):
                     request.method, request.url.path, latency_ms, exc
                 )
                 raise
+

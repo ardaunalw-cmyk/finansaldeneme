@@ -170,3 +170,4 @@ async def is_token_revoked(token: str) -> bool:
     blacklist_key = f"jwt:revoked:{token}"
     revoked = await cache_service.get(blacklist_key)
     return revoked is not None
+

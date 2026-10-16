@@ -64,3 +64,4 @@ async def purge_cache_prefix(
         "purged_keys_count": purged_count,
         "purged_by": current_user.email
     }
+

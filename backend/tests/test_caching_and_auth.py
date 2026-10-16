@@ -186,3 +186,4 @@ async def test_cache_service_telemetry_and_revocation():
     assert await is_token_revoked(test_token) is False
     await revoke_token(test_token, ttl_seconds=60)
     assert await is_token_revoked(test_token) is True
+

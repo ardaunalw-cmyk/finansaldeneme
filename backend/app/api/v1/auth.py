@@ -159,3 +159,4 @@ async def logout(
     """
     await revoke_token(token)
     return {"message": "Session successfully terminated and token blacklisted."}
+

@@ -215,3 +215,4 @@ def test_rbac_insufficient_role_forbidden():
     # 403 Forbidden because User does not have ADMIN or PORTFOLIO_MANAGER role
     # Or 404/401 if user doesn't exist in DB during full session resolution
     assert res.status_code in (401, 403, 404)
+
