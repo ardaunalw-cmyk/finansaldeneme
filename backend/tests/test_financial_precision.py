@@ -109,3 +109,4 @@ def test_wac_cost_basis_lifecycle():
     assert tx3.realized_pnl == Decimal("989.5000")
     assert portfolio.cumulative_realized_pnl == Decimal("989.5000")
     assert portfolio.cash_balance == Decimal("98986.5000")
+

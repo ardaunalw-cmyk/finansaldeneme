@@ -38,3 +38,4 @@ class UUIDMixin:
         default=uuid.uuid4,
         nullable=False
     )
+

@@ -102,3 +102,4 @@ class PortfolioResponse(BaseModel):
 
     class Config:
         from_attributes = True
+

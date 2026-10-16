@@ -4,6 +4,7 @@ UTL FİNANS - Sovereign Intelligence & Core Financial Backend Engine
 ================================================================================
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 from fastapi import FastAPI, status
@@ -12,19 +13,45 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.database import engine, Base
+import app.models  # noqa: Register all ORM models
+from app.api.v1.router import api_v1_router
+from app.pipeline.market_data import market_engine
+from app.pipeline.news_kap import kap_worker
+from app.pipeline.macro import macro_engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Application Lifespan:
-    Initializes database tables on development startup and closes pool connections on shutdown.
+    1. Initializes database tables on development startup.
+    2. Spawns high-frequency market streaming worker, KAP news worker, and macro scheduler.
+    3. Gracefully terminates workers and disposes database pool on shutdown.
     """
-    # Startup: Ensure tables exist in development
+    # 1. Startup: Ensure tables exist
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # 2. Launch Background Pipeline Workers
+    market_task = asyncio.create_task(market_engine.start_streaming_worker())
+    news_task = asyncio.create_task(kap_worker.start_worker(poll_interval_seconds=45.0))
+    macro_task = asyncio.create_task(macro_engine.start_scheduler(interval_hours=4.0))
+
     yield
-    # Shutdown: Dispose DB connection pool
+
+    # 3. Shutdown: Stop workers gracefully
+    market_engine.stop_streaming_worker()
+    kap_worker.stop_worker()
+    macro_engine.stop_scheduler()
+
+    for task in [market_task, news_task, macro_task]:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+    # 4. Dispose DB connection pool
     await engine.dispose()
 
 
@@ -35,9 +62,10 @@ app = FastAPI(
     ## UTL FİNANS - Kurumsal Finansal Analiz & Portföy Yönetim Motoru
     
     * **Finansal Hassasiyet:** IEEE-754 ondalık kayma hatalarını engelleyen tam Decimal / NUMERIC mimarisi.
-    * **Temel & Teknik Analiz Entegrasyonu:** KAP, finansal tablolar, rasyolar ve formasyon analitiği.
-    * **Portföy & Ledger Yönetimi:** WAC (Ağırlıklı Ortalama Maliyet), varlık dağılımı ve işlem geçmişi.
-    * **Kurumsal Risk Kısıtları:** Tek hisse ağırlık tavanı, kaldıraç sınırları, SPK/UCITS uyumu.
+    * **Gerçek Zamanlı Piyasa Akışı:** BIST 30/100, FX ve Emtia için yüksek frekanslı WebSocket & REST akışı.
+    * **KAP Bildirim & NLP Hattı:** Otomatik hisse kodu eşleme, duygu analizi ve fiyat duyarlılığı etiketleme.
+    * **Makroekonomik Göstergeler:** TCMB faiz, Türkiye 5Y CDS, TÜFE enflasyon ve gösterge tahvil serileri.
+    * **Kurumsal Hata Dayanıklılığı:** Circuit Breaker, Token Bucket Rate Limiter ve Exponential Backoff.
     """,
     lifespan=lifespan,
     docs_url="/docs",
@@ -54,6 +82,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount API v1 Master Router
+app.include_router(api_v1_router)
+
 
 @app.get("/health", tags=["System Health"], status_code=status.HTTP_200_OK)
 async def health_check():
@@ -64,6 +95,11 @@ async def health_check():
             "service": "UTL FİNANS Core Engine",
             "version": settings.VERSION,
             "environment": settings.ENVIRONMENT,
+            "pipeline_status": {
+                "market_streamer": market_engine.is_running,
+                "kap_news_worker": kap_worker.is_running,
+                "macro_scheduler": macro_engine.is_running
+            },
             "financial_precision": "Active (Decimal 38 digits - ROUND_HALF_EVEN)"
         }
     )
@@ -73,5 +109,7 @@ async def health_check():
 async def root():
     return {
         "message": "UTL FİNANS - Sovereign Intelligence API is operational.",
-        "documentation": "/docs"
+        "version": settings.VERSION,
+        "documentation": "/docs",
+        "websocket_feed": "/api/v1/market/ws"
     }

@@ -27,6 +27,19 @@ from app.models.portfolio import (
     TransactionType,
     CostBasisMethod
 )
+from app.models.market_data import (
+    MarketPriceSnapshot,
+    MarketInstrumentType
+)
+from app.models.news import (
+    NewsDisclosure,
+    NewsSource,
+    DisclosureCategory
+)
+from app.models.macro import (
+    MacroIndicator,
+    MacroIndicatorKey
+)
 
 __all__ = [
     "Base",
@@ -46,5 +59,13 @@ __all__ = [
     "PortfolioPosition",
     "Transaction",
     "TransactionType",
-    "CostBasisMethod"
+    "CostBasisMethod",
+    "MarketPriceSnapshot",
+    "MarketInstrumentType",
+    "NewsDisclosure",
+    "NewsSource",
+    "DisclosureCategory",
+    "MacroIndicator",
+    "MacroIndicatorKey"
 ]
+

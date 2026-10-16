@@ -229,3 +229,4 @@ class Transaction(Base, UUIDMixin, TimestampMixin):
         Index("idx_portfolio_trade_history", "portfolio_id", "trade_date"),
         Index("idx_asset_trade_history", "asset_id", "trade_date"),
     )
+

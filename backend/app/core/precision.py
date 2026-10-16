@@ -131,3 +131,4 @@ PydanticPrice = Annotated[Decimal, BeforeValidator(_validate_decimal_price), Pla
 PydanticQuantity = Annotated[Decimal, BeforeValidator(_validate_decimal_qty), PlainSerializer(_serialize_decimal)]
 PydanticMoney = Annotated[Decimal, BeforeValidator(_validate_decimal_money), PlainSerializer(_serialize_decimal)]
 PydanticRatio = Annotated[Decimal, BeforeValidator(_validate_decimal_ratio), PlainSerializer(_serialize_decimal)]
+

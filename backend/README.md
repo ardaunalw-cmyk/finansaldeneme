@@ -180,3 +180,65 @@ Tarayıcınızda açın:
 * **Interactive API Docs (Swagger):** `http://localhost:8000/docs`
 * **Alternative API Docs (ReDoc):** `http://localhost:8000/redoc`
 * **Sistem Sağlık Kontrolü:** `http://localhost:8000/health`
+
+
+
+---
+
+## Aşama 2: Veri Akışı ve API Entegrasyonları (Data Pipeline & API Integrations)
+
+Aşama 2 kapsamında kurumsal seviyede gerçek zamanlı piyasa veri akışı, KAP bildirimleri ve makroekonomik parametrelerin veri hattı (Data Pipeline) tamamlanmıştır.
+
+### 1. Hata Yönetimi ve Dayanıklılık (Fault Tolerance Core)
+
+Dış API entegrasyonlarında oluşabilecek gecikme, rate limit aşımı ve servis kesintilerini engellemek için üç kurumsal tasarım deseni entegre edilmiştir ([`app/pipeline/resilience.py`](file:///c:/Users/omera/OneDrive/Masaüstü/Finans%20Deneme/backend/app/pipeline/resilience.py)):
+
+* **Circuit Breaker (Devre Kesici):** `CLOSED` (Normal), `OPEN` (Hızlı Hata / Devre Açık) ve `HALF_OPEN` (Canary / Deneme) durum makinesi. Dış sağlayıcı çöktüğünde sistem gereksiz isteklerle kilitlenmez, anında `CircuitBreakerOpenException` fırlatarak platform stabilitesini korur.
+* **Token Bucket Rate Limiter:** Saniyede maksimum istek ve burst limitlerini belirleyen asenkron token kovası algoritması.
+* **Exponential Backoff with Full Jitter:** Geçici ağ kopmalarında katlanarak artan bekleme süreleri ve "Thundering Herd" (Sürü Psikolojisi) çöküşünü önleyen rastgele gecikme (jitter) enjeksiyonu.
+
+---
+
+### 2. Canlı Piyasa Verisi & WebSocket Dağıtımı ([`app/pipeline/market_data.py`](file:///c:/Users/omera/OneDrive/Masaüstü/Finans%20Deneme/backend/app/pipeline/market_data.py))
+
+* **Çoklu Varlık Desteği:** BIST 30/100 (`THYAO`, `ASELS`, `GARAN`, `TUPRS`, `KCHOL`...), Döviz (`USD/TRY`, `EUR/TRY`, `GBP/TRY`), Emtia (`XAU/TRY` Gram Altın, `BRENT`, `XAG/TRY` Gümüş).
+* **WebSocket İstemcisi:** `/api/v1/market/ws` adresi üzerinden istemcilerin diledikleri hisselere (`{"action": "subscribe", "symbols": ["THYAO", "USD/TRY"]}`) veya tüm piyasaya (`["*"]`) abone olabileceği yayın motoru.
+* **Veritabanı Snapshot:** Gelen her tick `MarketPriceSnapshot` tablosunda `Decimal` kesinliğiyle güncellenir.
+
+---
+
+### 3. KAP Bildirimleri & Finansal Metin İşleme ([`app/pipeline/news_kap.py`](file:///c:/Users/omera/OneDrive/Masaüstü/Finans%20Deneme/backend/app/pipeline/news_kap.py))
+
+* **Asenkron Arka Plan Görevi (Background Worker):** Belirli aralıklarla KAP ve finansal RSS akışlarını tarayan bağımsız iş parçacığı.
+* **Doğal Dil İşleme (Financial NLP):**
+  - **Hisse Kodu Çıkarımı:** Başlık veya metindeki `[THYAO]`, `ASELS` veya şirket unvanlarını otomatik tespit eder.
+  - **Kategori Sınıflandırma:** Bildirimi `TEMETTU`, `FINANSAL_RAPOR`, `SERMAYE_ARTIRIMI`, `GENEL_KURUL`, `PAY_ALIM_SATIM` olarak etiketler.
+  - **Duygu & Fiyat Duyarlılığı Analizi:** Bildirimin piyasa etkisini (-1.00 ile +1.00 puan) ve fiyat duyarlılığını (`is_price_sensitive`) ölçer.
+
+---
+
+### 4. Makroekonomik Göstergeler & TCMB Hattı ([`app/pipeline/macro.py`](file:///c:/Users/omera/OneDrive/Masaüstü/Finans%20Deneme/backend/app/pipeline/macro.py))
+
+* **Zamanlanmış Görev (Scheduled Engine):** TCMB, TÜİK ve Hazine göstergelerini periyodik olarak günceller:
+  - **TCMB Politika Faizi:** %50.00
+  - **Türkiye 5 Yıllık CDS Primi:** ~264.50 bps
+  - **TÜİK Yıllık & Aylık TÜFE Enflasyonu:** %49.38 ve %2.97
+  - **Piyasa Katılımcıları 12 Ay TÜFE Beklentisi:** %27.44
+  - **2 Yıllık & 10 Yıllık Gösterge Tahvil Faizleri:** %43.15 ve %28.80
+* Bu veriler portföy optimizasyonunda risksiz getiri oranı (Risk-Free Rate) ve nakit akımı indirgeme modellerine otomatik girdi sağlar.
+
+---
+
+### 5. API v1 Uç Noktaları Özeti
+
+| Modül | Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- | :--- |
+| **Market** | `GET` | `/api/v1/market/quotes` | Tüm BIST, Döviz ve Emtia anlık fiyatları |
+| **Market** | `GET` | `/api/v1/market/quotes/{symbol}` | Belirli bir enstrümanın fiyat tick detayı |
+| **Market** | `WS` | `/api/v1/market/ws` | Gerçek zamanlı WebSocket fiyat beslemesi |
+| **News** | `GET` | `/api/v1/news/disclosures` | KAP bildirimleri (hisse, kategori, duygu filtresi) |
+| **News** | `GET` | `/api/v1/news/tickers/{ticker}` | İlgili hisseye ait tüm KAP duyuruları |
+| **News** | `POST`| `/api/v1/news/sync` | Arka plan KAP tarayıcısını tetikler |
+| **Macro** | `GET` | `/api/v1/macro/indicators` | Güncel TCMB faiz, CDS, enflasyon ve tahvil serisi |
+| **Macro** | `GET` | `/api/v1/macro/indicators/{key}` | İlgili makro göstergenin geçmiş zaman serisi |
+| **Macro** | `POST`| `/api/v1/macro/sync` | Makroekonomik veri eşitlemesini tetikler |

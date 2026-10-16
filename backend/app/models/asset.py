@@ -143,3 +143,4 @@ class Asset(Base, UUIDMixin, TimestampMixin):
     __table_args__ = (
         Index("idx_asset_lookup", "ticker", "exchange", "is_active"),
     )
+
