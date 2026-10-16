@@ -242,3 +242,71 @@ Dış API entegrasyonlarında oluşabilecek gecikme, rate limit aşımı ve serv
 | **Macro** | `GET` | `/api/v1/macro/indicators` | Güncel TCMB faiz, CDS, enflasyon ve tahvil serisi |
 | **Macro** | `GET` | `/api/v1/macro/indicators/{key}` | İlgili makro göstergenin geçmiş zaman serisi |
 | **Macro** | `POST`| `/api/v1/macro/sync` | Makroekonomik veri eşitlemesini tetikler |
+
+
+---
+
+## Aşama 3: Algoritmik Motor ve Analiz (Algorithmic Engine & Analysis)
+
+Aşama 3 kapsamında sistemin "Finansal Zekası" (Financial Intelligence) kurularak temel analiz, teknik analiz, melez skorlama ve portföy dengeleme motorları geliştirilmiştir.
+
+### 1. Temel Analiz & Kurumsal Sağlık Motoru ([`app/analytics/fundamental.py`](file:///c:/Users/omera/OneDrive/Masaüstü/Finans%20Deneme/backend/app/analytics/fundamental.py))
+
+* **DuPont Analizi (3 Kademeli ROE Ayrıştırması):**
+  $$\text{ROE} = \text{Net Kâr Marjı} \times \text{Aktif Devir Hızı} \times \text{Finansal Kaldıraç Çarpanı}$$
+  Kârlılığın operasyonel verimlilikten mi yoksa aşırı borçlanmadan mı kaynaklandığını ortaya koyar.
+* **Altman Z''-Skoru (Gelişmekte Olan Piyasalar / BIST Modeli):**
+  $$Z'' = 6.56 X_1 + 3.26 X_2 + 6.72 X_3 + 1.05 X_4$$
+  - $Z'' > 2.60$: **Güvenli Bölge (Safe Zone)** - İhmal edilebilir iflas riski.
+  - $1.10 \le Z'' \le 2.60$: **Gri Bölge (Grey Zone)** - Orta düzey finansal stres.
+  - $Z'' < 1.10$: **Sıkıntı Bölgesi (Distress Zone)** - Yüksek temerrüt/iflas riski.
+* **Piotroski F-Skoru (9 Puanlık Kurumsal Güç Karnesi):**
+  - **Kârlılık (4 puan):** Pozitif Net Kâr, Pozitif İşletme Nakit Akımı, Artan ROA, Nakit Akımı Kalitesi ($CFO > NI$).
+  - **Kaldıraç & Likidite (3 puan):** Düşen Uzun Vadeli Borç, Artan Cari Oran, Sıfır Seyrelme (Hisse ihracı yok).
+  - **Operasyonel Verimlilik (2 puan):** Artan Brüt Kâr Marjı, Artan Aktif Devir Hızı.
+  - *8-9 Puan: Üst Düzey Kurumsal Güç | 5-7 Puan: Dengeli | 0-4 Puan: Zayıf.*
+
+---
+
+### 2. Teknik Analiz & İndikatör Motoru ([`app/analytics/technical.py`](file:///c:/Users/omera/OneDrive/Masaüstü/Finans%20Deneme/backend/app/analytics/technical.py))
+
+* **Hareketli Ortalamalar (SMA 20, 50, 200):** Golden Cross / Death Cross kesişim sinyalleri.
+* **Göreceli Güç Endeksi (RSI 14):** Wilder's üssel yumuşatması ($RSI > 70$ aşırı alım, $RSI < 30$ aşırı satım).
+* **MACD (12, 26, 9):** Hızlı EMA, Yavaş EMA, Sinyal hattı ve Histogram dinamikleri.
+* **Bollinger Bantları (20, 2.0 std):** Üst/Alt bantlar, Volatilite Bandwidth ve $\%B$ osilatörü.
+* **Average True Range (ATR 14):** Pozisyon büyüklüğü ayarlamada kullanılan volatilite aralığı.
+
+---
+
+### 3. UTL Alpha Skorlama Algoritması ([`app/analytics/alpha_scoring.py`](file:///c:/Users/omera/OneDrive/Masaüstü/Finans%20Deneme/backend/app/analytics/alpha_scoring.py))
+
+Temel Analiz (%60 ağırlık) ile Teknik Analizi (%40 ağırlık) tek bir **UTL Alpha Skoruna** ($0.0 - 10.0$) dönüştüren melez karar motoru:
+
+$$\text{UTL Alpha} = (0.60 \times \text{Temel Skor}) + (0.40 \times \text{Teknik Skor})$$
+
+* $\mathbf{\ge 8.00}$: **GÜÇLÜ AL (STRONG BUY)** - Düşük Risk, üstün bilanço ve güçlü boğa trendi.
+* $\mathbf{6.50 - 7.99}$: **AL (BUY)** - Sağlıklı temel rasyolar, olumlu teknik yapı.
+* $\mathbf{4.50 - 6.49}$: **TUT (HOLD)** - Yön arayışı, dengeli görünüm.
+* $\mathbf{3.00 - 4.49}$: **SAT (SELL)** - Marjlarda bozulma veya ayı trendi baskısı.
+* $\mathbf{< 3.00}$: **GÜÇLÜ SAT (STRONG SELL)** - Kritik finansal kırılganlık ve negatif teknik görünüm.
+
+---
+
+### 4. İsviçre Risk Paritesi Portföy Dengeleme Motoru ([`app/analytics/rebalancing.py`](file:///c:/Users/omera/OneDrive/Masaüstü/Finans%20Deneme/backend/app/analytics/rebalancing.py))
+
+İsviçre Özel Bankacılık standartlarına uygun sermaye koruma algoritması:
+* **%20 Tek Hisse Tavanı (Swiss Cap):** Portföydeki hiçbir hisse senedinin ağırlığı %20'yi aşamaz ($w_i \le 0.20$). %20'yi aşan hisseler "Water-filling" algoritmasıyla kırpılır ve artan pay diğer varlıklara oransal dağıtılır.
+* **Risk Paritesi (Inverse Volatility):** Düşük volatiliteli hisselere daha yüksek, yüksek volatiliteli hisselere daha temkinli ağırlık verilir ($w_i \propto 1/\sigma_i$).
+* **Hedef Portföy Betası (Target Beta):** Hisse sepeti ve nakit tamponu hedeflenen portföy betasına (Örn: $\beta = 1.00$) göre otomatik dengelenir.
+* **Aksiyonel Emir Listesi:** Her hisse için `AL`, `SAT` veya `TUT` emri, alınıp satılacak tam lot adedi (`shares_to_trade`) ve tahmini nakit etkisi hesaplanır.
+
+---
+
+### 5. Aşama 3 API Uç Noktaları
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/analytics/fundamental` | DuPont, Altman Z'' ve Piotroski F-Skoru hesaplar |
+| `POST` | `/api/v1/analytics/technical` | SMA 20/50/200, RSI 14, MACD, Bollinger ve ATR analiz karnesi |
+| `POST` | `/api/v1/analytics/alpha-score` | Hibrit UTL Alpha Skoru (0-10) ve Al/Sat karar mantığı üretir |
+| `POST` | `/api/v1/analytics/rebalance` | İsviçre Risk Paritesi & %20 tavanlı portföy dengeleme planı sunar |

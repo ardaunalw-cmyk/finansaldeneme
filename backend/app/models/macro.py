@@ -67,3 +67,4 @@ class MacroIndicator(Base, UUIDMixin, TimestampMixin):
         Index("idx_macro_key_date", "indicator_key", "observation_date", unique=True),
         Index("idx_macro_published", "published_at"),
     )
+

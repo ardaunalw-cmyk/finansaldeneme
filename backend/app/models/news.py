@@ -86,3 +86,4 @@ class NewsDisclosure(Base, UUIDMixin, TimestampMixin):
         Index("idx_news_ticker_published", "related_ticker", "published_at"),
         Index("idx_news_category_source", "category", "source"),
     )
+

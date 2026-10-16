@@ -267,3 +267,4 @@ class KapNewsWorker:
 
 
 kap_worker = KapNewsWorker()
+

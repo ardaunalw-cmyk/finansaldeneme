@@ -90,3 +90,4 @@ class MacroIndicatorResponse(BaseModel):
 
     class Config:
         from_attributes = True
+

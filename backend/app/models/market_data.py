@@ -73,3 +73,4 @@ class MarketPriceSnapshot(Base, UUIDMixin, TimestampMixin):
     __table_args__ = (
         Index("idx_market_price_lookup", "symbol", "instrument_type"),
     )
+

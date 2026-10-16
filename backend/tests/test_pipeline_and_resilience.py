@@ -183,3 +183,4 @@ async def test_macroeconomic_benchmarks():
     policy_item = next(d for d in data if d["key"] == "TCMB_POLICY_RATE")
     assert policy_item["value"] == Decimal("50.000000")
     assert policy_item["unit"] == "PERCENT"
+

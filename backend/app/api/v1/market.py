@@ -92,3 +92,4 @@ async def market_feed_websocket(websocket: WebSocket):
         await ws_market_manager.disconnect(websocket)
     except Exception:
         await ws_market_manager.disconnect(websocket)
+

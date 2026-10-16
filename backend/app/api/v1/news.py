@@ -85,3 +85,4 @@ async def trigger_news_sync(session: AsyncSession = Depends(get_db)):
         "new_disclosures_ingested": count,
         "message": f"KAP news feed synchronized successfully. {count} new entries processed."
     }
+

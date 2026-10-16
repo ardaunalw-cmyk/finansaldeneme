@@ -79,3 +79,4 @@ async def trigger_macro_sync(session: AsyncSession = Depends(get_db)):
         "indicators_synced": count,
         "message": f"Macroeconomic data engine synchronized {count} indicators."
     }
+
