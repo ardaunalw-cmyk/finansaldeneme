@@ -161,3 +161,4 @@ async def execute_swiss_rebalance(payload: PortfolioRebalanceRequest):
         max_asset_weight_cap=payload.max_single_asset_cap
     )
     return result
+

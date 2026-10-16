@@ -295,3 +295,4 @@ def test_swiss_risk_parity_enforces_20_percent_cap():
     # BIMAS started at low weight with lowest volatility, should receive reallocation
     bimas_order = next(o for o in plan.orders if o.symbol == "BIMAS")
     assert bimas_order.target_weight > bimas_order.current_weight
+

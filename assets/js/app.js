@@ -27,6 +27,8 @@ function initApp() {
   initStockTableFilters();
   initIncomeStatementFilter();
   initSectorFilters();
+  initWebSocketStream();
+  initApiBackendSync();
 
   // Handle URL hash or default to overview
   const hash = window.location.hash.replace('#', '') || 'overview';
@@ -58,6 +60,126 @@ function initTickerAnimation() {
     randomItem.classList.add('opacity-70');
     setTimeout(() => randomItem.classList.remove('opacity-70'), 300);
   }, 4000);
+}
+
+/* ==========================================================================
+   1.1 Real-Time WebSocket Market Stream & Backend API Sync
+   ========================================================================== */
+function initWebSocketStream() {
+  if (typeof utlWs === 'undefined') return;
+
+  utlWs.onStatusChange((isOnline) => {
+    const badge = document.querySelector('.live-market-clock')?.parentElement?.parentElement?.querySelector('.text-emerald-400, .text-slate-400');
+    if (badge) {
+      if (isOnline) {
+        badge.innerHTML = `<i class="fa-solid fa-circle text-emerald-400 mr-1 text-[8px] animate-pulse"></i> Canlı WebSocket: Bağlı`;
+        badge.className = 'text-emerald-400 font-semibold';
+      } else {
+        badge.innerHTML = `<i class="fa-solid fa-shield-halved mr-1 text-[10px]"></i> Veri Akışı: BIST Standart`;
+        badge.className = 'text-slate-400 font-semibold';
+      }
+    }
+  });
+
+  utlWs.onTick((tick) => {
+    handleMarketTick(tick);
+  });
+
+  utlWs.connect();
+}
+
+function handleMarketTick(tick) {
+  if (!tick || !tick.symbol) return;
+  const sym = tick.symbol.toUpperCase();
+
+  // 1. Update matching ticker in top live ticker bar
+  const tickerItems = document.querySelectorAll('.ticker-price-jiggle');
+  tickerItems.forEach(item => {
+    const text = item.textContent || '';
+    let matches = false;
+    if (sym === 'XU100' && text.includes('BIST 100')) matches = true;
+    else if (sym === 'USD/TRY' && text.includes('USD/TRY')) matches = true;
+    else if (sym === 'EUR/TRY' && text.includes('EUR/TRY')) matches = true;
+    else if ((sym === 'XAU/TRY' || sym === 'ONS ALTIN') && text.includes('ALTIN')) matches = true;
+    else if (sym === 'BRENT' && text.includes('BRENT')) matches = true;
+
+    if (matches) {
+      const priceSpan = item.querySelector('.text-slate-100');
+      const changeSpan = item.querySelector('.text-emerald-400, .text-rose-400');
+      if (priceSpan && tick.price) {
+        priceSpan.textContent = parseFloat(tick.price).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+      }
+      if (changeSpan && tick.change_percent) {
+        const chgNum = parseFloat(tick.change_percent) * 100;
+        const isUp = chgNum >= 0;
+        changeSpan.textContent = `${isUp ? '▲' : '▼'} %${Math.abs(chgNum).toFixed(2).replace('.', ',')}`;
+        changeSpan.className = isUp ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+      }
+
+      // Visual flash animation (green flash for tick)
+      item.classList.add('bg-emerald-500/20', 'rounded', 'px-1', 'transition-colors');
+      setTimeout(() => item.classList.remove('bg-emerald-500/20'), 400);
+    }
+  });
+
+  // 2. If tick matches currently viewed stock, update detail view in real time
+  if (sym === currentStockCode.toUpperCase()) {
+    const priceEl = document.getElementById('stockDetailPrice');
+    const changeEl = document.getElementById('stockDetailChange');
+    const highEl = document.getElementById('stockDayHigh');
+    const lowEl = document.getElementById('stockDayLow');
+
+    const numPrice = parseFloat(tick.price);
+    if (priceEl && !isNaN(numPrice)) {
+      priceEl.textContent = `₺${numPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+      priceEl.classList.add('scale-105', 'transition-transform');
+      setTimeout(() => priceEl.classList.remove('scale-105'), 300);
+    }
+
+    if (changeEl && tick.change_percent) {
+      const chgNum = parseFloat(tick.change_percent) * 100;
+      const isPos = chgNum >= 0;
+      changeEl.textContent = `${isPos ? '+%' : '-%'}${Math.abs(chgNum).toFixed(2).replace('.', ',')} (${tick.change_amount || ''})`;
+      changeEl.className = isPos ? 'text-emerald-700 font-bold text-xs sm:text-sm font-mono' : 'text-rose-700 font-bold text-xs sm:text-sm font-mono';
+    }
+
+    if (highEl && tick.high) {
+      highEl.textContent = `₺${parseFloat(tick.high).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+    }
+    if (lowEl && tick.low) {
+      lowEl.textContent = `₺${parseFloat(tick.low).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+    }
+
+    // Update technical chart's live price point if open
+    if (charts.techPrice && charts.techPrice.data && charts.techPrice.data.datasets[0]) {
+      const len = charts.techPrice.data.datasets[0].data.length;
+      if (len > 0) {
+        charts.techPrice.data.datasets[0].data[len - 1] = numPrice;
+        charts.techPrice.update('none');
+      }
+    }
+  }
+}
+
+async function initApiBackendSync() {
+  if (typeof utlApi === 'undefined') return;
+  const health = await utlApi.checkHealth();
+  if (health.online) {
+    console.log('[UTL FİNANS] Backend Engine is ONLINE:', health.data);
+    const quotes = await utlApi.getMarketQuotes();
+    if (quotes && quotes.length) {
+      quotes.forEach(q => handleMarketTick({
+        symbol: q.symbol,
+        price: q.current_price,
+        change_amount: q.change_amount,
+        change_percent: q.change_percent,
+        high: q.high_price,
+        low: q.low_price
+      }));
+    }
+  } else {
+    console.log('[UTL FİNANS] Running in High-Speed Offline/Local Database Mode.');
+  }
 }
 
 /* ==========================================================================
@@ -1535,6 +1657,14 @@ function updateSimulation() {
       potEl.className = 'text-base font-bold font-mono text-rose-600 mt-0.5';
     }
   }
+
+  // Interactive Live Update on stockProjection Chart
+  if (charts.stockProjection && charts.stockProjection.data && charts.stockProjection.data.datasets[1]) {
+    const baseProj = currentCompanyData.projections?.chart?.projected || [];
+    const multiplier = 1 + (growth - 35) / 140;
+    charts.stockProjection.data.datasets[1].data = baseProj.map(val => val !== null ? Math.round(val * multiplier * 10) / 10 : null);
+    charts.stockProjection.update('none'); // Instant fluid update without re-render lag
+  }
 }
 
 function resetSimulation() {
@@ -1548,7 +1678,7 @@ function resetSimulation() {
 }
 
 /* ==========================================================================
-   9. Modals & Helpers
+   9. Modals & Swiss Risk Parity Rebalance Engine
    ========================================================================== */
 function initModals() {
   const openRebalanceBtns = document.querySelectorAll('.open-rebalance-btn');
@@ -1558,6 +1688,7 @@ function initModals() {
 
   openRebalanceBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+      renderSwissRebalanceModal();
       if (rebalanceModal) rebalanceModal.classList.remove('hidden');
     });
   });
@@ -1576,7 +1707,13 @@ function initModals() {
       setTimeout(() => {
         executeRebalanceBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Başarıyla Uygulandı!';
         executeRebalanceBtn.classList.replace('gold-btn', 'bg-emerald-600');
-        showToast('Algoritmik Portföy Dengeleme emri aracı kurum API hattına başarıyla iletildi!');
+        showToast('İsviçre Risk Paritesi dengeleme emri uygulandı (%20 Tavan Korunuyor)!');
+
+        // Dynamically update portfolio donut chart to reflect strict 20% Swiss cap
+        if (charts.donut) {
+          charts.donut.data.datasets[0].data = [20, 20, 20, 20, 20];
+          charts.donut.update();
+        }
 
         setTimeout(() => {
           if (rebalanceModal) rebalanceModal.classList.add('hidden');
@@ -1584,7 +1721,7 @@ function initModals() {
           executeRebalanceBtn.innerHTML = '<i class="fa-solid fa-bolt mr-2"></i> Dengelemeyi Uygula';
           executeRebalanceBtn.classList.replace('bg-emerald-600', 'gold-btn');
         }, 1200);
-      }, 1000);
+      }, 900);
     });
   }
 
@@ -1638,6 +1775,44 @@ function openReportModal(reportId) {
   }
 
   modal.classList.remove('hidden');
+}
+
+function renderSwissRebalanceModal() {
+  const modal = document.getElementById('rebalanceModal');
+  if (!modal) return;
+
+  const ordersContainer = modal.querySelector('.space-y-3');
+  if (ordersContainer) {
+    ordersContainer.innerHTML = `
+      <div class="p-3.5 bg-rose-50/70 border border-rose-200 rounded-xl flex items-center justify-between text-xs transition-all hover:bg-rose-50">
+        <div>
+          <span class="font-bold text-rose-900 flex items-center gap-1.5">
+            <span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 text-[10px] font-mono font-bold">KÂR SATIŞI</span>
+            THYAO (İsviçre %20 Kuralı)
+          </span>
+          <span class="text-rose-600 block text-[11px] mt-0.5">Mevcut: %25.0 ➔ Hedef: %20.0 (Aşırı ağırlık kırpıldı)</span>
+        </div>
+        <div class="text-right">
+          <span class="font-mono font-bold text-rose-700 text-sm block">-₺62.500</span>
+          <span class="text-[10px] text-slate-400 font-mono">-198 Lot</span>
+        </div>
+      </div>
+
+      <div class="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between text-xs transition-all hover:bg-emerald-50">
+        <div>
+          <span class="font-bold text-emerald-900 flex items-center gap-1.5">
+            <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">ALIM EMRİ</span>
+            SISE (Risk Paritesi Rotasyonu)
+          </span>
+          <span class="text-emerald-600 block text-[11px] mt-0.5">Mevcut: %8.0 ➔ Hedef: %13.0 (Düşük volatilite avantajı)</span>
+        </div>
+        <div class="text-right">
+          <span class="font-mono font-bold text-emerald-700 text-sm block">+₺62.500</span>
+          <span class="text-[10px] text-slate-400 font-mono">+1.350 Lot</span>
+        </div>
+      </div>
+    `;
+  }
 }
 
 /* ==========================================================================
@@ -2696,3 +2871,6 @@ window.setTechnicalOscillator = setTechnicalOscillator;
 window.setTechnicalTimeframe = setTechnicalTimeframe;
 window.calculateTechnicalAnalysis = calculateTechnicalAnalysis;
 window.renderTechnicalAnalysis = renderTechnicalAnalysis;
+window.renderSwissRebalanceModal = renderSwissRebalanceModal;
+window.handleMarketTick = handleMarketTick;
+

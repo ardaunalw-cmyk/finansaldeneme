@@ -299,3 +299,4 @@ class FundamentalAnalysisEngine:
             operating_efficiency_points=efficiency_pts,
             score_breakdown=breakdown
         )
+

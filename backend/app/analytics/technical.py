@@ -366,3 +366,4 @@ class TechnicalAnalysisEngine:
             macd_signal_state=macd_state,
             overall_technical_bias=bias
         )
+

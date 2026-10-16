@@ -227,3 +227,4 @@ class SwissRiskParityRebalancer:
             orders=orders,
             summary=summary_msg
         )
+
