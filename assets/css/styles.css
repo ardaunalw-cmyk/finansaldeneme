@@ -1,0 +1,332 @@
+/* ==========================================================================
+   UTL FİNANS - Sovereign Intelligence Theme Stylesheet
+   High-End Swiss / Wall Street Quantitative Terminal Design System
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --color-gold-50: #FFFDF7;
+  --color-gold-100: #FEF9E7;
+  --color-gold-200: #FBEFBF;
+  --color-gold-300: #F5DE88;
+  --color-gold-400: #E6C453;
+  --color-gold-500: #C59B27;
+  --color-gold-600: #A87F1C;
+  --color-gold-700: #886214;
+  --color-gold-800: #6B4C12;
+  --color-gold-900: #4B340B;
+
+  --color-slate-950: #070D18;
+  --color-slate-900: #0B1320;
+  --color-slate-850: #101B2E;
+  --color-slate-800: #16243D;
+  --color-slate-700: #233454;
+
+  --color-surface-bg: #F8F9FA;
+  --color-card-bg: #FFFFFF;
+  --color-border-subtle: #E8ECEF;
+  --color-border-card: #E5E9EB;
+
+  --color-positive: #10B981;
+  --color-positive-bg: #ECFDF5;
+  --color-negative: #EF4444;
+  --color-negative-bg: #FEF2F2;
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Global Reset & Base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-surface-bg);
+  color: #1E293B;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Typography Utilities */
+.font-serif-display {
+  font-family: var(--font-serif);
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-sans);
+}
+
+.font-mono-numbers {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Golden Gradient Elements */
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 50%, #996515 100%);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #C59B27 0%, #A07817 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-btn {
+  background: linear-gradient(135deg, #C59B27 0%, #A87F1C 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(197, 155, 39, 0.25);
+}
+.gold-btn:hover {
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+  box-shadow: 0 4px 14px rgba(197, 155, 39, 0.35);
+  transform: translateY(-1px);
+}
+.gold-btn:active {
+  transform: translateY(0);
+}
+
+/* Dark Institutional Button */
+.navy-btn {
+  background: #0B1320;
+  color: #FFFFFF;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.navy-btn:hover {
+  background: #16243D;
+  box-shadow: 0 4px 12px rgba(11, 19, 32, 0.2);
+}
+
+/* Pulsing Indicators */
+.pulse-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10B981;
+  position: relative;
+}
+.pulse-indicator::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  border: 2px solid #10B981;
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Ticker Animation */
+.ticker-scroll-track {
+  display: flex;
+  white-space: nowrap;
+  animation: ticker-slide 45s linear infinite;
+}
+.ticker-scroll-track:hover {
+  animation-play-state: paused;
+}
+@keyframes ticker-slide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Card Styling */
+.utl-card {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-card);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 16px rgba(0, 0, 0, 0.02);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.utl-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border-color: #DDE2E5;
+}
+
+/* Range Bar Visualization */
+.range-track {
+  height: 4px;
+  background: #E2E8F0;
+  border-radius: 9999px;
+  position: relative;
+}
+.range-indicator {
+  width: 10px;
+  height: 10px;
+  background: #C59B27;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  border-radius: 50%;
+  position: absolute;
+  top: -3px;
+  transform: translateX(-50%);
+}
+
+/* Gauge Indicator */
+.gauge-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #EF4444 0%, #EAB308 50%, #10B981 100%);
+  position: relative;
+}
+.gauge-marker {
+  width: 14px;
+  height: 14px;
+  background: #0F172A;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  border-radius: 50%;
+  position: absolute;
+  top: -3px;
+  transform: translateX(-50%);
+}
+
+/* Segmented Score Bar */
+.segmented-score-bar {
+  display: flex;
+  gap: 4px;
+  height: 6px;
+  width: 100%;
+}
+.segmented-score-bar .segment {
+  flex: 1;
+  border-radius: 2px;
+  background: #E2E8F0;
+}
+.segmented-score-bar .segment.active {
+  background: #10B981;
+}
+
+/* Custom Table Polish */
+.utl-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.utl-table th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748B;
+  padding: 12px 16px;
+  border-bottom: 1px solid #E2E8F0;
+  background: #FAFAFA;
+}
+.utl-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #F1F5F9;
+  font-size: 13.5px;
+  color: #1E293B;
+  vertical-align: middle;
+}
+.utl-table tr:hover td {
+  background-color: #F8FAFC;
+}
+
+/* DuPont Connector Line */
+.dupont-line {
+  position: relative;
+}
+.dupont-line::after {
+  content: '×';
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: bold;
+  color: #94A3B8;
+  font-size: 16px;
+}
+
+/* Active Nav States */
+.nav-tab-active {
+  color: #C59B27 !important;
+  font-weight: 700 !important;
+  position: relative;
+}
+.nav-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: #C59B27;
+  border-radius: 2px;
+}
+
+/* Sidebar Active Item */
+.sidebar-link-active {
+  background-color: #FEF9E7 !important;
+  color: #886214 !important;
+  border-left: 3px solid #C59B27 !important;
+  font-weight: 600 !important;
+}
+
+/* Modal backdrop & anim */
+.modal-backdrop {
+  background: rgba(11, 19, 32, 0.65);
+  backdrop-filter: blur(6px);
+  transition: opacity 0.25s ease;
+}
+.modal-content-box {
+  animation: modal-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modal-pop {
+  0% { transform: scale(0.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Smooth Tab transitions */
+.view-panel {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.view-panel.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Print Styles for Research Reports */
+@media print {
+  header, footer, nav, .no-print {
+    display: none !important;
+  }
+}

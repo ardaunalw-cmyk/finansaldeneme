@@ -1,0 +1,3174 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UTL FİNANS | Yapay Zeka Destekli Kurumsal Finansal Analiz & Piyasa Zekası</title>
+  
+  <!-- Favicon / Meta -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+  <meta name="description" content="Borsa İstanbul ve küresel varlıklar için derinlemesine rasyo analizleri, bilanço skorlaması ve kurumsal algoritmik sinyaller.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#FFFDF7',
+              100: '#FEF9E7',
+              200: '#FBEFBF',
+              300: '#F5DE88',
+              400: '#E6C453',
+              500: '#C59B27',
+              600: '#A87F1C',
+              700: '#886214',
+              800: '#6B4C12',
+              900: '#4B340B'
+            },
+            slate: {
+              850: '#101B2E',
+              950: '#070D18'
+            }
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="bg-[#F8F9FA] text-slate-800 antialiased selection:bg-amber-100 selection:text-amber-900">
+
+  <!-- ======================================================================
+       TOP LIVE TICKER BAR (BIST 100, Currencies, Commodities)
+       ====================================================================== -->
+  <div class="bg-[#070F1E] text-white text-xs border-b border-slate-800 py-1.5 px-4 font-mono-numbers z-50 relative select-none">
+    <div class="max-w-[1520px] mx-auto flex items-center justify-between overflow-hidden">
+      <!-- Live Status Tag -->
+      <div class="flex items-center gap-2 flex-shrink-0 pr-4 border-r border-slate-800 font-sans">
+        <span class="pulse-indicator"></span>
+        <span class="font-bold tracking-wider text-[11px] text-emerald-400 uppercase">CANLI PİYASALAR</span>
+      </div>
+
+      <!-- Ticker Items -->
+      <div class="flex items-center gap-6 overflow-x-auto no-scrollbar py-0.5 px-3 whitespace-nowrap text-[11px]">
+        <div class="flex items-center gap-1.5 ticker-price-jiggle">
+          <span class="text-slate-400 font-sans font-medium">BIST 100:</span>
+          <span class="font-semibold text-slate-100">9.420,15</span>
+          <span class="text-emerald-400 font-bold">▲ %1,42</span>
+        </div>
+        <div class="text-slate-700">•</div>
+        <div class="flex items-center gap-1.5 ticker-price-jiggle">
+          <span class="text-slate-400 font-sans font-medium">USD/TRY:</span>
+          <span class="font-semibold text-slate-100">36,45</span>
+          <span class="text-emerald-400 font-bold">▲ %0,12</span>
+        </div>
+        <div class="text-slate-700">•</div>
+        <div class="flex items-center gap-1.5 ticker-price-jiggle">
+          <span class="text-slate-400 font-sans font-medium">EUR/TRY:</span>
+          <span class="font-semibold text-slate-100">38,30</span>
+          <span class="text-rose-400 font-bold">▼ %0,05</span>
+        </div>
+        <div class="text-slate-700">•</div>
+        <div class="flex items-center gap-1.5 ticker-price-jiggle">
+          <span class="text-slate-400 font-sans font-medium">ONS ALTIN:</span>
+          <span class="font-semibold text-slate-100">$2.890</span>
+          <span class="text-emerald-400 font-bold">▲ %0,84</span>
+        </div>
+        <div class="text-slate-700">•</div>
+        <div class="flex items-center gap-1.5 ticker-price-jiggle">
+          <span class="text-slate-400 font-sans font-medium">GRAM ALTIN:</span>
+          <span class="font-semibold text-slate-100">3.390 ₺</span>
+          <span class="text-emerald-400 font-bold">▲ %0,95</span>
+        </div>
+        <div class="text-slate-700">•</div>
+        <div class="flex items-center gap-1.5 ticker-price-jiggle">
+          <span class="text-slate-400 font-sans font-medium">BRENT:</span>
+          <span class="font-semibold text-slate-100">$76.20</span>
+          <span class="text-rose-400 font-bold">▼ %0,40</span>
+        </div>
+      </div>
+
+      <!-- Right Quick Live Info -->
+      <div class="hidden lg:flex items-center gap-3 text-slate-400 text-[11px] font-sans flex-shrink-0 pl-4 border-l border-slate-800">
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-clock text-amber-500"></i> <span class="live-market-clock">16:45:00 TSİ</span></span>
+        <span class="text-slate-700">|</span>
+        <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-shield-halved mr-1 text-[10px]"></i> Veri Akışı: BIST PRO</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       PRIMARY NAVIGATION HEADER
+       ====================================================================== -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm transition-all">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3 cursor-pointer select-none" onclick="switchView('overview')">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 via-amber-600 to-amber-700 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
+          <i class="fa-solid fa-landmark text-lg"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif font-bold text-lg tracking-wider text-slate-900 leading-none">UTL FİNANS</span>
+          <span class="text-[9px] uppercase tracking-[0.2em] font-semibold text-amber-700 mt-1 font-mono">SOVEREIGN INTELLIGENCE</span>
+        </div>
+      </div>
+
+      <!-- Global Search Bar with Autocomplete Dropdown -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input 
+            type="text" 
+            placeholder="Hisse senedi, fon, endeks veya şirket ara (Örn: THYAO, EREGL)..." 
+            class="global-search-input w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/10 transition-all font-sans"
+          >
+          <kbd class="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] bg-slate-200/80 text-slate-500 rounded font-mono border border-slate-300 pointer-events-none">/</kbd>
+        </div>
+        
+        <!-- Search Autocomplete Dropdown Menu -->
+        <div id="searchDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 z-50 max-h-80 overflow-y-auto"></div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="hidden xl:flex items-center gap-6 text-[13px] font-medium font-sans">
+        <a href="#overview" data-view-target="overview" class="nav-tab-active py-2 transition-colors">Genel Bakış & Piyasalar</a>
+        <a href="#stock-detail" data-view-target="stock-detail" class="text-slate-600 hover:text-amber-700 py-2 transition-colors">Hisse & Bilanço Analizi</a>
+        <a href="#reports" data-view-target="reports" class="text-slate-600 hover:text-amber-700 py-2 transition-colors">Sektörel Raporlar</a>
+        <a href="#portfolio" data-view-target="portfolio" class="text-slate-600 hover:text-amber-700 py-2 transition-colors">Portföy & Model Portföy</a>
+        <a href="#reports" data-view-target="reports" class="text-slate-600 hover:text-amber-700 py-2 transition-colors flex items-center gap-1.5">
+          <span>Yapay Zeka Bülten</span>
+          <span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full font-bold uppercase">v4.8</span>
+        </a>
+      </nav>
+
+      <!-- Right Controls & User Profile -->
+      <div class="flex items-center gap-3">
+        <!-- Live Status Pill -->
+        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Canlı</span>
+        </div>
+
+        <!-- UTL PRO Button -->
+        <button class="gold-btn px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-crown text-[11px]"></i>
+          <span>UTL PRO</span>
+        </button>
+
+        <!-- User Profile Avatar -->
+        <div class="w-8 h-8 rounded-full bg-slate-900 border-2 border-amber-500/60 text-white flex items-center justify-center text-xs font-bold cursor-pointer hover:ring-2 hover:ring-amber-500/20 transition-all select-none" title="Can Güner - UTL PRO Üye">
+          CG
+        </div>
+
+        <!-- Mobile Menu Hamburger -->
+        <button id="mobileMenuToggle" class="xl:hidden p-2 text-slate-600 hover:text-slate-900 focus:outline-none">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobileNavDrawer" class="hidden xl:hidden bg-white border-b border-slate-200 px-4 py-3 space-y-2">
+      <a href="#overview" data-view-target="overview" class="block py-2 text-sm font-semibold text-slate-800 hover:text-amber-700">Genel Bakış & Piyasalar</a>
+      <a href="#stock-detail" data-view-target="stock-detail" class="block py-2 text-sm font-semibold text-slate-800 hover:text-amber-700">Hisse & Bilanço Analizi</a>
+      <a href="#reports" data-view-target="reports" class="block py-2 text-sm font-semibold text-slate-800 hover:text-amber-700">Sektörel Raporlar</a>
+      <a href="#portfolio" data-view-target="portfolio" class="block py-2 text-sm font-semibold text-slate-800 hover:text-amber-700">Portföy & Model Portföy</a>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       MAIN CONTENT CONTAINER (Renders the 4 views via switchView)
+       ====================================================================== -->
+  <main class="min-h-screen">
+
+    <!-- ====================================================================
+         VIEW 1: GENEL BAKIŞ & PİYASALAR (Screen 1 in screenshots)
+         ==================================================================== -->
+    <div id="view-overview" class="view-panel active">
+      <div class="max-w-[1520px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+        <!-- Sovereign Hero Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
+          <div class="space-y-2">
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[11px] font-semibold tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              <span>ALGORİTMİK MAKRO İSTİHBARAT • Model Sürümü: v4.8 Sovereign</span>
+            </div>
+
+            <!-- Main Heading with Serif Luxury Accent -->
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif text-slate-900 tracking-tight font-medium">
+              Yapay Zeka Destekli <span class="italic font-normal text-amber-700">Kurumsal Finansal Analiz</span> & Piyasa Zekası
+            </h1>
+
+            <p class="text-xs sm:text-sm text-slate-500 max-w-3xl">
+              Borsa İstanbul ve küresel varlıklar için derinlemesine rasyo analizleri, bilanço skorlaması ve kurumsal algoritmik sinyaller.
+            </p>
+          </div>
+
+          <!-- Market Clock & Filter Action -->
+          <div class="flex items-center gap-3 flex-shrink-0">
+            <div class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-2.5 text-xs">
+              <div class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <i class="fa-solid fa-building-columns text-[11px]"></i>
+              </div>
+              <div>
+                <div class="text-[10px] text-slate-400 font-semibold uppercase">PİYASA SAATİ</div>
+                <div class="font-mono font-bold text-slate-800 live-market-clock">04:08:58 TSI</div>
+              </div>
+            </div>
+
+            <button class="navy-btn px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm">
+              <i class="fa-solid fa-sliders text-amber-400"></i>
+              <span>Filtreleri Özelleştir</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Key Financial Metric Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Card 1: BIST 100 ENDEKSİ -->
+          <div class="utl-card p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">BIST 100 ENDEKSİ</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold font-mono">
+                ▲ %1,42
+              </span>
+            </div>
+            <div>
+              <div class="text-2xl font-bold font-mono text-slate-900 tracking-tight">
+                9.420,15 <span class="text-xs font-normal text-slate-500 font-sans">TL</span>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+                <span>Hacim: <strong class="text-slate-700">114.8 Mlr ₺</strong></span>
+                <span>Aralık: <strong class="text-slate-700 font-mono">9.310 - 9.445</strong></span>
+              </div>
+            </div>
+            <!-- Mini Bar Sparkline -->
+            <div class="flex items-end gap-1.5 h-6 pt-1">
+              <div class="flex-1 bg-emerald-200 rounded-t h-[40%]"></div>
+              <div class="flex-1 bg-emerald-300 rounded-t h-[55%]"></div>
+              <div class="flex-1 bg-emerald-300 rounded-t h-[50%]"></div>
+              <div class="flex-1 bg-emerald-400 rounded-t h-[70%]"></div>
+              <div class="flex-1 bg-emerald-400 rounded-t h-[65%]"></div>
+              <div class="flex-1 bg-emerald-500 rounded-t h-[85%]"></div>
+              <div class="flex-1 bg-emerald-600 rounded-t h-[100%]"></div>
+            </div>
+          </div>
+
+          <!-- Card 2: PİYASA DEĞERİ LİDERLERİ -->
+          <div class="utl-card p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">PİYASA DEĞERİ LİDERLERİ</span>
+              <i class="fa-solid fa-lock text-amber-500 text-xs"></i>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 flex items-center justify-between">
+                <span class="font-bold text-slate-800">THYAO</span>
+                <span class="text-emerald-600 font-bold font-mono">+3.80%</span>
+              </div>
+              <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 flex items-center justify-between">
+                <span class="font-bold text-slate-800">ASELS</span>
+                <span class="text-emerald-600 font-bold font-mono">+1.76%</span>
+              </div>
+              <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 flex items-center justify-between">
+                <span class="font-bold text-slate-800">GARAN</span>
+                <span class="text-emerald-600 font-bold font-mono">+2.15%</span>
+              </div>
+              <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 flex items-center justify-between">
+                <span class="font-bold text-slate-800">KCHOL</span>
+                <span class="text-emerald-600 font-bold font-mono">+0.60%</span>
+              </div>
+            </div>
+            <div class="text-[11px] text-slate-500 text-right">
+              Ağırlıklı payı: Endekste <strong class="text-amber-700">%30.2'si</strong>
+            </div>
+          </div>
+
+          <!-- Card 3: UTL ALPHA SKOR ORTALAMASI -->
+          <div class="utl-card p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">UTL ALPHA SKOR ORTALAMASI</span>
+              <span class="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded font-mono font-bold">ALGORİTMİK</span>
+            </div>
+            <div>
+              <div class="flex items-baseline gap-1">
+                <span class="text-2xl font-bold font-mono text-slate-900">8.4</span>
+                <span class="text-xs text-slate-400 font-mono">/ 10</span>
+              </div>
+              <div class="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-0.5">
+                <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+                <span>Yüksek Getiri Potansiyeli</span>
+              </div>
+            </div>
+            <!-- Progress Bar -->
+            <div class="space-y-1">
+              <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                <div class="w-[40%] bg-slate-300"></div>
+                <div class="w-[30%] bg-amber-400"></div>
+                <div class="w-[30%] bg-emerald-500"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-400 font-mono">
+                <span>Defansif (0-4)</span>
+                <span>Dengeli (5-7)</span>
+                <span class="text-emerald-600 font-bold">Alpha(8-10)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: KORKU & AÇGÖZLÜLÜK -->
+          <div class="utl-card p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">KORKU & AÇGÖZLÜLÜK</span>
+              <i class="fa-solid fa-gauge-high text-emerald-500 text-xs"></i>
+            </div>
+            <div>
+              <div class="flex items-baseline gap-1">
+                <span class="text-2xl font-bold font-mono text-slate-900">68</span>
+                <span class="text-xs text-slate-400 font-mono">/ 100</span>
+              </div>
+              <div class="text-xs text-emerald-700 font-semibold flex items-center gap-1.5 mt-0.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Açgözlülük / İyimser Bölge</span>
+              </div>
+            </div>
+            <!-- Gauge track with marker -->
+            <div class="pt-1">
+              <div class="gauge-track">
+                <div class="gauge-marker" style="left: 68%;"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-400 font-mono mt-1.5">
+                <span>Aşırı Korku</span>
+                <span>Nötr</span>
+                <span class="text-emerald-600 font-bold">İyimser (68)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Middle Section: BIST 100 Chart (Left) + Sector Heatmap (Right) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- BIST 100 Depth & Trend Chart (Col span 2) -->
+          <div class="lg:col-span-2 utl-card p-6 flex flex-col justify-between">
+            <div>
+              <!-- Chart Header -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                    <i class="fa-solid fa-chart-line text-sm"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h2 class="font-bold text-slate-900 text-base">BIST 100 Performans & Derinlik Grafiği</h2>
+                      <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-bold">BIST100</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Mum grafiği, hacim ağırlıklı ortalama ve teknik direnç koridoru</p>
+                  </div>
+                </div>
+
+                <!-- Timeframe Selectors -->
+                <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                  <button class="bist-timeframe-btn px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 font-bold transition-all">1G</button>
+                  <button class="bist-timeframe-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">1H</button>
+                  <button class="bist-timeframe-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">1A</button>
+                  <button class="bist-timeframe-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">3A</button>
+                  <button class="bist-timeframe-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">1Y</button>
+                  <button class="bist-timeframe-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">YBB</button>
+                </div>
+              </div>
+
+              <!-- 4 Technical Stat Pills -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
+                <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                  <div class="text-[10px] text-slate-400 font-semibold uppercase">KRİTİK DESTEK 1</div>
+                  <div class="text-sm font-bold font-mono text-slate-800">9.250 TL</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                  <div class="text-[10px] text-slate-400 font-semibold uppercase">KRİTİK DİRENÇ 1</div>
+                  <div class="text-sm font-bold font-mono text-slate-800">9.680 TL</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                  <div class="text-[10px] text-slate-400 font-semibold uppercase">20 GÜNLÜK HO</div>
+                  <div class="text-sm font-bold font-mono text-slate-800">9.314 TL</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                  <div class="text-[10px] text-slate-400 font-semibold uppercase">200 GÜNLÜK HO</div>
+                  <div class="text-sm font-bold font-mono text-slate-800">8.940 TL</div>
+                </div>
+              </div>
+
+              <!-- Interactive Chart Canvas -->
+              <div class="relative h-64 w-full">
+                <canvas id="bistTrendChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart Footer & Legend -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-4 border-t border-slate-100 text-xs text-slate-500">
+              <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  <span>BIST 100 Ana Akış</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <span>Yabancı Takas Girişi</span>
+                </div>
+              </div>
+              <div class="text-[11px] text-slate-400">
+                Kaynak: BIST DataFeed Real-Time Pro
+              </div>
+            </div>
+          </div>
+
+          <!-- Sektörel Isı Haritası & AI Signal (Col span 1) -->
+          <div class="utl-card p-6 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h3 class="font-bold text-slate-900 text-base">Sektörel Isı Haritası</h3>
+                  <p class="text-xs text-slate-400">Günlük ağırlıklı sermaye akışı</p>
+                </div>
+                <button onclick="switchView('reports')" class="text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-md font-semibold transition-colors">
+                  Canlı Derinliğe
+                </button>
+              </div>
+
+              <!-- Sector Cards -->
+              <div class="grid grid-cols-2 gap-3 my-4">
+                <!-- XULAS -->
+                <div class="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl space-y-1">
+                  <div class="flex items-center justify-between text-xs text-emerald-800 font-bold">
+                    <span>XULAS (Ulaştırma)</span>
+                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+                  </div>
+                  <div class="text-lg font-bold font-mono text-emerald-700">+3.45%</div>
+                  <div class="text-[10px] text-emerald-600 font-mono text-right">%23.5 Hacim</div>
+                </div>
+
+                <!-- XBANK -->
+                <div class="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl space-y-1">
+                  <div class="flex items-center justify-between text-xs text-emerald-800 font-bold">
+                    <span>XBANK (Bankacılık)</span>
+                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+                  </div>
+                  <div class="text-lg font-bold font-mono text-emerald-700">+1.82%</div>
+                  <div class="text-[10px] text-emerald-600 font-mono text-right">%26.1 Hacim</div>
+                </div>
+
+                <!-- XMANA -->
+                <div class="p-3 bg-emerald-50/40 border border-emerald-200/60 rounded-xl space-y-1">
+                  <div class="flex items-center justify-between text-xs text-emerald-800 font-bold">
+                    <span>XMANA (Metal/Demir)</span>
+                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+                  </div>
+                  <div class="text-lg font-bold font-mono text-emerald-700">+1.20%</div>
+                  <div class="text-[10px] text-emerald-600 font-mono text-right">%18.9 Hacim</div>
+                </div>
+
+                <!-- XKMYA -->
+                <div class="p-3 bg-rose-50/60 border border-rose-200/80 rounded-xl space-y-1">
+                  <div class="flex items-center justify-between text-xs text-rose-800 font-bold">
+                    <span>XKMYA (Kimya/Petrol)</span>
+                    <i class="fa-solid fa-arrow-trend-down text-[10px]"></i>
+                  </div>
+                  <div class="text-lg font-bold font-mono text-rose-700">-0.42%</div>
+                  <div class="text-[10px] text-rose-600 font-mono text-right">%12.8 Hacim</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Sinyal Notu Card -->
+            <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-4 space-y-2">
+              <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                <i class="fa-regular fa-lightbulb text-amber-600"></i>
+                <span>AI Sinyal Notu</span>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Ulaştırma ve Bankacılık öncülüğünde yabancı girişi hızlandı. Para girişi 4. çeyrek bilançolarına yönelik pozitif fiyatlama sinyaline işaret ediyor.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Section: Piyasa Hacmi & Seçilmiş Şirket Analitiği (BIST 30 ODAK) -->
+        <div class="utl-card p-6 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-bold text-slate-900">Piyasa Hacmi & Seçilmiş Şirket Analitiği</h3>
+                <span class="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-mono font-bold">BIST 30 ODAK</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Günlük değişimler, değerleme çarpanları ve UTL Alpha skor sıralaması.</p>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-semibold">
+              <button class="overview-table-tab px-3 py-1.5 rounded-lg bg-slate-900 text-white transition-all" data-filter="all">Tüm Hisseler</button>
+              <button class="overview-table-tab px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all" data-filter="gainers">En Çok Artanlar</button>
+              <button class="overview-table-tab px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all" data-filter="volume">En Yüksek Hacim</button>
+              <button class="overview-table-tab px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all" data-filter="alpha">Alpha 9+ Skor</button>
+            </div>
+          </div>
+
+          <!-- Stock Table -->
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="utl-table">
+              <thead>
+                <tr>
+                  <th>KOD & ŞİRKET ADI</th>
+                  <th class="text-right">SON FİYAT</th>
+                  <th class="text-right">GÜNLÜK DEĞİŞİM %</th>
+                  <th class="text-right">F/K ORANI</th>
+                  <th class="text-right">PD/DD</th>
+                  <th class="text-center">UTL PUANI</th>
+                  <th class="text-center">İŞLEM</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- THYAO -->
+                <tr class="overview-table-row" data-code="THYAO" data-is-up="true" data-score="9.4">
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-xs font-mono">
+                        THY
+                      </div>
+                      <div>
+                        <div class="font-bold text-slate-900">THYAO</div>
+                        <div class="text-xs text-slate-400">Türk Hava Yolları A.O.</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-right font-mono font-bold text-slate-900">312.50 TL</td>
+                  <td class="text-right">
+                    <span class="inline-flex items-center gap-1 text-emerald-600 font-mono font-bold text-xs px-2 py-0.5 rounded bg-emerald-50">
+                      ▲ +3.80%
+                    </span>
+                  </td>
+                  <td class="text-right font-mono text-slate-700">3.84</td>
+                  <td class="text-right font-mono text-slate-700">0.98</td>
+                  <td class="text-center">
+                    <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200">
+                      9.4 / 10
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <button onclick="switchView('stock-detail', 'THYAO')" class="px-3 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition-colors">
+                      Detay
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- EREGL -->
+                <tr class="overview-table-row" data-code="EREGL" data-is-up="true" data-score="8.1">
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs font-mono">
+                        ERG
+                      </div>
+                      <div>
+                        <div class="font-bold text-slate-900">EREGL</div>
+                        <div class="text-xs text-slate-400">Ereğli Demir Çelik</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-right font-mono font-bold text-slate-900">48.90 TL</td>
+                  <td class="text-right">
+                    <span class="inline-flex items-center gap-1 text-emerald-600 font-mono font-bold text-xs px-2 py-0.5 rounded bg-emerald-50">
+                      ▲ +2.10%
+                    </span>
+                  </td>
+                  <td class="text-right font-mono text-slate-700">11.20</td>
+                  <td class="text-right font-mono text-slate-700">0.92</td>
+                  <td class="text-center">
+                    <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200">
+                      8.1 / 10
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <button onclick="switchView('stock-detail', 'EREGL')" class="px-3 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition-colors">
+                      Detay
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- BIMAS -->
+                <tr class="overview-table-row" data-code="BIMAS" data-is-up="false" data-score="7.2">
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs font-mono">
+                        BIM
+                      </div>
+                      <div>
+                        <div class="font-bold text-slate-900">BIMAS</div>
+                        <div class="text-xs text-slate-400">BİM Birleşik Mağazalar</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-right font-mono font-bold text-slate-900">485.00 TL</td>
+                  <td class="text-right">
+                    <span class="inline-flex items-center gap-1 text-rose-600 font-mono font-bold text-xs px-2 py-0.5 rounded bg-rose-50">
+                      ▼ -0.90%
+                    </span>
+                  </td>
+                  <td class="text-right font-mono text-slate-700">14.60</td>
+                  <td class="text-right font-mono text-slate-700">3.45</td>
+                  <td class="text-center">
+                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono font-bold text-xs border border-slate-200">
+                      7.2 / 10
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <button onclick="switchView('stock-detail', 'BIMAS')" class="px-3 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition-colors">
+                      Detay
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- TUPRS -->
+                <tr class="overview-table-row" data-code="TUPRS" data-is-up="true" data-score="8.8">
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-xs font-mono">
+                        TUP
+                      </div>
+                      <div>
+                        <div class="font-bold text-slate-900">TUPRS</div>
+                        <div class="text-xs text-slate-400">Tüpraş Türkiye Petrol Raf.</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-right font-mono font-bold text-slate-900">162.30 TL</td>
+                  <td class="text-right">
+                    <span class="inline-flex items-center gap-1 text-emerald-600 font-mono font-bold text-xs px-2 py-0.5 rounded bg-emerald-50">
+                      ▲ +1.90%
+                    </span>
+                  </td>
+                  <td class="text-right font-mono text-slate-700">6.10</td>
+                  <td class="text-right font-mono text-slate-700">1.85</td>
+                  <td class="text-center">
+                    <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200">
+                      8.8 / 10
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <button onclick="switchView('stock-detail', 'TUPRS')" class="px-3 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition-colors">
+                      Detay
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Subfooter -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 pt-2">
+            <div>0/600 Dönem: 4/30 Hisse • Son güncelleme: 16:42:00</div>
+            <a href="#stock-detail" onclick="switchView('stock-detail')" class="text-amber-700 hover:text-amber-800 font-bold flex items-center gap-1">
+              <span>BIST Tüm Şirketleri Görüntüle</span>
+              <i class="fa-solid fa-arrow-right text-[11px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Section: Günün Öne Çıkan Analiz Raporu (Aviation Research Banner) -->
+        <div class="utl-card overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12">
+            <!-- Left Info Content -->
+            <div class="lg:col-span-7 p-6 sm:p-8 space-y-4 flex flex-col justify-between">
+              <div class="space-y-3">
+                <div class="inline-flex items-center gap-2 text-xs text-amber-700 font-bold">
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] uppercase font-mono">★ GÜNÜN ÖNE ÇIKAN ANALİZ RAPORU</span>
+                  <span>• 8 Sayfa Derinlikli Rapor</span>
+                </div>
+
+                <h2 class="text-xl sm:text-2xl font-serif text-slate-900 font-semibold leading-snug">
+                  Havacılık Sektöründe 4. Çeyrek Büyüme Beklentileri & Çarpan İncelemesi
+                </h2>
+
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Avrupa hatlarındaki güçlü talep dinamikleri, kargo kapasite artışları ve düşen jet yakıtı maliyetleri ışığında THYAO ve PGSUS için hedef çarpan revizyonu tamamlandı. Algoritmik iskonto oranı %24 olarak modellendi.
+                </p>
+
+                <!-- 3 Recommendation Badges -->
+                <div class="grid grid-cols-3 gap-3 pt-2">
+                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div class="text-[10px] text-slate-400 font-semibold uppercase">SEKTÖR TAVSİYESİ</div>
+                    <div class="text-xs sm:text-sm font-bold text-emerald-700 mt-0.5">AĞIRLIĞI ARTIR</div>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div class="text-[10px] text-slate-400 font-semibold uppercase">HEDEF DEĞERLEME</div>
+                    <div class="text-xs sm:text-sm font-bold font-mono text-slate-900 mt-0.5">420.00 TL</div>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div class="text-[10px] text-slate-400 font-semibold uppercase">RİSK KATSAYISI (BETA)</div>
+                    <div class="text-xs sm:text-sm font-bold font-mono text-slate-900 mt-0.5">1.06 (Düşük)</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
+                <button class="gold-btn px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 download-pdf-btn">
+                  <i class="fa-solid fa-file-pdf"></i>
+                  <span>PDF Raporu İndir</span>
+                </button>
+                <button onclick="switchView('stock-detail', 'THYAO')" class="navy-btn px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <i class="fa-solid fa-chart-pie text-amber-400"></i>
+                  <span>Detaylı Bilanço İncele</span>
+                </button>
+                <button onclick="switchView('portfolio')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors flex items-center gap-2">
+                  <i class="fa-solid fa-plus text-slate-500"></i>
+                  <span>Model Portföye Ekle</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right Cockpit Photo with Analyst Banner -->
+            <div class="lg:col-span-5 relative min-h-[260px] bg-slate-900 overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1000&q=80" 
+                alt="Havacılık Kokpit Analizi" 
+                class="w-full h-full object-cover opacity-85 hover:scale-105 transition-transform duration-700"
+              >
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+              
+              <!-- Analyst Attribution Box -->
+              <div class="absolute bottom-4 left-4 right-4 bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-3 text-white">
+                <div class="text-[10px] text-amber-400 font-mono uppercase tracking-wider font-semibold">UTL FİNANS ARAŞTIRMA MASASI</div>
+                <div class="text-xs font-bold text-slate-100 mt-0.5">Analist: Emre K. Tan & Algoritmik Konsensüs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         VIEW 2: HİSSE & BİLANÇO ANALİZİ (THYAO Detail - Screen 2)
+         ==================================================================== -->
+    <div id="view-stock-detail" class="view-panel">
+      <div class="flex flex-col lg:flex-row min-h-screen">
+        
+        <!-- Left Terminal Sidebar (Matches Screen 2 & 3) -->
+        <aside class="w-full lg:w-64 bg-white border-r border-slate-200 flex flex-col justify-between p-4 flex-shrink-0">
+          <div class="space-y-6">
+            <!-- Sidebar Header / Terminal Title -->
+            <div class="flex items-center gap-2 pb-4 border-b border-slate-100">
+              <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-serif font-bold text-base shadow-sm">
+                U
+              </div>
+              <div>
+                <div class="font-serif font-bold text-sm tracking-wide text-slate-900">UTL FİNANS</div>
+                <div class="text-[9px] font-mono font-semibold tracking-wider text-amber-700 uppercase">TERMINAL</div>
+              </div>
+            </div>
+
+            <!-- Portfolio Value Widget -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PORTFÖY DEĞERİ</div>
+              <div class="text-xl font-bold font-mono text-slate-900">₺1.428.950</div>
+              <div class="text-xs text-emerald-600 font-bold font-mono">▲ %11.2</div>
+            </div>
+
+            <!-- Sidebar Navigation Links -->
+            <nav class="space-y-1 font-sans text-xs font-medium">
+              <a href="#overview" data-view-target="overview" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-table-columns text-slate-400 w-4"></i>
+                <span>Genel Bakış & Piyasalar</span>
+              </a>
+              <a href="#stock-detail" data-view-target="stock-detail" class="sidebar-nav-item sidebar-link-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-chart-column text-amber-600 w-4"></i>
+                <span>Hisse & Bilanço Analizi</span>
+              </a>
+              <a href="#reports" data-view-target="reports" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-book-bookmark text-slate-400 w-4"></i>
+                <span>Sektörel Raporlar</span>
+              </a>
+              <a href="#portfolio" data-view-target="portfolio" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-briefcase text-slate-400 w-4"></i>
+                <span>Portföy & Model Portföy</span>
+              </a>
+              <a href="#reports" data-view-target="reports" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-microchip text-slate-400 w-4"></i>
+                <span>Yapay Zeka Bülten</span>
+              </a>
+            </nav>
+          </div>
+
+          <!-- Bottom User Card -->
+          <div class="pt-4 border-t border-slate-100 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-slate-900 border border-amber-500/80 text-white flex items-center justify-center font-bold text-xs">
+              CG
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-900">Can Güner</div>
+              <div class="text-[10px] text-amber-700 font-mono font-semibold">UTL PRO ÜYE</div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Main Deep Analysis Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1300px]">
+          
+          <!-- Terminal Top Bar with Search & BIST Status (Matches Screenshot 2) -->
+          <div class="flex items-center justify-between gap-4 pb-4 border-b border-slate-200">
+            <div class="relative flex-1 max-w-xl">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input 
+                type="text" 
+                placeholder="Hisse senedi, fon, endeks veya şirket ara (Örn: THYAO, EREGL)..." 
+                class="global-search-input w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-sans"
+              >
+            </div>
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>BIST Seansı: Açık</span>
+              </div>
+              <button class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center relative transition-colors" onclick="showToast('Okunmamış bildirim bulunmuyor.')">
+                <i class="fa-regular fa-bell text-xs"></i>
+                <span class="w-2 h-2 rounded-full bg-amber-500 absolute top-1.5 right-1.5"></span>
+              </button>
+              <button class="gold-btn px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-crown text-[10px]"></i>
+                <span>UTL PRO</span>
+              </button>
+              <div class="w-8 h-8 rounded-full bg-slate-900 border border-amber-500/80 text-white flex items-center justify-center text-xs font-bold cursor-pointer hover:ring-2 hover:ring-amber-500/20 transition-all select-none" title="Can Güner">
+                CG
+              </div>
+            </div>
+          </div>
+
+          <!-- Stock Header with Logo, Price, Consensus & Range -->
+          <div class="utl-card p-6 space-y-6">
+            <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+              
+              <!-- Company Info & Live Quote -->
+              <div class="flex items-start gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 text-2xl flex-shrink-0">
+                  <i id="stockDetailIcon" class="fa-solid fa-plane-up"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h1 id="stockDetailName" class="text-xl sm:text-2xl font-serif font-bold text-slate-900">Türk Hava Yolları A.O.</h1>
+                    <span id="stockDetailSymbol" class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-xs font-bold">THYAO.IS</span>
+                    <span id="stockDetailIndex" class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-mono text-xs font-bold border border-amber-200">BIST 30</span>
+                  </div>
+                  
+                  <div class="flex items-baseline gap-3 mt-2">
+                    <span id="stockDetailPrice" class="text-3xl font-mono font-bold text-slate-900">₺312,50</span>
+                    <span id="stockDetailChange" class="text-emerald-700 font-bold text-xs sm:text-sm font-mono">+%3,82 (+₺11,50)</span>
+                    <span id="stockDetailVolume" class="text-xs text-slate-400 font-mono">Hacim: ₺4.82 Mlr</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- UTL Score & 12M Target Box -->
+              <div class="flex flex-wrap items-center gap-4">
+                <!-- Score Pill -->
+                <div class="flex items-center gap-3 p-3 bg-amber-50/60 border border-amber-200 rounded-xl">
+                  <div id="stockDetailScore" class="w-10 h-10 rounded-full bg-amber-500 text-white font-bold font-mono text-lg flex items-center justify-center shadow-sm">
+                    9.1
+                  </div>
+                  <div>
+                    <div class="text-[10px] text-amber-800 font-bold uppercase">UTL BİLANÇO SKORU →</div>
+                    <div class="text-xs font-bold text-slate-900">Mükemmel Finansal Sağlık</div>
+                    <div class="text-[10px] text-slate-500">BIST Ulaştırma: %90 Diliminde</div>
+                  </div>
+                </div>
+
+                <!-- 12M Consensus Target -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">12A KONSENSÜS HEDEF FİYAT</div>
+                  <div class="flex items-baseline gap-2 mt-0.5">
+                    <span id="stockDetailTargetPrice" class="text-lg font-bold font-mono text-slate-900">₺420,00</span>
+                    <span id="stockDetailPotential" class="text-xs text-emerald-600 font-bold font-mono">▲ %34,4 Potansiyel</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500">16 Analist: 14 Al, 2 Tut</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2">
+                  <button class="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5" onclick="showToast('THYAO fiyat alarmı başarıyla kuruldu!')">
+                    <i class="fa-regular fa-bell"></i>
+                    <span>Alarm Kur</span>
+                  </button>
+                  <button class="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5" onclick="showToast('Konsolide finansal bilanço Excel formatında indiriliyor...')">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>Finansal Excel</span>
+                  </button>
+                  <button class="gold-btn px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5" onclick="switchView('reports')">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>Rakip Karşılaştırma</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Dual Range Sliders (Gün İçi vs 52 Hafta) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1 text-xs">
+              <!-- Day Range -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-slate-500 font-medium">
+                  <span>GÜN İÇİ ARALIK</span>
+                  <span class="font-mono"><strong id="stockDayLow">₺304,00</strong> — <strong id="stockDayHigh">₺318,00</strong></span>
+                </div>
+                <div class="range-track">
+                  <div class="range-indicator" style="left: 62%;"></div>
+                </div>
+              </div>
+
+              <!-- 52-Week Range -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-slate-500 font-medium">
+                  <span>52 HAFTA ARALIĞI</span>
+                  <span class="font-mono"><strong id="stockYearLow">₺218,00</strong> — <strong id="stockYearHigh">₺352,00</strong></span>
+                </div>
+                <div class="range-track">
+                  <div class="range-indicator" style="left: 72%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6 Financial Valuation Multipliers Cards Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            
+            <!-- F/K -->
+            <div class="utl-card p-3.5 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400">F/K ORANI</span>
+                <span class="text-[9px] bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded font-bold font-mono">İSKONTOLU</span>
+              </div>
+              <div id="stockDetailFK" class="text-xl font-bold font-mono text-slate-900">4.82</div>
+              <div class="text-[10px] text-slate-400">Sektör Ort: <span class="font-mono">7.40</span></div>
+            </div>
+
+            <!-- PD/DD -->
+            <div class="utl-card p-3.5 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400">PD/DD ORANI</span>
+                <span class="text-[9px] bg-amber-50 text-amber-700 px-1.5 py-0.2 rounded font-bold font-mono">CAZİP</span>
+              </div>
+              <div id="stockDetailPDDD" class="text-xl font-bold font-mono text-slate-900">0.98</div>
+              <div class="text-[10px] text-slate-400">Sektör Ort: <span class="font-mono">1.45</span></div>
+            </div>
+
+            <!-- FD/FAVÖK -->
+            <div class="utl-card p-3.5 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400">FD / FAVÖK</span>
+                <span class="text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded font-bold font-mono">UYGUN</span>
+              </div>
+              <div id="stockDetailFDFavok" class="text-xl font-bold font-mono text-slate-900">4.15</div>
+              <div class="text-[10px] text-slate-400">Tarihsel Ort: <span class="font-mono">5.20</span></div>
+            </div>
+
+            <!-- NET BORÇ/FAVÖK -->
+            <div class="utl-card p-3.5 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400">NET BORÇ / FAVÖK</span>
+                <span class="text-[9px] bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded font-bold font-mono">GÜÇLÜ</span>
+              </div>
+              <div id="stockDetailNetDebt" class="text-xl font-bold font-mono text-slate-900">1.12x</div>
+              <div class="text-[10px] text-slate-400">Kritik Eşik: <span class="font-mono">&lt; 3.00x</span></div>
+            </div>
+
+            <!-- ROE -->
+            <div class="utl-card p-3.5 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400">ÖZSERMAYE KÂRI (ROE)</span>
+                <i class="fa-solid fa-arrow-trend-up text-emerald-600 text-[10px]"></i>
+              </div>
+              <div id="stockDetailROE" class="text-xl font-bold font-mono text-emerald-700">%28.4</div>
+              <div class="text-[10px] text-slate-400">Önceki Dönem: <span class="font-mono">%24.1</span></div>
+            </div>
+
+            <!-- ROA -->
+            <div class="utl-card p-3.5 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400">AKTİF KÂR (ROA)</span>
+                <i class="fa-solid fa-check text-emerald-600 text-[10px]"></i>
+              </div>
+              <div id="stockDetailROA" class="text-xl font-bold font-mono text-slate-900">%14.2</div>
+              <div class="text-[10px] text-slate-400">Sektör Ort: <span class="font-mono">%8.9</span></div>
+            </div>
+
+          </div>
+
+          <!-- ================================================================
+               TEKNİK ANALİZ, İNDİKATÖRLER & OTOMATİK FORMASYON SİSTEMİ
+               ================================================================ -->
+          <div class="utl-card p-6 space-y-6">
+            
+            <!-- Section Header & Toolbar -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-100 text-amber-900 border border-amber-300">
+                    <i class="fa-solid fa-chart-line text-[9px] mr-1"></i>TEKNİK ANALİZ & FORMASYON SİSTEMİ
+                  </span>
+                  <span class="text-xs text-slate-400 font-mono hidden sm:inline">|</span>
+                  <span id="techHeaderStockCode" class="text-xs font-mono font-bold text-slate-700">THYAO / BIST</span>
+                </div>
+                <h3 class="font-bold text-slate-900 text-lg mt-1">İleri Düzey Teknik Göstergeler & Otomatik Formasyon Analizi</h3>
+                <p class="text-xs text-slate-400">Trend göstergeleri, osilatörler, Bollinger bantları, Fibonacci seviyeleri ve yapay zeka formasyon tespiti</p>
+              </div>
+
+              <!-- Timeframe & Layer Controls -->
+              <div class="flex flex-wrap items-center gap-2">
+                <!-- Timeframes -->
+                <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                  <button id="btnTimeframe1M" onclick="setTechnicalTimeframe('1M')" class="px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 font-bold transition-all">1A</button>
+                  <button id="btnTimeframe3M" onclick="setTechnicalTimeframe('3M')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">3A</button>
+                  <button id="btnTimeframe6M" onclick="setTechnicalTimeframe('6M')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">6A</button>
+                  <button id="btnTimeframe1Y" onclick="setTechnicalTimeframe('1Y')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">1Y</button>
+                </div>
+
+                <!-- Layer Toggles -->
+                <button id="toggleLayerSMA" onclick="toggleTechnicalLayer('sma')" class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-amber-300 bg-amber-50 text-amber-900 transition-all flex items-center gap-1.5 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span> <span>SMA 20/50/200</span>
+                </button>
+                <button id="toggleLayerBB" onclick="toggleTechnicalLayer('bollinger')" class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-sky-300 bg-sky-50 text-sky-900 transition-all flex items-center gap-1.5 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-sky-500"></span> <span>Bollinger (20,2)</span>
+                </button>
+                <button id="toggleLayerFib" onclick="toggleTechnicalLayer('fibonacci')" class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-purple-300 bg-purple-50 text-purple-900 transition-all flex items-center gap-1.5 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-purple-500"></span> <span>Fibonacci</span>
+                </button>
+                <button id="toggleLayerPattern" onclick="toggleTechnicalLayer('pattern')" class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-emerald-300 bg-emerald-50 text-emerald-900 transition-all flex items-center gap-1.5 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span> <span>Formasyon Hattı</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Main Technical Charts Area -->
+            <div class="space-y-3">
+              <!-- Price & Overlays Canvas -->
+              <div class="p-3 bg-slate-50/70 rounded-2xl border border-slate-200/80">
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200/60 text-xs">
+                  <div class="flex items-center gap-4">
+                    <span class="font-bold text-slate-800 font-mono text-sm" id="techCurrentPriceLabel">₺312,50</span>
+                    <span class="font-mono text-xs font-semibold text-emerald-600" id="techCurrentChangeLabel">+%3,82</span>
+                    <div class="hidden sm:flex items-center gap-3 text-[11px] text-slate-500 font-mono">
+                      <span><span class="inline-block w-2.5 h-0.5 bg-amber-500 mr-1"></span>SMA 20: <strong id="valSMA20" class="text-slate-700">304.20</strong></span>
+                      <span><span class="inline-block w-2.5 h-0.5 bg-sky-500 mr-1"></span>SMA 50: <strong id="valSMA50" class="text-slate-700">292.80</strong></span>
+                      <span><span class="inline-block w-2.5 h-0.5 bg-purple-500 mr-1"></span>SMA 200: <strong id="valSMA200" class="text-slate-700">268.40</strong></span>
+                    </div>
+                  </div>
+                  <div class="text-[10px] text-slate-400 font-mono hidden md:inline">Fiyat Trendi, Hareketli Ortalamalar ve Kırılım Seviyeleri</div>
+                </div>
+                <div class="relative h-72 sm:h-80 w-full">
+                  <canvas id="technicalPriceChart"></canvas>
+                </div>
+              </div>
+
+              <!-- Oscillator Sub-Chart -->
+              <div class="p-3 bg-slate-50/70 rounded-2xl border border-slate-200/80">
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200/60 text-xs">
+                  <!-- Oscillator Switcher -->
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase mr-1">OSİLATÖR:</span>
+                    <button id="btnOscRSI" onclick="setTechnicalOscillator('rsi')" class="px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 transition-all">RSI (14)</button>
+                    <button id="btnOscMACD" onclick="setTechnicalOscillator('macd')" class="px-2.5 py-0.5 rounded text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all">MACD (12,26,9)</button>
+                    <button id="btnOscStoch" onclick="setTechnicalOscillator('stoch')" class="px-2.5 py-0.5 rounded text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all">Stokastik</button>
+                  </div>
+                  <!-- Oscillator Status Badge -->
+                  <div id="techOscillatorStatus" class="font-mono text-xs font-bold text-emerald-600">RSI: 62.40 (Yükseliş Trendi)</div>
+                </div>
+                <div class="relative h-28 sm:h-32 w-full">
+                  <canvas id="technicalOscillatorChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Showcase Grid: Active Pattern (Left) & Technical Consensus / Pivots (Right) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              <!-- Active Pattern Card (Col 7) -->
+              <div class="lg:col-span-7 p-5 bg-gradient-to-br from-amber-500/5 via-white to-emerald-500/5 rounded-2xl border border-amber-200/70 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-amber-100">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-base border border-amber-200">
+                      <i class="fa-solid fa-shapes"></i>
+                    </div>
+                    <div>
+                      <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">TESPİT EDİLEN GRAFİK FORMASYONU</span>
+                      <h4 id="techPatternName" class="font-serif font-bold text-slate-900 text-base sm:text-lg">Fincan Kulp (Cup & Handle) Formasyonu</h4>
+                    </div>
+                  </div>
+                  <span id="techPatternBadge" class="px-3 py-1 rounded-full text-xs font-bold font-mono bg-emerald-100 text-emerald-800 border border-emerald-200 self-start sm:self-center">
+                    🟢 BOĞA KIRILIMI (BULLISH)
+                  </span>
+                </div>
+
+                <!-- 4 Level Metric Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+                  <div class="p-2.5 bg-white rounded-xl border border-slate-200/70 shadow-sm">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Kırılım / Giriş</span>
+                    <span id="techPatternBreakout" class="text-sm font-bold font-mono text-slate-900 block mt-0.5">₺308,00</span>
+                    <span class="text-[9px] text-slate-500 font-mono">Direnç Kırıldı</span>
+                  </div>
+                  <div class="p-2.5 bg-emerald-50/80 rounded-xl border border-emerald-200 shadow-sm">
+                    <span class="text-[9px] font-bold text-emerald-800 uppercase block">Formasyon Hedefi</span>
+                    <span id="techPatternTarget" class="text-sm font-bold font-mono text-emerald-700 block mt-0.5">₺348,00</span>
+                    <span id="techPatternTargetPot" class="text-[9px] text-emerald-600 font-mono font-bold">▲ +%11,3</span>
+                  </div>
+                  <div class="p-2.5 bg-rose-50/80 rounded-xl border border-rose-200 shadow-sm">
+                    <span class="text-[9px] font-bold text-rose-800 uppercase block">Stop-Loss (Zarar Kes)</span>
+                    <span id="techPatternStop" class="text-sm font-bold font-mono text-rose-700 block mt-0.5">₺296,00</span>
+                    <span id="techPatternStopRisk" class="text-[9px] text-rose-600 font-mono font-bold">▼ -%5,2</span>
+                  </div>
+                  <div class="p-2.5 bg-amber-50/80 rounded-xl border border-amber-200 shadow-sm">
+                    <span class="text-[9px] font-bold text-amber-800 uppercase block">Risk / Kazanç (R/R)</span>
+                    <span id="techPatternRR" class="text-sm font-bold font-mono text-amber-900 block mt-0.5">2.18x</span>
+                    <span class="text-[9px] text-amber-700 font-mono font-bold">Cazip Oran</span>
+                  </div>
+                </div>
+
+                <!-- Pattern Commentary -->
+                <p id="techPatternDesc" class="text-xs text-slate-600 leading-relaxed bg-white/70 p-3 rounded-xl border border-slate-100">
+                  Hisse grafiğinde oluşan Fincan Kulp formasyonu, direnç seviyesinin artan işlem hacmiyle yukarı kırılmasıyla tamamlanmıştır. Kulp derinliği kadar yükseliş projeksiyonu ₺348,00 seviyesini teknik hedef olarak öne çıkarmaktadır. ₺296,00 seviyesi kulp dip desteği olarak stop-loss takibi gerektirir.
+                </p>
+              </div>
+
+              <!-- Technical Consensus & Pivots (Col 5) -->
+              <div class="lg:col-span-5 p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-4 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                    <div>
+                      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">TEKNİK KONSENSÜS İBRESİ</span>
+                      <h4 class="font-bold text-slate-900 text-base">Algoritmik Sinyal Özeti</h4>
+                    </div>
+                    <div id="techOverallSignalBadge" class="px-3 py-1 rounded-full text-xs font-bold font-mono bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      GÜÇLÜ AL
+                    </div>
+                  </div>
+
+                  <!-- Count Bar -->
+                  <div class="my-3 space-y-1.5">
+                    <div class="flex justify-between text-xs font-mono">
+                      <span class="text-emerald-700 font-bold" id="techBuyCount">14 Alış</span>
+                      <span class="text-slate-500 font-semibold" id="techNeutralCount">4 Nötr</span>
+                      <span class="text-rose-700 font-bold" id="techSellCount">2 Satış</span>
+                    </div>
+                    <div class="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
+                      <div id="techBarBuy" class="bg-emerald-500 transition-all duration-500" style="width: 70%"></div>
+                      <div id="techBarNeutral" class="bg-amber-400 transition-all duration-500" style="width: 20%"></div>
+                      <div id="techBarSell" class="bg-rose-500 transition-all duration-500" style="width: 10%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pivot Points Matrix -->
+                <div class="space-y-1.5 pt-2 border-t border-slate-200">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">KLASİK PİVOT DESTEK & DİRENÇLER</span>
+                  <div class="grid grid-cols-5 gap-1.5 text-center font-mono text-[11px]">
+                    <div class="p-1.5 bg-rose-50 rounded-lg border border-rose-200">
+                      <div class="text-[9px] font-bold text-rose-600">S2 (Dip)</div>
+                      <div id="pivotS2" class="font-bold text-slate-800 mt-0.5">₺298.50</div>
+                    </div>
+                    <div class="p-1.5 bg-rose-50/50 rounded-lg border border-rose-100">
+                      <div class="text-[9px] font-bold text-rose-500">S1 (Destek)</div>
+                      <div id="pivotS1" class="font-bold text-slate-800 mt-0.5">₺305.20</div>
+                    </div>
+                    <div class="p-1.5 bg-amber-50 rounded-lg border border-amber-200 font-bold">
+                      <div class="text-[9px] text-amber-800">PİVOT (PP)</div>
+                      <div id="pivotPP" class="text-slate-900 mt-0.5">₺311.80</div>
+                    </div>
+                    <div class="p-1.5 bg-emerald-50/50 rounded-lg border border-emerald-100">
+                      <div class="text-[9px] font-bold text-emerald-600">R1 (Direnç)</div>
+                      <div id="pivotR1" class="font-bold text-slate-800 mt-0.5">₺318.50</div>
+                    </div>
+                    <div class="p-1.5 bg-emerald-50 rounded-lg border border-emerald-200">
+                      <div class="text-[9px] font-bold text-emerald-700">R2 (Tepe)</div>
+                      <div id="pivotR2" class="font-bold text-slate-800 mt-0.5">₺325.00</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Indicators Scorecard Table -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-list-check text-amber-600"></i>
+                  <h4 class="font-bold text-slate-900 text-sm sm:text-base">En Çok Kullanılan 10 Teknik Gösterge Tablosu</h4>
+                </div>
+                <span class="text-[11px] text-slate-400 font-mono">Canlı Algoritmik Değerler</span>
+              </div>
+
+              <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-100 text-slate-500 uppercase text-[10px] font-bold">
+                    <tr>
+                      <th class="py-2.5 px-3">Gösterge Adı</th>
+                      <th class="py-2.5 px-3">Kullanılan Periyot</th>
+                      <th class="py-2.5 px-3 font-mono">Hesaplanan Değer</th>
+                      <th class="py-2.5 px-3">Teknik Sinyal</th>
+                      <th class="py-2.5 px-3">Yorum & Açıklama</th>
+                    </tr>
+                  </thead>
+                  <tbody id="technicalIndicatorsTbody" class="divide-y divide-slate-100 font-sans">
+                    <!-- Populated dynamically by app.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- AI-Powered Technical Commentary Section (Requested specifically by user) -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                  <h4 class="font-bold text-slate-900 text-sm sm:text-base">Yapay Zeka Destekli Teknik Analiz Raporu & Uzman Yorumu</h4>
+                </div>
+                <span class="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-mono font-bold">OTOMATİK BÜLTEN</span>
+              </div>
+
+              <!-- Commentary Box -->
+              <div id="techAnalysisCommentary" class="p-5 bg-gradient-to-br from-amber-500/5 via-slate-50 to-emerald-500/5 rounded-2xl border border-amber-200/80 text-xs text-slate-700 space-y-3 leading-relaxed shadow-sm">
+                <!-- Dynamically generated text by app.js -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Middle Row: Financial Dynamics Chart (Left) + Solvency / Altman Z (Right) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Income Statement Chart (Col 8) -->
+            <div class="lg:col-span-8 utl-card p-6 flex flex-col justify-between">
+              <div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 class="font-bold text-slate-900 text-base">Finansal Gelir Tablosu Dinamikleri</h3>
+                    <p class="text-xs text-slate-400">Son 5 Çeyrek Konsolide Satış Gelirleri ve FAVÖK Büyümesi (Milyar TL)</p>
+                  </div>
+
+                  <!-- Toggle Buttons -->
+                  <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                    <button id="toggleQuarterly" class="px-3 py-1 rounded-md bg-amber-100 text-amber-900 font-bold transition-all">ÇEYREKLİK</button>
+                    <button id="toggleAnnual" class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">YILLIK (KÜMÜLATİF)</button>
+                  </div>
+                </div>
+
+                <!-- 3 Top Mini Metric Cards -->
+                <div class="grid grid-cols-3 gap-3 my-4">
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-[9px] text-slate-400 font-bold uppercase">YILLIK SATIŞ GELİRLERİ</div>
+                    <div id="stockAnnualRevenue" class="text-sm font-bold font-mono text-slate-900 mt-0.5">₺540.2 Mlr</div>
+                    <div class="text-[10px] text-emerald-600 font-semibold font-mono">▲ YoY Artış</div>
+                  </div>
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-[9px] text-slate-400 font-bold uppercase">FAVÖK (EBITDA)</div>
+                    <div id="stockAnnualFavok" class="text-sm font-bold font-mono text-slate-900 mt-0.5">₺138.8 Mlr</div>
+                    <div class="text-[10px] text-amber-700 font-semibold font-mono">Faaliyet Kârlılığı</div>
+                  </div>
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-[9px] text-slate-400 font-bold uppercase">KONSOLİDE NET KÂR</div>
+                    <div id="stockNetIncome" class="text-sm font-bold font-mono text-slate-900 mt-0.5">₺68.4 Mlr</div>
+                    <div class="text-[10px] text-emerald-600 font-semibold font-mono">★ Dönem Net Kârı</div>
+                  </div>
+                </div>
+
+                <!-- Chart Canvas -->
+                <div class="relative h-56 w-full">
+                  <canvas id="stockIncomeChart"></canvas>
+                </div>
+              </div>
+
+              <!-- Footer Legend -->
+              <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500">
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-sky-300 rounded"></span> <span>Satış Hasılatı</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-500 rounded"></span> <span>FAVÖK</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-emerald-500"></span> <span>FAVÖK Marjı (%)</span></div>
+                </div>
+                <div class="text-[10px] text-slate-400 font-mono">Konsolide IFRS / UFRS Tablosu</div>
+              </div>
+            </div>
+
+            <!-- Health & Altman Z Solvency (Col 4) -->
+            <div class="lg:col-span-4 utl-card p-6 flex flex-col justify-between space-y-4">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider">KURUMSAL SAĞLIK & İFLAS RİSKİ</span>
+                    <h3 class="font-bold text-slate-900 text-base">İleri Düzey Güvenilirlik Skorları</h3>
+                  </div>
+                  <i class="fa-solid fa-shield-halved text-amber-500 text-sm"></i>
+                </div>
+
+                <!-- Altman Z-Score -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700">ALTMAN Z-SCORE</span>
+                    <span id="stockAltmanZStatus" class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold font-mono text-xs">GÜVENLİ BÖLGE</span>
+                  </div>
+                  <div class="flex items-baseline gap-2">
+                    <span id="stockAltmanZScore" class="text-2xl font-bold font-mono text-slate-900">3.42</span>
+                    <span class="text-xs text-slate-400 font-mono">(&gt; 2.99 Güvenli)</span>
+                  </div>
+                  <!-- Progress Indicator -->
+                  <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden flex">
+                    <div class="w-[30%] bg-rose-400"></div>
+                    <div class="w-[30%] bg-amber-400"></div>
+                    <div class="w-[40%] bg-emerald-500"></div>
+                  </div>
+                  <p id="stockAltmanZDesc" class="text-[11px] text-slate-500 leading-relaxed">
+                    Şirketin kısa vadeli nakit ve işletme sermayesi yükümlülükleri iflas riski taşımamaktadır.
+                  </p>
+                </div>
+
+                <!-- Piotroski F-Score -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700">PIOTROSKI F-SCORE</span>
+                    <span id="stockPiotroskiStatus" class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-bold font-mono text-xs">GÜÇLÜ İYİLEŞME</span>
+                  </div>
+                  <div class="flex items-baseline gap-2">
+                    <span id="stockPiotroskiScore" class="text-2xl font-bold font-mono text-slate-900">8 <span class="text-xs text-slate-400">/ 9</span></span>
+                    <span class="text-xs text-emerald-600 font-semibold">Kurumsal Skor</span>
+                  </div>
+                  <!-- 9-segment score bar -->
+                  <div class="segmented-score-bar" id="stockPiotroskiBar">
+                    <div class="segment active"></div>
+                    <div class="segment active"></div>
+                    <div class="segment active"></div>
+                    <div class="segment active"></div>
+                    <div class="segment active"></div>
+                    <div class="segment active"></div>
+                    <div class="segment active"></div>
+                    <div class="segment active"></div>
+                    <div class="segment"></div>
+                  </div>
+                  <p id="stockPiotroskiDesc" class="text-[11px] text-slate-500 leading-relaxed">
+                    Kârlılık, kaldıraç verimliliği ve operasyonel nakit akışı parametreleri tepe noktada.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Blue Quote Callout -->
+              <div class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-start gap-2.5 text-xs text-blue-900 font-medium">
+                <i class="fa-solid fa-paper-plane text-blue-600 mt-0.5"></i>
+                <span>Hisse başına net nakit akışı son 3 yılda %180 bileşik artış sergiledi.</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Next Row: 3 Kademeli DuPont Analizi (Left) + Analist Notu (Right) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- DuPont Analysis (Col 7) -->
+            <div class="lg:col-span-7 utl-card p-6 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-slate-900 text-base">3 Kademeli DuPont Analizi Dağılımı</h3>
+                    <span class="text-[10px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-mono font-bold">MİMARİ AYRIŞTIRMA</span>
+                  </div>
+                  <p class="text-xs text-slate-400">Özsermaye Kârlılığını (%28.4 ROE) Oluşturan Temel Finansal Dinamikler</p>
+                </div>
+              </div>
+
+              <!-- 3 Component Cards -->
+              <div class="grid grid-cols-3 gap-3">
+                <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+                    <span>NET KÂR MARJI</span>
+                    <i class="fa-solid fa-percent text-slate-400"></i>
+                  </div>
+                  <div id="dupontNetMargin" class="text-lg font-bold font-mono text-slate-900">%12.66</div>
+                  <div class="text-[10px] text-slate-500">Net Kâr / Satışlar</div>
+                  <div class="text-[10px] text-emerald-600 font-semibold">Kârlılık Verimliliği</div>
+                </div>
+
+                <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+                    <span>AKTİF DEVİR HIZI</span>
+                    <i class="fa-solid fa-rotate text-slate-400"></i>
+                  </div>
+                  <div id="dupontAssetTurnover" class="text-lg font-bold font-mono text-slate-900">1.12x</div>
+                  <div class="text-[10px] text-slate-500">Satışlar / Toplam Varlık</div>
+                  <div class="text-[10px] text-blue-600 font-semibold">Hızlı Varlık Verimliliği</div>
+                </div>
+
+                <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+                    <span>KALDIRAÇ ÇARPANI</span>
+                    <i class="fa-solid fa-arrows-split-up-and-left text-slate-400"></i>
+                  </div>
+                  <div id="dupontLeverage" class="text-lg font-bold font-mono text-slate-900">2.00x</div>
+                  <div class="text-[10px] text-slate-500">Toplam Varlık / Özkaynak</div>
+                  <div class="text-[10px] text-amber-700 font-semibold">Kontrollü Borçluluk Oranı</div>
+                </div>
+              </div>
+
+              <!-- Formula Banner -->
+              <div class="p-3 bg-blue-50/60 border border-blue-200/80 rounded-xl flex items-center justify-between text-xs font-mono text-slate-800">
+                <span class="text-slate-500 font-sans font-medium">DuPont Bağıntısı:</span>
+                <span id="dupontEquation" class="font-bold">
+                  %12.66 (Net Marj) × 1.12 (Devir Hızı) × 2.00 (Kaldıraç) = <span class="text-emerald-700 font-bold">%28.4 ROE</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Analyst Research Note (Col 5) -->
+            <div class="lg:col-span-5 utl-card p-6 flex flex-col justify-between space-y-4">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider">UTL ARAŞTIRMA MASASI</span>
+                    <h3 class="font-bold text-slate-900 text-base">Bilanço Analist Notu</h3>
+                  </div>
+                  <i class="fa-solid fa-landmark text-amber-500 text-sm"></i>
+                </div>
+
+                <p id="analystNoteSummary" class="text-xs text-slate-600 leading-relaxed">
+                  THYAO, 2024/09 döneminde güçlü yolcu doluluk oranları (%85.3) ve kargo operasyonlarının marj katkısıyla beklentilerin %12 üzerinde kâr açıkladı. Para girişi ve vadeli nakit akışı pozisyonu borç geri ödemelerini destekleyerek Net Borç/FAVÖK oranını 1.12 seviyesine çekti.
+                </p>
+
+                <!-- Yellow Callout for Risk & Opportunity -->
+                <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1">
+                  <div class="text-xs font-bold text-amber-900">Öne Çıkan Risk & Fırsat:</div>
+                  <p id="analystNoteRiskOpp" class="text-[11px] text-slate-600 leading-relaxed">
+                    Küresel havacılık tedarik zincirindeki motor bakım gecikmeleri kapasite artışını sınırlasa da, 2033 filo genişleme vizyonu ve yeni kargo rotaları değerlemeyi yukarı taşımaktadır.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Analyst Signature -->
+              <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-[10px]">
+                    EK
+                  </div>
+                  <span class="font-bold text-slate-800">Emre Karadağ, CFA</span>
+                </div>
+                <div id="analystNoteDate" class="text-[10px] text-slate-400 font-mono">GÜNCEL DÜN 16:30</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Table: Bilanço & Gelir Tablosu Çeyreklik Kırılımı -->
+          <div class="utl-card p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Bilanço & Gelir Tablosu Çeyreklik Kırılımı</h3>
+                <p class="text-xs text-slate-400">Tüm veriler Milyon Türk Lirası (TRY) cinsindendir.</p>
+              </div>
+
+              <!-- Search Filter in Table -->
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <input 
+                    type="text" 
+                    id="incomeStatementSearch" 
+                    placeholder="Kalem ara..." 
+                    class="pl-3 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-amber-500"
+                  >
+                  <i class="fa-solid fa-magnifying-glass absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                </div>
+                <button class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                  <i class="fa-solid fa-filter text-slate-500"></i>
+                  <span>Filtrele</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Detailed Statement Table -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+              <table class="utl-table">
+                <thead>
+                  <tr>
+                    <th>BİLANÇO VE GELİR KALEMİ</th>
+                    <th class="text-right">2024/09 (3Ç)</th>
+                    <th class="text-right">2024/06 (2Ç)</th>
+                    <th class="text-right">2023/09 (3Ç)</th>
+                    <th class="text-right">YOY DEĞİŞİM</th>
+                    <th class="text-center">TREND</th>
+                  </tr>
+                </thead>
+                <tbody id="stockBreakdownTbody">
+                  <tr class="income-statement-row">
+                    <td class="font-medium text-slate-900 flex items-center gap-2">
+                      <i class="fa-solid fa-coins text-amber-500"></i> Toplam Dönen Varlıklar
+                    </td>
+                    <td class="text-right font-mono font-bold text-slate-900">₺218.420 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺192.110 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺154.300 Mn</td>
+                    <td class="text-right font-mono font-bold text-emerald-600">+%41,5</td>
+                    <td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono font-bold text-[10px]">YÜKSELİŞ</span></td>
+                  </tr>
+                  <tr class="income-statement-row">
+                    <td class="font-medium text-slate-900 flex items-center gap-2">
+                      <i class="fa-solid fa-warehouse text-slate-500"></i> Duran Varlıklar (Filo & Tesisler)
+                    </td>
+                    <td class="text-right font-mono font-bold text-slate-900">₺592.830 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺548.200 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺420.150 Mn</td>
+                    <td class="text-right font-mono font-bold text-emerald-600">+%41,1</td>
+                    <td class="text-center"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono font-bold text-[10px]">SABİT</span></td>
+                  </tr>
+                  <tr class="income-statement-row">
+                    <td class="font-medium text-slate-900 flex items-center gap-2">
+                      <i class="fa-solid fa-credit-card text-rose-500"></i> Kısa Vadeli Yükümlülükler
+                    </td>
+                    <td class="text-right font-mono font-bold text-slate-900">₺178.640 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺165.400 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺132.800 Mn</td>
+                    <td class="text-right font-mono font-bold text-slate-600">+%34,5</td>
+                    <td class="text-center"><span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-mono font-bold text-[10px]">NORMAL</span></td>
+                  </tr>
+                  <tr class="income-statement-row">
+                    <td class="font-medium text-slate-900 flex items-center gap-2">
+                      <i class="fa-solid fa-vault text-amber-600"></i> Toplam Özkaynaklar
+                    </td>
+                    <td class="text-right font-mono font-bold text-slate-900">₺384.950 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺330.120 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺265.440 Mn</td>
+                    <td class="text-right font-mono font-bold text-emerald-600">+%45,0</td>
+                    <td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono font-bold text-[10px]">GÜÇLÜ</span></td>
+                  </tr>
+                  <tr class="income-statement-row">
+                    <td class="font-medium text-slate-900 flex items-center gap-2">
+                      <i class="fa-solid fa-chart-simple text-blue-500"></i> Net Satış Hasılatı
+                    </td>
+                    <td class="text-right font-mono font-bold text-slate-900">₺211.200 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺172.900 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺148.700 Mn</td>
+                    <td class="text-right font-mono font-bold text-emerald-600">+%42,0</td>
+                    <td class="text-center"><span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-[10px]">LİDER</span></td>
+                  </tr>
+                  <tr class="income-statement-row">
+                    <td class="font-medium text-slate-900 flex items-center gap-2">
+                      <i class="fa-solid fa-trophy text-amber-500"></i> Dönem Net Kârı
+                    </td>
+                    <td class="text-right font-mono font-bold text-slate-900">₺32.480 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺19.850 Mn</td>
+                    <td class="text-right font-mono text-slate-600">₺24.200 Mn</td>
+                    <td class="text-right font-mono font-bold text-emerald-600">+%34,2</td>
+                    <td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-bold text-[10px]">REKOR</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table Subfooter -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 pt-2">
+              <div>Finansal dipnotlar ve IFRS - 16 kiralama düzeltmeleri konsolide tablolara dahil edilmiştir.</div>
+              <button onclick="showToast('Tüm 40 çeyrek bilanço veri arşivi yüklendi.')" class="text-amber-700 hover:text-amber-800 font-bold flex items-center gap-1">
+                <span>Tüm 40 Çeyreği Görüntüle</span>
+                <i class="fa-solid fa-arrow-right text-[11px]"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- ====================================================================
+               KAP RESMİ ŞİRKET BİLGİLERİ & BİLDİRİMLER AKIŞI
+               ==================================================================== -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left: KAP Resmi Kurumsal Kimlik Kartı (Col 5) -->
+            <div class="lg:col-span-5 utl-card p-6 flex flex-col justify-between space-y-4">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider">KAMUYU AYDINLATMA PLATFORMU</span>
+                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                      <span>KAP Resmi Şirket Profili</span>
+                      <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-mono text-[10px] font-bold border border-emerald-200">
+                        <i class="fa-solid fa-circle-check text-[9px] mr-1"></i>Doğrulandı
+                      </span>
+                    </h3>
+                  </div>
+                  <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+                    <i class="fa-solid fa-landmark"></i>
+                  </div>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                  <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase">KAP Resmi Ticari Ünvan</div>
+                    <div id="kapDetailTitle" class="font-bold text-slate-800 text-sm mt-0.5 leading-snug">TÜRK HAVA YOLLARI A.O.</div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                      <div class="text-[10px] text-slate-400 font-semibold uppercase">Ödenmiş Sermaye</div>
+                      <div id="kapDetailPaidCapital" class="font-bold font-mono text-slate-900 text-sm mt-0.5">₺1.38 Mlr</div>
+                    </div>
+                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                      <div class="text-[10px] text-slate-400 font-semibold uppercase">Kayıtlı Sermaye Tavanı</div>
+                      <div id="kapDetailCapitalCeiling" class="font-bold font-mono text-slate-900 text-sm mt-0.5">₺10.00 Mlr</div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                      <div class="text-[10px] text-slate-400 font-semibold uppercase">Merkez & Şehir</div>
+                      <div id="kapDetailCity" class="font-bold text-slate-800 mt-0.5 truncate">İSTANBUL</div>
+                    </div>
+                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                      <div class="text-[10px] text-slate-400 font-semibold uppercase">Borsa Kodu & Sektör</div>
+                      <div id="kapDetailSector" class="font-bold text-slate-800 mt-0.5 truncate">Ulaştırma & Havacılık</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase">Bağımsız Denetim Şirketi (Auditor)</div>
+                    <div id="kapDetailAuditor" class="font-semibold text-slate-700 text-xs mt-0.5">PwC BAĞIMSIZ DENETİM VE SERBEST MUHASEBECİ MALİ MÜŞAVİRLİK A.Ş</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- KAP Action Footer -->
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 text-xs">
+                <a id="kapDetailExternalLink" href="https://www.kap.org.tr" target="_blank" class="text-amber-700 hover:text-amber-800 font-bold flex items-center gap-1.5 transition-colors">
+                  <span>KAP.org.tr Resmi Sayfası</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+                <button id="kapRefreshBtn" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold text-xs transition-colors flex items-center gap-1.5" onclick="refreshLiveKapDisclosures()">
+                  <i class="fa-solid fa-rotate text-[11px]"></i>
+                  <span>KAP'tan Canlı Güncelle</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right: KAP Son Bildirimler Akışı (Col 7) -->
+            <div class="lg:col-span-7 utl-card p-6 flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider">BİLDİRİM & FAALİYET AKIŞI</span>
+                    <h3 class="font-bold text-slate-900 text-base">KAP Canlı Bildirimleri</h3>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-slate-400 font-mono">Son Bildirimler</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  </div>
+                </div>
+
+                <!-- Disclosures List Container -->
+                <div id="kapDisclosuresContainer" class="space-y-3 mt-4 max-h-[300px] overflow-y-auto pr-1">
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
+
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                <span>Veri Kaynağı: MKK / Kamuyu Aydınlatma Platformu (KAP)</span>
+                <span class="text-emerald-600 font-medium font-mono"><i class="fa-solid fa-shield-halved mr-1"></i>Resmi KAP Akışı</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ====================================================================
+               YAPAY ZEKA DESTEKLİ FİNANSAL PROJEKSİYON & GELECEK TAHMİN MODELİ
+               ==================================================================== -->
+          <div class="utl-card p-6 space-y-6">
+            
+            <!-- Section Title -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 uppercase">QUANT FORECASTING v4.2</span>
+                  <h3 class="text-xl font-serif font-bold text-slate-900">Yapay Zeka & Kantitatif Finansal Projeksiyon</h3>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">KAP mali tabloları, sektörel çarpanlar ve makroekonomik beklentilerle modellenen 3 yıllık finansal projeksiyon.</p>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-right">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">İNA (DCF) ADİL DEĞERİ</div>
+                  <div id="projDcfValue" class="text-base font-bold font-mono text-slate-900">₺420,00</div>
+                </div>
+                <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-right">
+                  <div class="text-[10px] text-amber-800 font-bold uppercase">12A MODEL POTANSİYELİ</div>
+                  <div id="projModelPotential" class="text-base font-bold font-mono text-emerald-600">▲ +%34,4</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3 Years Projections Metric Cards Table -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              <!-- 2025T -->
+              <div class="p-4 rounded-xl bg-gradient-to-br from-slate-50 to-amber-50/30 border border-slate-200/80 space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                  <span class="font-bold text-sm text-slate-900">2025 Yılı Projeksiyonu (T)</span>
+                  <span id="projGrowth2025" class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono font-bold text-xs">+%38 YoY</span>
+                </div>
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini Satış Geliri:</span>
+                    <strong id="projRev2025" class="font-mono text-slate-900 text-sm font-bold">₺745.5 Mlr</strong>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini FAVÖK:</span>
+                    <strong id="projFav2025" class="font-mono text-amber-800 text-sm font-bold">₺197.1 Mlr</strong>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini Net Kâr:</span>
+                    <strong id="projNet2025" class="font-mono text-emerald-700 text-sm font-bold">₺114.3 Mlr</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2026T -->
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                  <span class="font-bold text-sm text-slate-900">2026 Yılı Projeksiyonu (T)</span>
+                  <span id="projGrowth2026" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-mono font-bold text-xs">+%26 YoY</span>
+                </div>
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini Satış Geliri:</span>
+                    <strong id="projRev2026" class="font-mono text-slate-900 text-sm font-bold">₺939.3 Mlr</strong>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini FAVÖK:</span>
+                    <strong id="projFav2026" class="font-mono text-amber-800 text-sm font-bold">₺252.3 Mlr</strong>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini Net Kâr:</span>
+                    <strong id="projNet2026" class="font-mono text-emerald-700 text-sm font-bold">₺151.4 Mlr</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2027T -->
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                  <span class="font-bold text-sm text-slate-900">2027 Yılı Projeksiyonu (T)</span>
+                  <span id="projGrowth2027" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-mono font-bold text-xs">+%20 YoY</span>
+                </div>
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini Satış Geliri:</span>
+                    <strong id="projRev2027" class="font-mono text-slate-900 text-sm font-bold">₺1.127 Mlr</strong>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini FAVÖK:</span>
+                    <strong id="projFav2027" class="font-mono text-amber-800 text-sm font-bold">₺302.7 Mlr</strong>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-600">
+                    <span>Tahmini Net Kâr:</span>
+                    <strong id="projNet2027" class="font-mono text-emerald-700 text-sm font-bold">₺187.7 Mlr</strong>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Middle Row: Projections Chart (Left) + 3 Scenario Analysis (Right) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              <!-- Projections Dynamics Chart (Col 7) -->
+              <div class="lg:col-span-7 p-4 bg-slate-50/70 rounded-xl border border-slate-200 space-y-3">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-bold text-slate-900 text-sm">Hasılat Gerçekleşme & Gelecek Projeksiyon Trendi</h4>
+                    <p class="text-[11px] text-slate-400">Son Çeyrekler vs. Gelecek Çeyrek Modellenen Büyüme (Milyar ₺)</p>
+                  </div>
+                  <div class="flex items-center gap-3 text-xs">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500"></span><span class="text-slate-600">Gerçekleşen</span></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-500"></span><span class="text-slate-600">Projeksiyon</span></span>
+                  </div>
+                </div>
+                <div class="relative h-60 w-full">
+                  <canvas id="stockProjectionChart"></canvas>
+                </div>
+              </div>
+
+              <!-- 3 Scenarios Valuation (Col 5) -->
+              <div class="lg:col-span-5 space-y-3 flex flex-col justify-between">
+                <div class="space-y-3">
+                  <div class="text-xs font-bold text-slate-700 uppercase tracking-wider">3 Senaryolu Değerleme Matrisi</div>
+                  
+                  <!-- Bull Case -->
+                  <div class="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="font-bold text-emerald-800 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> İyimser Senaryo (Boğa)</span>
+                      <span id="projBullPot" class="font-mono font-bold text-emerald-700">+%55,0</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                      <span id="projBullPrice" class="text-lg font-bold font-mono text-slate-900">₺484,00</span>
+                      <span class="text-[10px] text-slate-500">Hedef Fiyat</span>
+                    </div>
+                    <p id="projBullDesc" class="text-[11px] text-slate-600 leading-tight">Yüksek kapasite kullanımı, ihracat genişlemesi ve rekor kâr marjları.</p>
+                  </div>
+
+                  <!-- Base Case -->
+                  <div class="p-3 bg-amber-50/60 border border-amber-200 rounded-xl space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="font-bold text-amber-900 flex items-center gap-1"><i class="fa-solid fa-scale-balanced"></i> Baz Senaryo (Piyasa Konsensüsü)</span>
+                      <span id="projBasePot" class="font-mono font-bold text-amber-700">+%32,0</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                      <span id="projBasePrice" class="text-lg font-bold font-mono text-slate-900">₺412,00</span>
+                      <span class="text-[10px] text-slate-500">Hedef Fiyat</span>
+                    </div>
+                    <p id="projBaseDesc" class="text-[11px] text-slate-600 leading-tight">Mevcut dezenflasyon trendi ve makro büyüme takvimi doğrultusunda.</p>
+                  </div>
+
+                  <!-- Bear Case -->
+                  <div class="p-3 bg-rose-50/60 border border-rose-200 rounded-xl space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="font-bold text-rose-800 flex items-center gap-1"><i class="fa-solid fa-shield"></i> Kötümser Senaryo (Ayı / Dip Desteği)</span>
+                      <span id="projBearPot" class="font-mono font-bold text-rose-700">-%5,0</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                      <span id="projBearPrice" class="text-lg font-bold font-mono text-slate-900">₺296,00</span>
+                      <span class="text-[10px] text-slate-500">Kritik Destek</span>
+                    </div>
+                    <p id="projBearDesc" class="text-[11px] text-slate-600 leading-tight">Finansman maliyeti artışı, kur oynaklığı ve iç talepte yavaşlama.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Interactive Projection Simulator Tool -->
+            <div class="p-5 bg-gradient-to-r from-amber-500/10 via-amber-600/5 to-slate-100 rounded-2xl border border-amber-200/80 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-amber-600"></i>
+                    <h4 class="font-bold text-slate-900 text-sm sm:text-base">Kişiselleştirilmiş Projeksiyon Simülatörü</h4>
+                  </div>
+                  <p class="text-xs text-slate-500">Kendi büyüme ve kârlılık varsayımlarınızı girerek anlık model hedef fiyatını hesaplayın.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="resetSimulation()" class="px-2.5 py-1 rounded bg-white border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors">Sıfırla</button>
+                </div>
+              </div>
+
+              <!-- Sliders Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <!-- Growth Slider -->
+                <div class="space-y-2">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="font-semibold text-slate-700">Beklenen Yıllık Satış Büyümesi:</span>
+                    <span id="simGrowthLabel" class="font-mono font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">%35</span>
+                  </div>
+                  <input id="simGrowthInput" type="range" min="10" max="80" value="35" class="w-full accent-amber-600 cursor-pointer" oninput="updateSimulation()">
+                  <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                    <span>%10 (Defansif)</span>
+                    <span>%45 (Dengeli)</span>
+                    <span>%80 (Agresif)</span>
+                  </div>
+                </div>
+
+                <!-- Margin Slider -->
+                <div class="space-y-2">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="font-semibold text-slate-700">Hedef FAVÖK Marjı:</span>
+                    <span id="simMarginLabel" class="font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">%24</span>
+                  </div>
+                  <input id="simMarginInput" type="range" min="5" max="45" value="24" class="w-full accent-emerald-600 cursor-pointer" oninput="updateSimulation()">
+                  <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                    <span>%5 (Sıkışık)</span>
+                    <span>%25 (Standart)</span>
+                    <span>%45 (Yüksek Katma Değer)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live Simulation Result Bar -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-amber-200/50">
+                <div class="p-2.5 bg-white rounded-xl border border-slate-200/80">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">Simüle Edilen Ciro</div>
+                  <div id="simResRevenue" class="text-base font-bold font-mono text-slate-900 mt-0.5">₺729.2 Mlr</div>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-200/80">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">Simüle Edilen FAVÖK</div>
+                  <div id="simResFavok" class="text-base font-bold font-mono text-amber-800 mt-0.5">₺175.0 Mlr</div>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-200/80">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">Simülasyon Hedef Fiyat</div>
+                  <div id="simResTarget" class="text-base font-bold font-mono text-slate-900 mt-0.5">₺415,00</div>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-emerald-200">
+                  <div class="text-[10px] text-emerald-700 font-bold uppercase">Simülasyon Getirisi</div>
+                  <div id="simResPotential" class="text-base font-bold font-mono text-emerald-600 mt-0.5 font-bold">▲ +%32,8</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         VIEW 3: PORTFÖY & MODEL PORTFÖY (Strategy Engine - Screen 3)
+         ==================================================================== -->
+    <div id="view-portfolio" class="view-panel">
+      <div class="flex flex-col lg:flex-row min-h-screen">
+        
+        <!-- Left Terminal Sidebar (Matches Screen 3) -->
+        <aside class="w-full lg:w-64 bg-white border-r border-slate-200 flex flex-col justify-between p-4 flex-shrink-0">
+          <div class="space-y-6">
+            <div class="flex items-center gap-2 pb-4 border-b border-slate-100">
+              <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-serif font-bold text-base shadow-sm">
+                U
+              </div>
+              <div>
+                <div class="font-serif font-bold text-sm tracking-wide text-slate-900">UTL FİNANS</div>
+                <div class="text-[9px] font-mono font-semibold tracking-wider text-amber-700 uppercase">TERMINAL</div>
+              </div>
+            </div>
+
+            <!-- Portfolio Value -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PORTFÖY DEĞERİ</div>
+              <div class="text-xl font-bold font-mono text-slate-900">₺1.428.950</div>
+              <div class="text-xs text-emerald-600 font-bold font-mono">▲ %11.2</div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1 font-sans text-xs font-medium">
+              <a href="#overview" data-view-target="overview" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-table-columns text-slate-400 w-4"></i>
+                <span>Genel Bakış & Piyasalar</span>
+              </a>
+              <a href="#stock-detail" data-view-target="stock-detail" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-chart-column text-slate-400 w-4"></i>
+                <span>Hisse & Bilanço Analizi</span>
+              </a>
+              <a href="#reports" data-view-target="reports" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-book-bookmark text-slate-400 w-4"></i>
+                <span>Sektörel Raporlar</span>
+              </a>
+              <a href="#portfolio" data-view-target="portfolio" class="sidebar-nav-item sidebar-link-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-briefcase text-amber-600 w-4"></i>
+                <span>Portföy & Model Portföy</span>
+              </a>
+              <a href="#reports" data-view-target="reports" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-microchip text-slate-400 w-4"></i>
+                <span>Yapay Zeka Bülten</span>
+              </a>
+            </nav>
+          </div>
+
+          <!-- Bottom User Card -->
+          <div class="pt-4 border-t border-slate-100 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-slate-900 border border-amber-500/80 text-white flex items-center justify-center font-bold text-xs">
+              CG
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-900">Can Güner</div>
+              <div class="text-[10px] text-amber-700 font-mono font-semibold">UTL PRO ÜYE</div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Main Portfolio Strategy Engine -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1300px]">
+          
+          <!-- Terminal Top Bar with Search & BIST Status (Matches Screenshot 3) -->
+          <div class="flex items-center justify-between gap-4 pb-4 border-b border-slate-200">
+            <div class="relative flex-1 max-w-xl">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input 
+                type="text" 
+                placeholder="Hisse senedi, fon, endeks veya şirket ara (Örn: THYAO, EREGL)..." 
+                class="global-search-input w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-sans"
+              >
+            </div>
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>BIST Seansı: Açık</span>
+              </div>
+              <button class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center relative transition-colors" onclick="showToast('Okunmamış bildirim bulunmuyor.')">
+                <i class="fa-regular fa-bell text-xs"></i>
+                <span class="w-2 h-2 rounded-full bg-amber-500 absolute top-1.5 right-1.5"></span>
+              </button>
+              <button class="gold-btn px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-crown text-[10px]"></i>
+                <span>UTL PRO</span>
+              </button>
+              <div class="w-8 h-8 rounded-full bg-slate-900 border border-amber-500/80 text-white flex items-center justify-center text-xs font-bold cursor-pointer hover:ring-2 hover:ring-amber-500/20 transition-all select-none" title="Can Güner">
+                CG
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Algorithmic Strategy Banner -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <div class="inline-flex items-center gap-2 text-xs font-semibold text-amber-800">
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                <span>CANLI ALGORİTMİK STRATEJİ • BIST 30 Alpha Stratejisi Q1</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">
+                İsviçre varlık yönetimi standartlarında kantitatif risk optimizasyonu ve rebalancing motoru.
+              </p>
+            </div>
+
+            <!-- Header Action Buttons -->
+            <div class="flex items-center gap-2.5">
+              <button class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-2" onclick="showToast('Kurumsal Model Portföy Değerleme Raporu oluşturuldu.')">
+                <i class="fa-solid fa-file-invoice"></i>
+                <span>Özel Rapor Oluştur</span>
+              </button>
+              <button class="gold-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2" onclick="showToast('Aracı kurum API entegrasyonu modalı açılıyor...')">
+                <i class="fa-solid fa-link"></i>
+                <span>Kendi Portföyünü Bağla</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Performance & Risk Indicators Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Outperformance Area Chart (Col 8) -->
+            <div class="lg:col-span-8 utl-card p-6 flex flex-col justify-between">
+              <div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                  <div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">UTL DİNAMİK MODEL BÜYÜKLÜĞÜ</span>
+                    <div class="flex items-baseline gap-3 mt-1">
+                      <span class="text-3xl font-mono font-bold text-slate-900">₺1.250.000</span>
+                      <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono font-bold text-xs">▲ +%84,6 Yıllık</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-1">
+                      BIST 100 Karşılaştırması: <strong class="text-slate-800 font-mono">+%51,2</strong> | Net Alpha: <strong class="text-emerald-600 font-mono">▲ +%33,4</strong>
+                    </div>
+                  </div>
+
+                  <!-- Time Filters -->
+                  <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                    <button class="port-timeframe-btn px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 font-bold transition-all">1Y</button>
+                    <button class="port-timeframe-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">YTD</button>
+                    <button class="port-timeframe-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">3Y</button>
+                    <button class="port-timeframe-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">TÜMÜ</button>
+                  </div>
+                </div>
+
+                <!-- Canvas Area Chart -->
+                <div class="relative h-60 w-full my-4">
+                  <canvas id="portfolioPerformanceChart"></canvas>
+                </div>
+              </div>
+
+              <!-- Footer Legend -->
+              <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500">
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-500 rounded"></span> <span>UTL MODEL PORTFÖY</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-slate-400 rounded"></span> <span>BIST 100 ENDEKSİ</span></div>
+                </div>
+                <div class="text-[10px] text-slate-400 font-mono">GÜNCEL VERİ: 16:45 TSİ</div>
+              </div>
+            </div>
+
+            <!-- 3 Risk Metrics (Col 4) -->
+            <div class="lg:col-span-4 space-y-4">
+              
+              <!-- Sharpe Ratio -->
+              <div class="utl-card p-5 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">SHARPE ORANI</span>
+                  <i class="fa-solid fa-scale-balanced text-amber-500 text-xs"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-mono font-bold text-slate-900">2.14</span>
+                  <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded">Olağanüstü Risk Primi</span>
+                </div>
+                <p class="text-xs text-slate-400">Sektör medyanı: 1.18 | Sınıfının en iyisi</p>
+              </div>
+
+              <!-- Drawdown -->
+              <div class="utl-card p-5 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">MAKSİMUM KAYIP (DRAWDOWN)</span>
+                  <i class="fa-solid fa-chart-line-down text-blue-500 text-xs"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-mono font-bold text-slate-900">-%9.8</span>
+                  <span class="text-xs bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded">Kontrollü Dip Riski</span>
+                </div>
+                <p class="text-xs text-slate-400">BIST 100 Maks. Kayıp: -%22.4</p>
+              </div>
+
+              <!-- Beta -->
+              <div class="utl-card p-5 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">PORTFÖY BETA KATSAYISI</span>
+                  <i class="fa-solid fa-shield-virus text-amber-500 text-xs"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-mono font-bold text-slate-900">0.88</span>
+                  <span class="text-xs bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded">Düşük Oynaklık Kalkanı</span>
+                </div>
+                <p class="text-xs text-slate-400">Piyasa hareketlerine karşı %12 defansif tampon</p>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- AI Algorithmic Rebalancing Signal Banner -->
+          <div class="p-6 rounded-2xl bg-gradient-to-r from-amber-50/90 via-amber-50/50 to-white border-2 border-amber-300 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-3.5">
+              <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 text-lg shadow-md shadow-amber-500/20">
+                <i class="fa-regular fa-lightbulb"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded font-mono font-bold uppercase">YAPAY ZEKA SİNYALİ</span>
+                  <span class="text-xs font-bold text-amber-900 uppercase tracking-wider">ALGORİTMİK DENGELEME ÖNERİSİ</span>
+                </div>
+                <h4 class="text-sm font-bold text-slate-900">
+                  Ocak Ayı Dengelemesi: THYAO ağırlığının kâr satışı ile %20'ye çekilip, iskontolu kalan SISE hissesine aktarılması önerilmektedir.
+                </h4>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  Gerekçe: Ulaştırma çarpanları tarihsel zirveye yaklaştı. SISE cam ambalaj marjları toparlanırken net aktif değer iskontosu %38 seviyesinde cazip fırsat sunuyor.
+                </p>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2.5 flex-shrink-0">
+              <button class="open-rebalance-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors">
+                Simülasyonu İncele
+              </button>
+              <button class="open-rebalance-btn gold-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Dengelemeyi Uygula</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Donut Asset Distribution (Left) + Holdings Table (Right) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Asset & Sector Allocation Donut (Col 4) -->
+            <div class="lg:col-span-4 utl-card p-6 flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 class="font-bold text-slate-900 text-base">Varlık & Sektör Dağılımı</h3>
+                    <p class="text-[10px] text-slate-400 font-mono uppercase">OPTİMAL PORTFÖY KOMPOZİSYONU</p>
+                  </div>
+                  <i class="fa-solid fa-chart-pie text-slate-400 text-sm"></i>
+                </div>
+
+                <!-- Donut Canvas Container -->
+                <div class="relative h-48 w-full my-4 flex items-center justify-center">
+                  <canvas id="portfolioDonutChart"></canvas>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                    <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">AKTİF AĞIRLIK</span>
+                    <span class="text-base font-bold text-slate-900">5 Sektör</span>
+                    <span class="text-[10px] text-emerald-600 font-bold">%100 Dolu</span>
+                  </div>
+                </div>
+
+                <!-- Slices Breakdown Legend -->
+                <div class="space-y-2 text-xs">
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded bg-[#C59B27]"></span>
+                      <span class="font-medium text-slate-800">Ulaştırma & Lojistik</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="font-mono font-bold text-slate-900">%25,0</span>
+                      <span class="text-[10px] text-slate-400 font-mono block">₺312.500</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded bg-[#1E293B]"></span>
+                      <span class="font-medium text-slate-800">Bankacılık & Finans</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="font-mono font-bold text-slate-900">%20,0</span>
+                      <span class="text-[10px] text-slate-400 font-mono block">₺250.000</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded bg-[#10B981]"></span>
+                      <span class="font-medium text-slate-800">Enerji & İklim</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="font-mono font-bold text-slate-900">%20,0</span>
+                      <span class="text-[10px] text-slate-400 font-mono block">₺250.000</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded bg-[#64748B]"></span>
+                      <span class="font-medium text-slate-800">Sanayi & Holding</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="font-mono font-bold text-slate-900">%20,0</span>
+                      <span class="text-[10px] text-slate-400 font-mono block">₺250.000</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded bg-[#93C5FD]"></span>
+                      <span class="font-medium text-slate-800">Nakit & Para Piyasası</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="font-mono font-bold text-slate-900">%15,0</span>
+                      <span class="text-[10px] text-slate-400 font-mono block">₺187.500</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer Badge -->
+              <div class="p-2.5 bg-blue-50/60 border border-blue-200/80 rounded-xl text-center text-xs font-semibold text-blue-900">
+                Hedef Beta Aralığı: <span class="font-mono font-bold">0.80 — 0.95 ARASI</span>
+              </div>
+            </div>
+
+            <!-- Model Portfolio Positions (Col 8) -->
+            <div class="lg:col-span-8 utl-card p-6 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-slate-900 text-base">Model Portföy Pozisyonları</h3>
+                    <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono font-bold">8 AKTİF POZİSYON</span>
+                  </div>
+                  <p class="text-[10px] text-slate-400 font-mono uppercase">HEDEF GETİRİ & POTANSİYEL MATRİSİ</p>
+                </div>
+                <button onclick="showToast('Model portföy verileri BIST derinlik hattından yenilendi.')" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+                  <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                </button>
+              </div>
+
+              <!-- Positions Table -->
+              <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="utl-table">
+                  <thead>
+                    <tr>
+                      <th>HİSSE & KOD</th>
+                      <th class="text-right">AĞIRLIK</th>
+                      <th class="text-right">GİRİŞ FİYATI</th>
+                      <th class="text-right">GÜNCEL FİYAT</th>
+                      <th class="text-right">HEDEF FİYAT</th>
+                      <th class="text-right">KÂR / ZARAR</th>
+                      <th class="text-center">DURUM</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-bold text-slate-900">
+                        <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('stock-detail', 'THYAO')">
+                          <span class="w-6 h-6 rounded bg-amber-50 text-amber-700 flex items-center justify-center text-[10px]">THY</span>
+                          <div>
+                            <div class="text-xs">THYAO</div>
+                            <div class="text-[9px] text-slate-400 font-normal">Türk Hava Yolları</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right font-mono font-bold text-slate-800">%15,0</td>
+                      <td class="text-right font-mono text-slate-500">₺248,50</td>
+                      <td class="text-right font-mono font-bold text-slate-900">₺314,75</td>
+                      <td class="text-right font-mono font-bold text-amber-800">₺385,00</td>
+                      <td class="text-right font-mono font-bold text-emerald-600">▲ +%26,6</td>
+                      <td class="text-center"><span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[10px]">TUT</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-900">
+                        <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('stock-detail', 'THYAO')">
+                          <span class="w-6 h-6 rounded bg-sky-50 text-sky-700 flex items-center justify-center text-[10px]">PGS</span>
+                          <div>
+                            <div class="text-xs">PGSUS</div>
+                            <div class="text-[9px] text-slate-400 font-normal">Pegasus Hava Taşımacılığı</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right font-mono font-bold text-slate-800">%10,0</td>
+                      <td class="text-right font-mono text-slate-500">₺184,20</td>
+                      <td class="text-right font-mono font-bold text-slate-900">₺232,40</td>
+                      <td class="text-right font-mono font-bold text-amber-800">₺290,00</td>
+                      <td class="text-right font-mono font-bold text-emerald-600">▲ +%26,1</td>
+                      <td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">GÜÇLÜ AL</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-900">
+                        <div class="flex items-center gap-2">
+                          <span class="w-6 h-6 rounded bg-emerald-50 text-emerald-700 flex items-center justify-center text-[10px]">GAR</span>
+                          <div>
+                            <div class="text-xs">GARAN</div>
+                            <div class="text-[9px] text-slate-400 font-normal">Garanti BBVA</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right font-mono font-bold text-slate-800">%12,0</td>
+                      <td class="text-right font-mono text-slate-500">₺88,00</td>
+                      <td class="text-right font-mono font-bold text-slate-900">₺122,80</td>
+                      <td class="text-right font-mono font-bold text-amber-800">₺145,00</td>
+                      <td class="text-right font-mono font-bold text-emerald-600">▲ +%39,5</td>
+                      <td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">GÜÇLÜ AL</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-900">
+                        <div class="flex items-center gap-2">
+                          <span class="w-6 h-6 rounded bg-blue-50 text-blue-700 flex items-center justify-center text-[10px]">AKB</span>
+                          <div>
+                            <div class="text-xs">AKBNK</div>
+                            <div class="text-[9px] text-slate-400 font-normal">Akbank T.A.Ş.</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right font-mono font-bold text-slate-800">%8,0</td>
+                      <td class="text-right font-mono text-slate-500">₺45,10</td>
+                      <td class="text-right font-mono font-bold text-slate-900">₺58,60</td>
+                      <td class="text-right font-mono font-bold text-amber-800">₺72,50</td>
+                      <td class="text-right font-mono font-bold text-emerald-600">▲ +%29,9</td>
+                      <td class="text-center"><span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[10px]">TUT</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-900">
+                        <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('stock-detail', 'TUPRS')">
+                          <span class="w-6 h-6 rounded bg-amber-50 text-amber-700 flex items-center justify-center text-[10px]">TUP</span>
+                          <div>
+                            <div class="text-xs">TUPRS</div>
+                            <div class="text-[9px] text-slate-400 font-normal">Tüpraş Rafinerileri</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right font-mono font-bold text-slate-800">%12,0</td>
+                      <td class="text-right font-mono text-slate-500">₺152,00</td>
+                      <td class="text-right font-mono font-bold text-slate-900">₺178,30</td>
+                      <td class="text-right font-mono font-bold text-amber-800">₺215,00</td>
+                      <td class="text-right font-mono font-bold text-emerald-600">▲ +%17,3</td>
+                      <td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">GÜÇLÜ AL</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-900">
+                        <div class="flex items-center gap-2">
+                          <span class="w-6 h-6 rounded bg-slate-100 text-slate-700 flex items-center justify-center text-[10px]">ENJ</span>
+                          <div>
+                            <div class="text-xs">ENJSA</div>
+                            <div class="text-[9px] text-slate-400 font-normal">Enerjisa Enerji</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right font-mono font-bold text-slate-800">%8,0</td>
+                      <td class="text-right font-mono text-slate-500">₺52,40</td>
+                      <td class="text-right font-mono font-bold text-slate-900">₺63,90</td>
+                      <td class="text-right font-mono font-bold text-amber-800">₺80,00</td>
+                      <td class="text-right font-mono font-bold text-emerald-600">▲ +%21,9</td>
+                      <td class="text-center"><span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[10px]">TUT</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-900">
+                        <div class="flex items-center gap-2">
+                          <span class="w-6 h-6 rounded bg-slate-100 text-slate-700 flex items-center justify-center text-[10px]">KCH</span>
+                          <div>
+                            <div class="text-xs">KCHOL</div>
+                            <div class="text-[9px] text-slate-400 font-normal">Koç Holding</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right font-mono font-bold text-slate-800">%12,0</td>
+                      <td class="text-right font-mono text-slate-500">₺195,00</td>
+                      <td class="text-right font-mono font-bold text-slate-900">₺218,50</td>
+                      <td class="text-right font-mono font-bold text-amber-800">₺275,00</td>
+                      <td class="text-right font-mono font-bold text-emerald-600">▲ +%12,0</td>
+                      <td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">GÜÇLÜ AL</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-900">
+                        <div class="flex items-center gap-2">
+                          <span class="w-6 h-6 rounded bg-slate-100 text-slate-700 flex items-center justify-center text-[10px]">SIS</span>
+                          <div>
+                            <div class="text-xs">SISE</div>
+                            <div class="text-[9px] text-slate-400 font-normal">Türkiye Şişe ve Cam Fab.</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right font-mono font-bold text-slate-800">%8,0</td>
+                      <td class="text-right font-mono text-slate-500">₺49,80</td>
+                      <td class="text-right font-mono font-bold text-slate-900">₺47,30</td>
+                      <td class="text-right font-mono font-bold text-amber-800">₺68,00</td>
+                      <td class="text-right font-mono font-bold text-rose-600">▼ -%5,0</td>
+                      <td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">GÜÇLÜ AL</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Table Subfooter -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 pt-1">
+                <div class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                  <span>Değerlemeler İskontolu Nakit Akışı (İNA) ve Çarpan Analiziyle hesaplanır.</span>
+                </div>
+                <div>Hedef Fiyat Ortalama Potansiyeli: <strong class="text-emerald-600 font-mono">+%31,8</strong></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom 3 Strategy Feature Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            
+            <div class="utl-card p-5 space-y-2 flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center flex-shrink-0 text-lg">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">İsviçre Risk Paritesi</h4>
+                <p class="text-xs text-slate-500 leading-relaxed mt-1">
+                  Portföydeki tekil hisse ağırlığı azami %20 ile sınırlandırılarak volatilite ve likidite riski minimize edilir.
+                </p>
+              </div>
+            </div>
+
+            <div class="utl-card p-5 space-y-2 flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center flex-shrink-0 text-lg">
+                <i class="fa-solid fa-fingerprint"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">Haftalık Bilanço Taraması</h4>
+                <p class="text-xs text-slate-500 leading-relaxed mt-1">
+                  Algoritma, FAVÖK marjı büyümesi ve serbest nakit akışı verimliliğini 7/24 takip ederek tetikleyici üretir.
+                </p>
+              </div>
+            </div>
+
+            <div class="utl-card p-5 space-y-2 flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0 text-lg">
+                <i class="fa-solid fa-mobile-screen"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">Otomatik API Senkronizasyonu</h4>
+                <p class="text-xs text-slate-500 leading-relaxed mt-1">
+                  Aracı kurum hesabınızı güvenle bağlayarak model portföy emirlerini tek tıkla kendi portföyünüze yansıtın.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         VIEW 4: SEKTÖREL RAPORLAR & PİYASA KÜTÜPHANESİ (Screen 4)
+         ==================================================================== -->
+    <div id="view-reports" class="view-panel">
+      <div class="max-w-[1520px] mx-auto px-4 sm:px-6 py-6 space-y-8">
+        
+        <!-- Header & Stats -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
+          <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-semibold tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              <span>KURUMSAL ARAŞTIRMA & STRATEJİ DİREKTÖRLÜĞÜ</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif text-slate-900 tracking-tight font-medium">
+              Sektörel Analizler ve Piyasa Kütüphanesi
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 max-w-3xl">
+              İsviçre özel bankacılık disiplini ve kantitatif veri modellemesiyle hazırlanmış Borsa İstanbul sektörel çarpanları, bilanço projeksiyonları ve tematik makro raporlar.
+            </p>
+          </div>
+
+          <!-- 3 Stats Counter -->
+          <div class="flex items-center gap-3 flex-shrink-0">
+            <div class="px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm text-center">
+              <div class="text-[9px] font-bold text-slate-400 uppercase">KAPSAMDAKİ ŞİRKET</div>
+              <div class="text-lg font-bold font-mono text-slate-900">142</div>
+            </div>
+            <div class="px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm text-center">
+              <div class="text-[9px] font-bold text-slate-400 uppercase">GÜNCEL RAPOR</div>
+              <div class="text-lg font-bold font-mono text-amber-700">48 Adet</div>
+            </div>
+            <div class="px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm text-center">
+              <div class="text-[9px] font-bold text-slate-400 uppercase">ORTALAMA ROE</div>
+              <div class="text-lg font-bold font-mono text-emerald-600">%34.8</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Featured Macro Strategy Report (Hero Card) -->
+        <div class="utl-card overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12">
+            <!-- Left High-Res Boardroom Photo -->
+            <div class="lg:col-span-5 relative min-h-[340px] bg-slate-900 overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1000&q=80" 
+                alt="2025 Makroekonomik Toplantı" 
+                class="w-full h-full object-cover opacity-85 hover:scale-105 transition-transform duration-700"
+              >
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+              
+              <!-- Badge overlay -->
+              <div class="absolute bottom-6 left-6 right-6 space-y-1">
+                <span class="px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-mono font-bold text-[10px] uppercase">
+                  ★ ÖNE ÇIKAN MAKRO STRATEJİ RAPORU
+                </span>
+                <h3 class="text-lg font-serif font-bold text-white pt-1">
+                  2025 Q1 Makroekonomik Yol Haritası
+                </h3>
+              </div>
+            </div>
+
+            <!-- Right Research Details -->
+            <div class="lg:col-span-7 p-6 sm:p-8 space-y-4 flex flex-col justify-between">
+              <div class="space-y-3">
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-bold">28 Sayfa Derinlikli Analiz</span>
+                  <span class="text-slate-400">• Yayınlanma: 14 Ocak 2025</span>
+                  <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold font-mono text-[10px]">BIST 100 İÇİN DÖNEMLİ</span>
+                </div>
+
+                <h2 class="text-xl sm:text-2xl font-serif text-slate-900 font-semibold leading-snug">
+                  2025 İlk Çeyrek Türkiye Makroekonomik Görünüm & BIST Sektörel Rotasyon Stratejisi
+                </h2>
+
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  TCMB dezenflasyon takvimi ve sıkı para politikasının ikinci fazında bilanço dayanıklılığı yüksek, operasyonel nakit akışı kuvvetli ve ihracat payı dengeli hisselere kantitatif ağırlıklandırma.
+                </p>
+
+                <!-- 4 Strategy Takeaways Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl space-y-0.5">
+                    <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <span class="w-4 h-4 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold">1</span>
+                      <span>Bankacılık & Spread</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-tight">2. çeyrek ve sonrasında faiz indirim döngüsüyle pozitif NIM genişlemesi.</p>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl space-y-0.5">
+                    <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <span class="w-4 h-4 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold">2</span>
+                      <span>Sanayi İskontosu</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-tight">Yüksek finansman maliyeti dayanıklılığına ve yenilenebilir enerjiye teşvikli sektör potansiyeli.</p>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl space-y-0.5">
+                    <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <span class="w-4 h-4 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold">3</span>
+                      <span>Defansif Tüketim</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-tight">Yüksek iç tüketim talebi esnekliğine sahip gıda perakendesinde belirgin kazanç.</p>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl space-y-0.5">
+                    <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <span class="w-4 h-4 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold">4</span>
+                      <span>Tahvil Takası</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-tight">Enflasyon muhasebesi (TMS 29) sonrasında F/K ve Özkaynak çarpanı liderliği.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Author & Action Buttons -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs">
+                    SK
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-slate-900">Dr. Selim Karahan</div>
+                    <div class="text-[10px] text-slate-400">Baş Makro Stratejist & Makro Araştırma Direktörü</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2.5">
+                  <button onclick="openReportModal('rep-1')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
+                    Önizleme
+                  </button>
+                  <button class="gold-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 download-pdf-btn">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Tam Raporu İndir (PDF)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Sektör Karşılaştırma Filtreleri ve Değerleme Göstergeleri -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider font-mono">SEKTÖREL ÇARPAN MATRİSİ</span>
+              <h2 class="text-lg font-bold text-slate-900">Sektör Karşılaştırma Filtreleri ve Değerleme Göstergeleri</h2>
+            </div>
+
+            <!-- Quarter Switchers -->
+            <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+              <button class="px-3 py-1 rounded-md bg-white text-slate-900 shadow-sm font-bold">Q4 2024 (Son Çeyrek)</button>
+              <button class="px-3 py-1 rounded-md text-slate-500 hover:text-slate-800">2025 Konsensüs Tahmini</button>
+            </div>
+          </div>
+
+          <!-- Sector Filter Pills -->
+          <div class="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs font-medium py-1">
+            <button class="sector-filter-pill px-3 py-1.5 rounded-lg bg-slate-900 text-white font-bold transition-all">Tüm Sektörler ★</button>
+            <button class="sector-filter-pill px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Bankacılık</button>
+            <button class="sector-filter-pill px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Havacılık</button>
+            <button class="sector-filter-pill px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Demir - Çelik</button>
+            <button class="sector-filter-pill px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Perakende</button>
+            <button class="sector-filter-pill px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Enerji</button>
+            <button class="sector-filter-pill px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Telekom</button>
+            <button class="sector-filter-pill px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Otomotiv</button>
+          </div>
+
+          <!-- Comparative Multipliers Bar Chart (Left) + Dark Heatmap Opportunity Card (Right) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Grouped Bar Chart (Col 8) -->
+            <div class="lg:col-span-8 utl-card p-6 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">SEKTÖREL ÇARPAN & BÜYÜME PROJEKSİYONU</span>
+                    <h3 class="font-bold text-slate-900 text-base">Fiyat / Kazanç (F/K) Ortalamaları vs. Yıllık Gelir Büyümesi</h3>
+                  </div>
+                  <!-- Legend -->
+                  <div class="flex items-center gap-3 text-xs">
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-500 rounded"></span> <span class="text-slate-600">F/K Ortalaması</span></div>
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-slate-900 rounded"></span> <span class="text-slate-600">Büyüme Oranı (%)</span></div>
+                  </div>
+                </div>
+
+                <div class="relative h-64 w-full my-4">
+                  <canvas id="sectorComparisonChart"></canvas>
+                </div>
+              </div>
+
+              <!-- Footer Note -->
+              <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-400">
+                <div>* Kaynak: UTL Finans Kantitatif Veri Terminali Konsolide Verileri.</div>
+                <button onclick="showToast('Sektörel tüm 14 rasyo karşılaştırma tablosu açılıyor...')" class="text-amber-700 font-bold hover:text-amber-800">
+                  Tüm Çarpan Tablosunu Genişlet →
+                </button>
+              </div>
+            </div>
+
+            <!-- Dark Heatmap Card (Col 4) -->
+            <div class="lg:col-span-4 bg-[#0B1320] text-white rounded-2xl p-6 flex flex-col justify-between space-y-4 shadow-xl border border-slate-800">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <span class="text-[10px] tracking-wider font-mono uppercase text-slate-400 font-bold">BIST 100 ISI HARİTASI</span>
+                  <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-mono font-bold">DELİVEP-AI</span>
+                </div>
+
+                <div>
+                  <h3 class="text-lg font-serif font-bold text-slate-100">En Yüksek Değerleme Fırsatı Nerede?</h3>
+                  <p class="text-xs text-slate-400 leading-relaxed mt-2">
+                    Tarihsel iskonto ve konsensüs analizleri ışığında önümüzdeki 6 ayda en yüksek getiri potansiyeli sunan sektörler belirlendi. Perakende ve havacılık sektörlerinde operasyonel nakit yaratma kabiliyeti öne çıkıyor.
+                  </p>
+                </div>
+
+                <!-- 2 Opportunity Metric Pills -->
+                <div class="space-y-2.5">
+                  <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl flex items-center justify-between">
+                    <span class="text-xs text-slate-300">Bankacılık Risk Primi</span>
+                    <span class="text-xs font-mono font-bold text-emerald-400">Cazip (-1.4x F/K)</span>
+                  </div>
+                  <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl flex items-center justify-between">
+                    <span class="text-xs text-slate-300">Havacılık Nakit Akışı</span>
+                    <span class="text-xs font-mono font-bold text-emerald-400">Çok Güçlü (+%48)</span>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="switchView('overview')" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs border border-white/10 transition-colors">
+                Sektörel Isı Haritasını Aç
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Section: Son Yayımlanan Analiz & Değerleme Raporları (4 Cards Grid) -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">KÜTÜPHANEDEN SON YAYINLAR</span>
+              <h2 class="text-lg font-bold text-slate-900">Son Yayımlanan Analiz & Değerleme Raporları</h2>
+            </div>
+
+            <!-- Dropdown Filter -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400">Filtrele:</span>
+              <select class="bg-white border border-slate-200 text-xs rounded-lg px-3 py-1.5 text-slate-700 font-medium focus:outline-none">
+                <option>Tüm Analizler</option>
+                <option>Bankacılık</option>
+                <option>Enerji</option>
+                <option>Perakende</option>
+                <option>Sanayi</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 4 Reports Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- Report 1: Bankacılık NIM -->
+            <div class="utl-card overflow-hidden flex flex-col justify-between hover:-translate-y-1 transition-transform cursor-pointer" onclick="openReportModal('rep-1')">
+              <div>
+                <div class="relative h-40 bg-slate-900 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80" alt="Bankacılık" class="w-full h-full object-cover opacity-80">
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                  <div class="absolute top-3 left-3 right-3 flex items-center justify-between text-[10px] font-mono font-bold">
+                    <span class="px-2 py-0.5 rounded bg-slate-900/80 text-white backdrop-blur-sm border border-slate-700">BIST XBANK</span>
+                    <span class="px-2 py-0.5 rounded bg-emerald-500 text-white">● GÜÇLÜ AL</span>
+                  </div>
+                  <span class="absolute bottom-2 left-3 text-[10px] text-slate-300 font-mono">14 Sayfa</span>
+                </div>
+
+                <div class="p-4 space-y-2">
+                  <div class="text-[10px] text-slate-400 font-mono">12 Ocak 2025 • Bankacılık</div>
+                  <h4 class="font-bold text-slate-900 text-sm leading-snug hover:text-amber-700 transition-colors">
+                    Bankacılık Sektöründe Net Faiz Marjı (NIM) İyileşme Döngüsü
+                  </h4>
+                  <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                    Parasal sıkılaşma döngüsünün gevşeme sürecinde TCMB gelişmelerine göre net faiz marjında beklenen toparlanma: AKBNK, Garanti BBVA ve İş Bankası.
+                  </p>
+                </div>
+              </div>
+
+              <div class="p-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                <span class="flex items-center gap-1"><i class="fa-regular fa-eye"></i> 3.4k Okunma</span>
+                <span class="text-amber-700 font-bold flex items-center gap-1">Raporu Oku →</span>
+              </div>
+            </div>
+
+            <!-- Report 2: Yenilenebilir Enerji -->
+            <div class="utl-card overflow-hidden flex flex-col justify-between hover:-translate-y-1 transition-transform cursor-pointer" onclick="openReportModal('rep-2')">
+              <div>
+                <div class="relative h-40 bg-slate-900 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=800&q=80" alt="Yenilenebilir Enerji" class="w-full h-full object-cover opacity-80">
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                  <div class="absolute top-3 left-3 right-3 flex items-center justify-between text-[10px] font-mono font-bold">
+                    <span class="px-2 py-0.5 rounded bg-slate-900/80 text-white backdrop-blur-sm border border-slate-700">YENİ ENERJİ</span>
+                    <span class="px-2 py-0.5 rounded bg-amber-500 text-slate-950">● ODAK İZLE</span>
+                  </div>
+                  <span class="absolute bottom-2 left-3 text-[10px] text-slate-300 font-mono">21 Sayfa</span>
+                </div>
+
+                <div class="p-4 space-y-2">
+                  <div class="text-[10px] text-slate-400 font-mono">10 Ocak 2025 • Çeşitlilik & Enerji</div>
+                  <h4 class="font-bold text-slate-900 text-sm leading-snug hover:text-amber-700 transition-colors">
+                    Yenilenebilir Enerji Şirketlerinde Kapasite Artışı ve Çarpan Analizi
+                  </h4>
+                  <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                    YEKA 5 projeleri ve hibrit depolama yatırımlarının FAVÖK marjlarına etkisi: ENJSA ve GWIND çarpanlarının sektörel iskontoları.
+                  </p>
+                </div>
+              </div>
+
+              <div class="p-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                <span class="flex items-center gap-1"><i class="fa-regular fa-eye"></i> 2.8k Okunma</span>
+                <span class="text-amber-700 font-bold flex items-center gap-1">Raporu Oku →</span>
+              </div>
+            </div>
+
+            <!-- Report 3: Perakende Gıda -->
+            <div class="utl-card overflow-hidden flex flex-col justify-between hover:-translate-y-1 transition-transform cursor-pointer" onclick="openReportModal('rep-3')">
+              <div>
+                <div class="relative h-40 bg-slate-900 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=80" alt="Perakende Gıda" class="w-full h-full object-cover opacity-80">
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                  <div class="absolute top-3 left-3 right-3 flex items-center justify-between text-[10px] font-mono font-bold">
+                    <span class="px-2 py-0.5 rounded bg-slate-900/80 text-white backdrop-blur-sm border border-slate-700">BIST XTUM</span>
+                    <span class="px-2 py-0.5 rounded bg-emerald-500 text-white">● GÜÇLÜ AL</span>
+                  </div>
+                  <span class="absolute bottom-2 left-3 text-[10px] text-slate-300 font-mono">16 Sayfa</span>
+                </div>
+
+                <div class="p-4 space-y-2">
+                  <div class="text-[10px] text-slate-400 font-mono">09 Ocak 2025 • Tüketim & Perakende</div>
+                  <h4 class="font-bold text-slate-900 text-sm leading-snug hover:text-amber-700 transition-colors">
+                    Perakende Gıda Sektöründe Enflasyon Muhasebesi Etkileri
+                  </h4>
+                  <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                    TMS 29 enflasyon muhasebesi sonrası net nakit pozisyonu yüksek BIMAS, MGROS ve SOK market karşılaştırması ve marj dayanıklılığı.
+                  </p>
+                </div>
+              </div>
+
+              <div class="p-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                <span class="flex items-center gap-1"><i class="fa-regular fa-eye"></i> 4.1k Okunma</span>
+                <span class="text-amber-700 font-bold flex items-center gap-1">Raporu Oku →</span>
+              </div>
+            </div>
+
+            <!-- Report 4: Otomotiv İhracat -->
+            <div class="utl-card overflow-hidden flex flex-col justify-between hover:-translate-y-1 transition-transform cursor-pointer" onclick="openReportModal('rep-4')">
+              <div>
+                <div class="relative h-40 bg-slate-900 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=800&q=80" alt="Otomotiv" class="w-full h-full object-cover opacity-80">
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                  <div class="absolute top-3 left-3 right-3 flex items-center justify-between text-[10px] font-mono font-bold">
+                    <span class="px-2 py-0.5 rounded bg-slate-900/80 text-white backdrop-blur-sm border border-slate-700">BIST XMANA</span>
+                    <span class="px-2 py-0.5 rounded bg-rose-500 text-white">● YÜKSEK RİSK</span>
+                  </div>
+                  <span class="absolute bottom-2 left-3 text-[10px] text-slate-300 font-mono">18 Sayfa</span>
+                </div>
+
+                <div class="p-4 space-y-2">
+                  <div class="text-[10px] text-slate-400 font-mono">05 Ocak 2025 • Sanayi & İhracat</div>
+                  <h4 class="font-bold text-slate-900 text-sm leading-snug hover:text-amber-700 transition-colors">
+                    Otomotiv İhracat Pazarları ve Karlılık Görünümü
+                  </h4>
+                  <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                    Avrupa pazarındaki daralma ve elektrikli araç geçiş maliyetlerinin FROTO ve TOASO marj beklentilerine etkisi ve model güncellemeleri.
+                  </p>
+                </div>
+              </div>
+
+              <div class="p-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                <span class="flex items-center gap-1"><i class="fa-regular fa-eye"></i> 1.9k Okunma</span>
+                <span class="text-amber-700 font-bold flex items-center gap-1">Raporu Oku →</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Section: Finansal Terimler ve Bilanço Okuma Rehberi (Educational Module) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Left Intro Card (Col 4) -->
+          <div class="lg:col-span-4 utl-card p-6 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider font-mono">EN ÇOK ARANAN & KURUMSAL EĞİTİM MODÜLÜ</span>
+              <h3 class="text-xl font-serif font-bold text-slate-900">
+                Finansal Terimler ve Bilanço Okuma Rehberi
+              </h3>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Sermaye piyasalarında profesyonel bir yatırımcı gibi düşünebilmek için bilanço kalemlerini, rasyoları ve finansal oran analizlerini bilmeniz belirleyicidir.
+              </p>
+              
+              <!-- Participants badges -->
+              <div class="flex items-center gap-2 pt-2">
+                <div class="flex -space-x-2">
+                  <div class="w-7 h-7 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-[10px] border-2 border-white">EK</div>
+                  <div class="w-7 h-7 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-[10px] border-2 border-white">SK</div>
+                  <div class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px] border-2 border-white">CG</div>
+                </div>
+                <span class="text-[11px] text-slate-500 font-medium">1.240+ Portföy yöneticisi katılımı tamamladı</span>
+              </div>
+            </div>
+
+            <button onclick="showToast('Kurumsal Bilanço Eğitim Modülü 1/4 başlatılıyor...')" class="navy-btn w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+              <i class="fa-solid fa-graduation-cap text-amber-400"></i>
+              <span>Rehbere Başla (Modül 1/4)</span>
+            </button>
+          </div>
+
+          <!-- Right 4 Glossaries Cards (Col 8) -->
+          <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- F/K -->
+            <div class="utl-card p-4 space-y-2 hover:border-amber-400 transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400 font-mono">DEĞERLEME METRİĞİ</span>
+                <i class="fa-regular fa-lightbulb text-slate-400 text-xs"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 text-base">Fiyat / Kazanç (F/K)</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Hissenin mevcut piyasa fiyatının hisse başına düşen yıllık net kâra oranıdır. Şirkete yatırılan sermayenin kaç yılda amorti edileceğini modeller.
+              </p>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] font-mono">
+                <span class="text-slate-400">KONTROL: 3 YIL</span>
+                <span class="text-slate-700 font-bold">BIST Medyanı: 7.4x</span>
+              </div>
+            </div>
+
+            <!-- FAVÖK -->
+            <div class="utl-card p-4 space-y-2 hover:border-amber-400 transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400 font-mono">OPERASYONEL ÖLÇÜ</span>
+                <i class="fa-solid fa-chart-line text-slate-400 text-xs"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 text-base">FAVÖK (EBITDA)</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Faiz, Amortisman ve Vergi Öncesi Kâr. Şirketin finansman maliyeti ve vergi politikalarından bağımsız ana operasyonel nakit üretme kabiliyetidir.
+              </p>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] font-mono">
+                <span class="text-slate-400">BORÇLANMAYA DUYARLILIK</span>
+                <span class="text-emerald-700 font-bold">AVANTAJ</span>
+              </div>
+            </div>
+
+            <!-- ROE -->
+            <div class="utl-card p-4 space-y-2 hover:border-amber-400 transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400 font-mono">SERMAYE VERİMİ</span>
+                <i class="fa-solid fa-scale-balanced text-slate-400 text-xs"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 text-base">Özsermaye Kârlılığı (ROE)</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Hissedarların koyduğu her 100 TL özkaynak karşılığında yaratılan net kâr. Her zaman enflasyonun üzerinde kalması gereken en temel verim rasyosudur.
+              </p>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] font-mono">
+                <span class="text-slate-400">DUPONT ANALİZİ</span>
+                <span class="text-amber-700 font-bold">Kritik Eşik: &gt; %30</span>
+              </div>
+            </div>
+
+            <!-- Net Borç / FAVÖK -->
+            <div class="utl-card p-4 space-y-2 hover:border-amber-400 transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400 font-mono">SOLVENCY / KALDIRAÇ</span>
+                <i class="fa-regular fa-bookmark text-slate-400 text-xs"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 text-base">Net Borç / FAVÖK</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                İşletmenin mevcut borçlarından nakit varlıkları düşüldükten sonra kalan tutarın kaç yılda ödenebileceğini gösterir. 2.5x üzerindeki oranlar temkin gerektirir.
+              </p>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] font-mono">
+                <span class="text-slate-400">FİNANSAL RİSK</span>
+                <span class="text-blue-700 font-bold">İdeal: &lt; 1.5x</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Weekly Newsletter Subscription Box -->
+        <div class="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-xl flex-shrink-0">
+              <i class="fa-regular fa-envelope"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Haftalık Kurumsal Strateji Bültenine Katılın</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Her pazartesi sabahı açılıştan önce doğrudan kurumsal analist yorumları içeren bülten.</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 max-w-md w-full">
+            <input 
+              type="email" 
+              placeholder="Kurumsal e-posta adresiniz..." 
+              class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500"
+            >
+            <button class="gold-btn px-5 py-2.5 rounded-xl text-xs font-bold flex-shrink-0" onclick="showToast('Haftalık Kurumsal Strateji Bültenine kaydınız tamamlandı!')">
+              Abone Ol
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ======================================================================
+       UNIVERSAL CORPORATE FOOTER (Sovereign Swiss Standard)
+       ====================================================================== -->
+  <footer class="bg-white border-t border-slate-200 mt-12 py-10 font-sans text-xs">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 space-y-8">
+      
+      <!-- Footer Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        
+        <!-- Col 1: Brand & Bio -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('overview')">
+            <div class="w-7 h-7 rounded bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
+              U
+            </div>
+            <span class="font-serif font-bold text-base text-slate-900">UTL FİNANS</span>
+          </div>
+          <p class="text-slate-500 leading-relaxed text-xs">
+            Kurumsal sermaye zekası, borsa/piyasa derinliği ve algoritmik portföy optimizasyon platformu.
+          </p>
+        </div>
+
+        <!-- Col 2: PİYASA & VERİ -->
+        <div class="space-y-2.5">
+          <div class="font-bold text-slate-900 uppercase tracking-wider text-[11px] font-mono">PİYASA & VERİ</div>
+          <ul class="space-y-2 text-slate-500">
+            <li><a href="#overview" onclick="switchView('overview')" class="hover:text-amber-700 transition-colors">Borsa İstanbul Canlı Veri</a></li>
+            <li><a href="#overview" onclick="switchView('overview')" class="hover:text-amber-700 transition-colors">Kıymetli Maden & Emtia</a></li>
+            <li><a href="#reports" onclick="switchView('reports')" class="hover:text-amber-700 transition-colors">TCMB & Makroekonomik Göstergeler</a></li>
+            <li><a href="#portfolio" onclick="switchView('portfolio')" class="hover:text-amber-700 transition-colors">Algoritmik Model Portföy</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: KURUMSAL & YASAL -->
+        <div class="space-y-2.5">
+          <div class="font-bold text-slate-900 uppercase tracking-wider text-[11px] font-mono">KURUMSAL & YASAL</div>
+          <ul class="space-y-2 text-slate-500">
+            <li><a href="#" onclick="showToast('Hakkımızda sayfası hazırlanıyor.')" class="hover:text-amber-700 transition-colors">Hakkımızda</a></li>
+            <li><a href="#" onclick="showToast('Yatırımcı İlişkileri portalı açılıyor.')" class="hover:text-amber-700 transition-colors">Yatırımcı İlişkileri</a></li>
+            <li><a href="#" onclick="showToast('Gizlilik ve KVKK Politikası.')" class="hover:text-amber-700 transition-colors">Gizlilik & KVKK Metni</a></li>
+            <li><a href="#" onclick="showToast('Kullanıcı Hizmet Sözleşmesi.')" class="hover:text-amber-700 transition-colors">Kullanıcı Sözleşmesi</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: LİSANS & SAĞLAYICILAR -->
+        <div class="space-y-3">
+          <div class="font-bold text-slate-900 uppercase tracking-wider text-[11px] font-mono">LİSANS & SAĞLAYICILAR</div>
+          <p class="text-slate-500 leading-relaxed text-xs">
+            Piyasa verileri BIST, FOREX mevzuatında veri sağlayıcıları tarafından sağlanmaktadır.
+          </p>
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-mono text-[11px]">
+            <i class="fa-solid fa-lock text-amber-500 text-[10px]"></i>
+            <span>BIST-100 Kurumsal Abonelik</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SPK Disclaimer Box -->
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-500 leading-relaxed space-y-1">
+        <strong class="font-bold text-slate-700">SPK YASAL UYARI:</strong> Burada yer alan yatırım bilgi, yorum ve tavsiyeleri yatırım danışmanlığı kapsamında değildir. Yatırım danışmanlığı hizmeti; aracı kurumlar, portföy yönetim şirketleri, mevduat kabul etmeyen bankalar ile müşteri arasında imzalanacak yatırım danışmanlığı sözleşmesi çerçevesinde sunulmaktadır. Burada yer alan yorum ve tavsiyeler, yorum ve tavsiyede bulunanların kişisel görüşlerine dayanmaktadır.
+      </div>
+
+      <!-- Bottom Copyright Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100 text-slate-400 text-[11px]">
+        <div>© 2025 UTL Finans Bilgi Teknolojileri ve Portföy Analiz A.Ş. Tüm hakları saklıdır.</div>
+        <div class="font-mono text-slate-500">Sovereign Swiss - Wall Street Fintech Standard</div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ======================================================================
+       INTERACTIVE MODALS
+       ====================================================================== -->
+  
+  <!-- Modal 1: Algorithmic Rebalance Simulator Modal -->
+  <div id="rebalanceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-5 border border-slate-200 modal-content-box">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Algoritmik Dengeleme Simülasyonu</h3>
+            <span class="text-[10px] text-slate-400 font-mono">BIST 30 Alpha Stratejisi Rebalance Motoru</span>
+          </div>
+        </div>
+        <button id="closeRebalanceModal" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Execution Plan -->
+      <div class="space-y-3">
+        <div class="p-3.5 bg-rose-50/70 border border-rose-200 rounded-xl flex items-center justify-between text-xs">
+          <div>
+            <span class="font-bold text-rose-900">Kâr Satışı: THYAO</span>
+            <span class="text-rose-600 block text-[11px] mt-0.5">Ağırlık: %25.0 ➔ %20.0 (Portföy payı düşürülüyor)</span>
+          </div>
+          <span class="font-mono font-bold text-rose-700 text-sm">-₺62.500</span>
+        </div>
+
+        <div class="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between text-xs">
+          <div>
+            <span class="font-bold text-emerald-900">Alım Emri: SISE</span>
+            <span class="text-emerald-600 block text-[11px] mt-0.5">Ağırlık: %8.0 ➔ %13.0 (İskontolu değer fırsatı)</span>
+          </div>
+          <span class="font-mono font-bold text-emerald-700 text-sm">+₺62.500</span>
+        </div>
+      </div>
+
+      <!-- Projected Impact -->
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1.5">
+        <div class="flex justify-between text-slate-600">
+          <span>Beklenen Sharpe Artışı:</span>
+          <span class="font-mono font-bold text-emerald-600">+0.14 (2.14 ➔ 2.28)</span>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>Portföy Risk Düşüşü:</span>
+          <span class="font-mono font-bold text-blue-600">Beta: 0.88 ➔ 0.85</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button onclick="document.getElementById('rebalanceModal').classList.add('hidden')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold">
+          Vazgeç
+        </button>
+        <button id="executeRebalanceBtn" class="gold-btn px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Dengelemeyi Uygula</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Report Reader Modal -->
+  <div id="reportReaderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-5 border border-slate-200 modal-content-box max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between pb-3 border-b border-slate-100">
+        <div>
+          <span id="readerModalCategory" class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[10px] font-mono font-bold uppercase">Kategori</span>
+          <h3 id="readerModalTitle" class="font-serif font-bold text-slate-900 text-lg mt-1 leading-snug">Rapor Başlığı</h3>
+          <span id="readerModalDate" class="text-xs text-slate-400 font-mono">Tarih</span>
+        </div>
+        <button id="closeReportReader" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="readerModalBody" class="space-y-4">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+        <span class="text-xs text-slate-400">UTL Finans Kurumsal Lisanslı Rapor</span>
+        <button class="gold-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 download-pdf-btn">
+          <i class="fa-solid fa-download"></i>
+          <span>PDF Olarak Kaydet</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic & Data -->
+  <script src="assets/js/kap-database.js"></script>
+  <script src="assets/js/stocks-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
