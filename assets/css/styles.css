@@ -1,41 +1,67 @@
 /* ==========================================================================
-   UTL FİNANS - Sovereign Intelligence Theme Stylesheet
-   High-End Swiss / Wall Street Quantitative Terminal Design System
+   Once and Always - Sovereign Financial Intelligence
+   The Economist Corporate Typography & JetBrains Mono Financial Hierarchy
+   Color Palette: The Economist Red (#E3120B), Sovereign Pitch Black, Crisp White
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700;1,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --color-gold-50: #FFFDF7;
-  --color-gold-100: #FEF9E7;
-  --color-gold-200: #FBEFBF;
-  --color-gold-300: #F5DE88;
-  --color-gold-400: #E6C453;
-  --color-gold-500: #C59B27;
-  --color-gold-600: #A87F1C;
-  --color-gold-700: #886214;
-  --color-gold-800: #6B4C12;
-  --color-gold-900: #4B340B;
+  /* iOS Safe Area & Notch / Dynamic Island Insets */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 
-  --color-slate-950: #070D18;
-  --color-slate-900: #0B1320;
-  --color-slate-850: #101B2E;
-  --color-slate-800: #16243D;
-  --color-slate-700: #233454;
+  /* The Economist Red, Black & White Sovereign Financial Terminal */
+  --color-bg-base: #FFFFFF;
+  --color-bg-subtle: #F8FAFC;
+  --color-bg-surface: #10121A;
+  --color-bg-card: #141722;
+  --color-bg-card-hover: #1A1E2C;
 
-  --color-surface-bg: #F8F9FA;
-  --color-card-bg: #FFFFFF;
-  --color-border-subtle: #E8ECEF;
-  --color-border-card: #E5E9EB;
+  /* Borders & Hairlines */
+  --color-border: #232738;
+  --color-border-subtle: #191D2B;
+  --color-border-focus: #E3120B;
 
-  --color-positive: #10B981;
-  --color-positive-bg: #ECFDF5;
-  --color-negative: #EF4444;
-  --color-negative-bg: #FEF2F2;
+  /* The Economist Crimson Red & Ruby Sovereign Accents */
+  --color-economist-red: #E3120B;
+  --color-accent-red: #E3120B;
+  --color-accent-red-hover: #B80A04;
+  --color-accent-rose: #F43F5E;
+  --color-accent-glow: rgba(227, 18, 11, 0.35);
 
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Once and Always Sovereign Red & Black Hallmark */
+  --color-oa-red: #E3120B;
+  --color-oa-crimson: #B80A04;
+  --color-oa-dark: #050608;
+  --color-oa-glow: rgba(227, 18, 11, 0.45);
+
+  /* Legacy Accent Mappings Redirected to Red & White */
+  --color-accent-blue: #E3120B;
+  --color-accent-blue-hover: #B80A04;
+  --color-accent-cyan: #F43F5E;
+  --color-oa-blue: #E3120B;
+  --color-oa-cobalt: #B80A04;
+
+  /* Crisp White Highlights */
+  --color-white: #FFFFFF;
+  --color-white-subtle: #F1F5F9;
+
+  /* Financial Health Indicators (Standard Green/Red) */
+  --color-positive: #089981;
+  --color-positive-bg: rgba(8, 153, 129, 0.14);
+  --color-negative: #F23645;
+  --color-negative-bg: rgba(242, 54, 69, 0.14);
+
+  /* The Economist Corporate Typography Standards */
+  --font-serif: 'Playfair Display', 'Lora', Georgia, 'Times New Roman', serif;
+  --font-masthead: var(--font-serif);
+  --font-economist: var(--font-serif);
+  --font-sans: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-tv: var(--font-sans);
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Roboto Mono', monospace;
 }
 
 /* Global Reset & Base */
@@ -43,30 +69,107 @@
   box-sizing: border-box;
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-surface-bg);
-  color: #1E293B;
+  background-color: var(--color-bg-base);
+  color: #F1F5F9;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
 
-/* Typography Utilities */
-.font-serif-display {
-  font-family: var(--font-serif);
+/* ==========================================================================
+   THE ECONOMIST EDITORIAL MASTHEAD & HEADING HIERARCHY
+   ========================================================================== */
+h1, h2, h3, h4, h5, h6,
+.font-masthead,
+.font-serif,
+.font-serif-display,
+.economist-heading,
+.economist-masthead {
+  font-family: var(--font-serif) !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.font-tabular {
-  font-variant-numeric: tabular-nums;
+h1, .font-h1 {
+  font-family: var(--font-serif) !important;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+h2, .font-h2 {
+  font-family: var(--font-serif) !important;
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.2;
+}
+
+h3, .font-h3 {
+  font-family: var(--font-serif) !important;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.25;
+}
+
+h4, .font-h4 {
+  font-family: var(--font-serif) !important;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+/* Body & UI Text: Modern Crisp Sans-Serif */
+p, label, input, button, select, textarea, .font-sans {
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-.font-mono-numbers {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+/* Financial Tabular Numbers: JetBrains Mono Standard */
+.font-mono,
+[class*="font-mono"],
+.font-mono-numbers,
+.font-tabular,
+.tabular-nums,
+table td.font-mono,
+table th.font-mono,
+.bist-ticker-price,
+.stat-number,
+.kpi-number,
+.price-value,
+.bist-price-badge,
+.currency-rate,
+.table-num,
+.ticker-price-jiggle span:nth-child(2),
+.ticker-price-jiggle span:nth-child(3),
+#overviewStockTableBody td:nth-child(n+3),
+#stockBalanceSheetTbody td:nth-child(n+2),
+#depthTableBody td,
+#akdBuyersTbody td:nth-child(n+2),
+#akdSellersTbody td:nth-child(n+2),
+#peerComparisonTbody td:nth-child(n+2),
+#portfolioHoldingsTableBody td:nth-child(n+3),
+#macroEarningsCalendarTbody td:nth-child(2),
+#macroEarningsCalendarTbody td:nth-child(5) {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  letter-spacing: -0.02em;
+}
+
+/* Terminal Crisp Text Rendering */
+p, span, label, td, th {
+  text-rendering: optimizeLegibility;
 }
 
 /* Custom Scrollbars */
@@ -75,56 +178,51 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: #0B0D12;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #232738;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #E3120B;
 }
 
-/* Golden Gradient Elements */
-.gold-gradient-bg {
-  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 50%, #996515 100%);
-}
-
-.gold-gradient-text {
-  background: linear-gradient(135deg, #C59B27 0%, #A07817 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.gold-btn {
-  background: linear-gradient(135deg, #C59B27 0%, #A87F1C 100%);
+/* The Economist Crimson Red Sovereign Action Button */
+.gold-btn, .oa-btn-primary, .btn-economist-red {
+  background: linear-gradient(135deg, #E3120B 0%, #B80A04 100%);
   color: #FFFFFF;
-  font-weight: 600;
+  font-weight: 700;
+  border: 1px solid rgba(227, 18, 11, 0.6);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px rgba(197, 155, 39, 0.25);
+  box-shadow: 0 2px 10px rgba(227, 18, 11, 0.38);
 }
-.gold-btn:hover {
-  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
-  box-shadow: 0 4px 14px rgba(197, 155, 39, 0.35);
+.gold-btn:hover, .oa-btn-primary:hover, .btn-economist-red:hover {
+  background: linear-gradient(135deg, #F43F5E 0%, #E3120B 100%);
+  box-shadow: 0 4px 18px rgba(227, 18, 11, 0.55);
+  border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-1px);
 }
-.gold-btn:active {
+.gold-btn:active, .oa-btn-primary:active, .btn-economist-red:active {
   transform: translateY(0);
 }
 
-/* Dark Institutional Button */
-.navy-btn {
-  background: #0B1320;
-  color: #FFFFFF;
+/* Secondary High-Contrast Dark Button */
+.navy-btn, .oa-btn-secondary {
+  background: #10121A;
+  color: #F1F5F9;
+  border: 1px solid #232738;
   font-weight: 600;
   transition: all 0.2s ease;
 }
-.navy-btn:hover {
-  background: #16243D;
-  box-shadow: 0 4px 12px rgba(11, 19, 32, 0.2);
+.navy-btn:hover, .oa-btn-secondary:hover {
+  background: #1A1E2C;
+  color: #FFFFFF;
+  border-color: #E3120B;
+  box-shadow: 0 4px 14px rgba(227, 18, 11, 0.18);
 }
 
-/* Pulsing Indicators */
+/* Pulsing Live Indicator */
 .pulse-indicator {
   display: inline-block;
   width: 8px;
@@ -160,37 +258,57 @@ body {
 .ticker-scroll-track:hover {
   animation-play-state: paused;
 }
-@keyframes ticker-slide {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+/* Ticker Price Jiggle Effect */
+.ticker-price-jiggle {
+  display: inline-block;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ticker-price-jiggle.jiggle-up {
+  animation: jiggle-up 0.5s ease;
+  color: #34D399;
+}
+.ticker-price-jiggle.jiggle-down {
+  animation: jiggle-down 0.5s ease;
+  color: #FB7185;
+}
+@keyframes jiggle-up {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); text-shadow: 0 0 8px rgba(52, 211, 153, 0.6); }
+  100% { transform: scale(1); }
+}
+@keyframes jiggle-down {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); text-shadow: 0 0 8px rgba(251, 113, 133, 0.6); }
+  100% { transform: scale(1); }
 }
 
-/* Card Styling */
-.utl-card {
-  background: #FFFFFF;
-  border: 1px solid var(--color-border-card);
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 16px rgba(0, 0, 0, 0.02);
+
+/* Minimalist Dark Card Styling (Noir & The Economist Crimson) */
+.utl-card, .oa-card {
+  background: #10121A;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.7);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.utl-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  border-color: #DDE2E5;
+.utl-card:hover, .oa-card:hover {
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.85), 0 0 15px rgba(227, 18, 11, 0.12);
+  border-color: #381A22;
 }
 
 /* Range Bar Visualization */
 .range-track {
   height: 4px;
-  background: #E2E8F0;
+  background: #232738;
   border-radius: 9999px;
   position: relative;
 }
 .range-indicator {
   width: 10px;
   height: 10px;
-  background: #C59B27;
-  border: 2px solid #FFFFFF;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  background: #E3120B;
+  border: 2px solid #10121A;
+  box-shadow: 0 0 8px rgba(227, 18, 11, 0.85);
   border-radius: 50%;
   position: absolute;
   top: -3px;
@@ -201,15 +319,15 @@ body {
 .gauge-track {
   height: 8px;
   border-radius: 9999px;
-  background: linear-gradient(to right, #EF4444 0%, #EAB308 50%, #10B981 100%);
+  background: linear-gradient(to right, #F43F5E 0%, #E3120B 50%, #10B981 100%);
   position: relative;
 }
 .gauge-marker {
   width: 14px;
   height: 14px;
-  background: #0F172A;
-  border: 2px solid #FFFFFF;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  background: #FFFFFF;
+  border: 2px solid #10121A;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.75);
   border-radius: 50%;
   position: absolute;
   top: -3px;
@@ -226,37 +344,38 @@ body {
 .segmented-score-bar .segment {
   flex: 1;
   border-radius: 2px;
-  background: #E2E8F0;
+  background: #232738;
 }
 .segmented-score-bar .segment.active {
-  background: #10B981;
+  background: #E3120B;
+  box-shadow: 0 0 6px rgba(227, 18, 11, 0.5);
 }
 
 /* Custom Table Polish */
-.utl-table {
+.utl-table, .oa-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
 }
-.utl-table th {
+.utl-table th, .oa-table th {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #64748B;
-  padding: 12px 16px;
-  border-bottom: 1px solid #E2E8F0;
-  background: #FAFAFA;
-}
-.utl-table td {
+  color: #94A3B8;
   padding: 14px 16px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid #232738;
+  background: #0B0D12;
+}
+.utl-table td, .oa-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #191D2B;
   font-size: 13.5px;
-  color: #1E293B;
+  color: #F1F5F9;
   vertical-align: middle;
 }
-.utl-table tr:hover td {
-  background-color: #F8FAFC;
+.utl-table tr:hover td, .oa-table tr:hover td {
+  background-color: rgba(227, 18, 11, 0.06);
 }
 
 /* DuPont Connector Line */
@@ -270,13 +389,13 @@ body {
   top: 50%;
   transform: translateY(-50%);
   font-weight: bold;
-  color: #94A3B8;
+  color: #64748B;
   font-size: 16px;
 }
 
 /* Active Nav States */
 .nav-tab-active {
-  color: #C59B27 !important;
+  color: #FFFFFF !important;
   font-weight: 700 !important;
   position: relative;
 }
@@ -286,27 +405,30 @@ body {
   bottom: -4px;
   left: 0;
   right: 0;
-  height: 2.5px;
-  background: #C59B27;
+  height: 2px;
+  background: #E3120B;
   border-radius: 2px;
+  box-shadow: 0 0 8px rgba(227, 18, 11, 0.85);
 }
 
 /* Sidebar Active Item */
 .sidebar-link-active {
-  background-color: #FEF9E7 !important;
-  color: #886214 !important;
-  border-left: 3px solid #C59B27 !important;
+  background-color: rgba(227, 18, 11, 0.15) !important;
+  color: #FFFFFF !important;
+  border-left: 3px solid #E3120B !important;
   font-weight: 600 !important;
 }
 
 /* Modal backdrop & anim */
 .modal-backdrop {
-  background: rgba(11, 19, 32, 0.65);
-  backdrop-filter: blur(6px);
+  background: rgba(3, 6, 14, 0.82);
+  backdrop-filter: blur(8px);
   transition: opacity 0.25s ease;
 }
 .modal-content-box {
   animation: modal-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #0E1626;
+  border: 1px solid #1E2B45;
 }
 @keyframes modal-pop {
   0% { transform: scale(0.96); opacity: 0; }
@@ -324,9 +446,681 @@ body {
   opacity: 1;
 }
 
-/* Print Styles for Research Reports */
+/* Form Input Dark Glow */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+}
+
+/* ==========================================================================
+   ONCE & ALWAYS BLUE & BLACK LUXURY SOVEREIGN LOGO
+   ========================================================================== */
+/* ==========================================================================
+   ONCE AND ALWAYS RED, BLACK & WHITE LUXURY SOVEREIGN LOGO
+   The Economist Official Red (#E3120B) Hallmark
+   ========================================================================== */
+/* ==========================================================================
+   4. THE ECONOMIST SIGNATURE RED HALLMARK BADGE & SOVEREIGN BRAND SYSTEM
+   Exact The Economist Red Box (#E3120B) with Crisp White Serif Typography
+   ========================================================================== */
+.oa-brand-badge,
+.economist-logo-badge {
+  background: #E3120B;
+  background: linear-gradient(145deg, #E81912 0%, #D80F08 55%, #B80A04 100%);
+  color: #FFFFFF !important;
+  font-family: var(--font-economist);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  padding: 6px 14px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(227, 18, 11, 0.40), 0 2px 6px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  line-height: 1.0;
+  overflow: hidden;
+  user-select: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.oa-brand-badge:hover,
+.economist-logo-badge:hover {
+  transform: translateY(-1px) scale(1.02);
+  background: linear-gradient(145deg, #F01E17 0%, #E3120B 55%, #C20B05 100%);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 6px 24px rgba(227, 18, 11, 0.58), 0 3px 8px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.55);
+}
+.oa-brand-badge::after,
+.economist-logo-badge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: skewX(-25deg);
+  animation: oa-sheen 4.5s infinite ease-in-out;
+}
+@keyframes oa-sheen {
+  0%, 60% { left: -120%; }
+  100% { left: 220%; }
+}
+
+.oa-brand-badge-sm,
+.economist-logo-badge-sm {
+  background: #E3120B;
+  background: linear-gradient(145deg, #E81912 0%, #D80F08 55%, #B80A04 100%);
+  color: #FFFFFF !important;
+  font-family: var(--font-economist);
+  font-weight: 900;
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(227, 18, 11, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  letter-spacing: -0.02em;
+  line-height: 1.0;
+}
+
+/* Big Splash Entrance Box (The Economist Crimson & Hallmark White Edition) */
+.oa-splash-box,
+.economist-splash-box,
+.oa-splash-box-white {
+  background: #E3120B;
+  background: linear-gradient(145deg, #E3120B 0%, #C90F08 50%, #B80A04 100%);
+  color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(227, 18, 11, 0.28), 0 0 0 1px rgba(184, 10, 4, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  padding: 16px 36px;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  border: 1px solid #B80A04;
+}
+.oa-splash-box::after,
+.economist-splash-box::after,
+.oa-splash-box-white::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  animation: splash-sweep 3.5s infinite ease-in-out;
+}
+@keyframes splash-sweep {
+  0% { left: -100%; }
+  45%, 100% { left: 200%; }
+}
+
+/* ==========================================================================
+   CINEMATIC ONC&AL LIGHT BURST INTRO (Ultra-Fast 650ms Zero-Lag Engine)
+   ========================================================================== */
+#introSplashScreen {
+  background: radial-gradient(circle at center, #141724 0%, #0A0C13 55%, #040508 100%) !important;
+  color: #FFFFFF;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  will-change: opacity, transform;
+}
+#introSplashScreen.splash-exit {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(1.04);
+}
+
+.intro-light-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 130px;
+  height: 130px;
+  margin-top: -65px;
+  margin-left: -65px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #FFFFFF 0%, rgba(255,240,210,0.95) 25%, rgba(227,18,11,0.75) 55%, transparent 75%);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.2);
+  mix-blend-mode: screen;
+  filter: blur(8px);
+  animation: intro-flare-burst 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.intro-light-beam {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200vw;
+  height: 6px;
+  margin-top: -3px;
+  margin-left: -100vw;
+  background: linear-gradient(90deg, transparent 0%, rgba(227,18,11,0.3) 25%, #FFFFFF 50%, rgba(227,18,11,0.3) 75%, transparent 100%);
+  pointer-events: none;
+  opacity: 0;
+  transform: scaleX(0.1);
+  animation: intro-beam-sweep 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.intro-logo-reveal {
+  animation: intro-title-pop 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes intro-title-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: blur(3px) brightness(120%);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.0);
+    filter: blur(0px) brightness(100%);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: brightness(200%);
+  }
+  85% {
+    opacity: 0.95;
+    transform: scale(1.04);
+    filter: brightness(300%);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+    filter: brightness(400%);
+  }
+}
+
+@keyframes intro-flare-burst {
+  0%, 20% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  45% {
+    opacity: 0.9;
+    transform: scale(4);
+    filter: blur(8px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(16);
+    filter: blur(20px);
+  }
+  90% {
+    opacity: 0.6;
+    transform: scale(26);
+    filter: blur(35px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(34);
+    filter: blur(50px);
+  }
+}
+
+@keyframes intro-beam-sweep {
+  0%, 25% {
+    opacity: 0;
+    transform: scaleX(0.1) rotate(-6deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.4) rotate(0deg);
+  }
+  80% {
+    opacity: 0.6;
+    transform: scaleX(2.0) rotate(6deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(2.4) rotate(10deg);
+  }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee-reverse {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee-reverse 35s linear infinite;
+}
+
+/* ==========================================================================
+   ELEGANT "AND" EDITORIAL TYPOGRAPHY (Replaces & with "and")
+   ========================================================================== */
+.oa-conjunction,
+.oa-ampersand {
+  display: inline-block;
+  font-family: 'Playfair Display', 'Lora', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.9em;
+  line-height: 1;
+  margin: 0 0.18em;
+  color: #E3120B;
+  text-shadow: 0 0 12px rgba(227, 18, 11, 0.5);
+  vertical-align: baseline;
+  letter-spacing: -0.01em;
+  user-select: none;
+}
+
+.oa-conjunction-hero,
+.oa-ampersand-hero {
+  display: inline-block;
+  font-family: 'Playfair Display', 'Lora', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.85em;
+  line-height: 1;
+  margin: 0 0.22em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F87171 45%, #E3120B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 16px rgba(227, 18, 11, 0.65));
+  vertical-align: baseline;
+  letter-spacing: -0.01em;
+  user-select: none;
+}
+
+.oa-conjunction-sm,
+.oa-ampersand-sm {
+  display: inline-block;
+  font-family: 'Playfair Display', 'Lora', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.88em;
+  margin: 0 0.12em;
+  color: #F87171;
+  vertical-align: baseline;
+  user-select: none;
+}
+
+/* ==========================================================================
+   TRADINGVIEW STYLE NUMERICAL TABLES & STOCK LOGOS
+   ========================================================================== */
+.font-tv,
+.tv-text {
+  font-family: var(--font-tv) !important;
+}
+
+.tv-stock-logo {
+  position: relative;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-tv);
+  font-weight: 800;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+.tv-stock-logo:hover {
+  transform: scale(1.08);
+  border-color: rgba(227, 18, 11, 0.7);
+  box-shadow: 0 4px 12px rgba(227, 18, 11, 0.25);
+}
+.tv-stock-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* TradingView Tabular Numerics */
+.font-tradingview-nums,
+.font-mono,
+[class*="font-mono"],
+.font-tabular,
+.utl-table td,
+.ticker-price-jiggle {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  letter-spacing: -0.015em;
+  text-rendering: optimizeLegibility;
+}
+
+/* TradingView Specific Green & Red Badges */
+.tv-pill-up {
+  color: #089981 !important;
+  background-color: rgba(8, 153, 129, 0.14) !important;
+  border: 1px solid rgba(8, 153, 129, 0.32) !important;
+}
+
+.tv-pill-down {
+  color: #F23645 !important;
+  background-color: rgba(242, 54, 69, 0.14) !important;
+  border: 1px solid rgba(242, 54, 69, 0.32) !important;
+}
+
+/* DCF Range Slider & Sensitivity Matrix Enhancements */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  background: #E3120B;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(227, 18, 11, 0.85);
+  border: 2px solid #FFFFFF;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  background: #F43F5E;
+}
+input[type="range"]::-moz-range-thumb {
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  background: #E3120B;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(227, 18, 11, 0.85);
+  border: 2px solid #FFFFFF;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.18);
+  background: #F43F5E;
+}
+
+/* Active Stock Subtabs - The Economist Red Standard */
+.stock-subtab-btn.active {
+  background: #E3120B !important;
+  color: #FFFFFF !important;
+  border-color: #E3120B !important;
+  box-shadow: 0 2px 12px rgba(227, 18, 11, 0.45) !important;
+}
+
+/* Terminal Command Palette Item Highlight */
+.command-item.active,
+.command-item:hover {
+  background-color: rgba(227, 18, 11, 0.16) !important;
+  color: #FFFFFF !important;
+  border-left: 3px solid #E3120B !important;
+}
+
+/* ==========================================================================
+   STOCK CODES & STOCK NAMES: PURE BLACK CONTRAST STANDARD
+   "kırmızı beyaz olsun. yalnızca beyaz ile karışmaması için hisse isimleri siyah olsun"
+   ========================================================================== */
+.stock-name-black,
+.stock-ticker-black,
+.stock-name-contrast,
+.stock-code-pill,
+#stockDetailName,
+#stockDetailSymbol {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+#stockDetailName {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #CBD5E1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  font-weight: 900 !important;
+}
+
+#stockDetailSymbol {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+  font-weight: 900 !important;
+}
+
+.stock-code-badge {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 1px solid #CBD5E1 !important;
+  font-weight: 900 !important;
+  font-family: var(--font-mono) !important;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.stock-name-badge {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  border-radius: 4px;
+}
+
+/* Print Styles */
 @media print {
-  header, footer, nav, .no-print {
+  header, footer, nav, #introSplashScreen, .no-print {
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   MOBILE-FIRST PWA, SAFE-AREA & iOS RETINA OPTIMIZATIONS
+   ========================================================================== */
+
+/* 1. iOS Safe Area & Notch Insets */
+.top-ticker-bar {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px)) !important;
+  padding-bottom: 0.5rem !important;
+}
+
+/* 2. Mobile Layout Spacing & Auto-Zoom Prevention */
+@media (max-width: 768px) {
+  body, main {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Prevent iOS Safari from auto-zooming when tapping text inputs */
+  input, select, textarea, .global-search-input {
+    font-size: 16px !important;
+  }
+
+  /* Compact header on mobile */
+  header .oa-brand-badge {
+    padding: 0.25rem 0.5rem !important;
+    height: 36px !important;
+  }
+
+  /* Fluid subnav bar touch scrolling */
+  #stockSubnavBar {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+
+  #stockSubnavBar > div {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 3. Mobile Bottom Navigation Bar Styling */
+#mobileBottomNav {
+  padding-bottom: max(0.4rem, env(safe-area-inset-bottom, 0px));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.bottom-nav-item {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.92);
+}
+
+/* 4. Native iOS Touch & Scroll Polish */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==========================================================================
+   5. MOBILE STICKY COLUMNS FOR WIDE DATA TABLES & MATRICES
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Overview 1048 BIST Stock Table */
+  #masterOverviewStockTable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  #masterOverviewStockTable thead th:first-child,
+  #masterOverviewStockTable tbody td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #0B0D12 !important;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.6) !important;
+    min-width: 145px !important;
+    max-width: 180px !important;
+  }
+
+  #masterOverviewStockTable thead th:first-child {
+    z-index: 25 !important;
+  }
+
+  /* Balance Sheet KAP Table */
+  #stockBalanceSheetTbody th,
+  #stockBalanceSheetTbody td:first-child,
+  table:has(#stockBalanceSheetTbody) thead th:first-child,
+  table:has(#stockBalanceSheetTbody) tbody td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #0B0D12 !important;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.6) !important;
+    min-width: 155px !important;
+    max-width: 210px !important;
+  }
+
+  table:has(#stockBalanceSheetTbody) thead th:first-child {
+    z-index: 25 !important;
+  }
+
+  /* Peer Comparison Table */
+  #peerComparisonTable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  #peerComparisonTable thead th:first-child,
+  #peerComparisonTable tbody td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #0B0D12 !important;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.6) !important;
+    min-width: 100px !important;
+  }
+
+  #peerComparisonTable thead th:first-child {
+    z-index: 25 !important;
+  }
+
+  /* Portfolio Holdings Table */
+  #portfolioHoldingsTable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  #portfolioHoldingsTable thead th:first-child,
+  #portfolioHoldingsTable tbody td:first-child,
+  #portfolioHoldingsTable tfoot td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #0B0D12 !important;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.6) !important;
+    min-width: 110px !important;
+  }
+
+  #portfolioHoldingsTable thead th:first-child {
+    z-index: 25 !important;
+  }
+
+  /* Correlation Heatmap Table */
+  #correlationHeatmapTable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  #correlationHeatmapTable thead th:first-child,
+  #correlationHeatmapTable tbody td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #0B0D12 !important;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.6) !important;
+    min-width: 78px !important;
+  }
+
+  #correlationHeatmapTable thead th:first-child {
+    z-index: 25 !important;
+  }
+
+  /* 5x5 DCF Sensitivity Matrix */
+  #dcfMatrixThead th:first-child,
+  #dcfMatrixTbody td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #0B0D12 !important;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.6) !important;
+    min-width: 72px !important;
+  }
+
+  #dcfMatrixThead th:first-child {
+    z-index: 25 !important;
+  }
+
+  #dcfMatrixTbody td {
+    min-width: 65px;
+    padding: 8px 4px !important;
+  }
+
+  /* 10-Level Order Book L2 Depth Table */
+  #depthTableBody tr td {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    font-size: 10.5px !important;
+  }
+}
+

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141722" />
+      <stop offset="100%" stop-color="#08090E" />
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F01E17" />
+      <stop offset="55%" stop-color="#E3120B" />
+      <stop offset="100%" stop-color="#A80903" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#E3120B" flood-opacity="0.45" />
+    </filter>
+  </defs>
+  <!-- Background Container -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" stroke="#232738" stroke-width="6"/>
+  <!-- The Economist Style Red Hallmark Box -->
+  <rect x="64" y="64" width="384" height="384" rx="58" fill="url(#redGrad)" filter="url(#glow)" />
+  <!-- Crisp White Serif Onc&Al Analyst Typography -->
+  <text x="256" y="235" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-weight="900" font-size="92" fill="#FFFFFF" letter-spacing="-3">Onc&amp;Al</text>
+  <text x="256" y="335" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-weight="700" font-size="70" fill="rgba(255,255,255,0.95)" letter-spacing="-1.5">Analyst</text>
+</svg>

@@ -6,13 +6,17 @@ $rawPath = Join-Path $PSScriptRoot "assets\js\kap-all.json"
 
 Write-Host "Fetching all 1049+ companies from KAP (IGS/ALL)..."
 try {
-    $rawCompanies = Invoke-RestMethod -Uri "https://www.kap.org.tr/tr/api/company/items/IGS/ALL" -Method Get -TimeoutSec 15
-    $rawCompanies | ConvertTo-Json -Depth 6 | Set-Content $rawPath -Encoding UTF8
-    Write-Host "Successfully downloaded $($rawCompanies.Count) companies from KAP."
+    $wc = New-Object System.Net.WebClient
+    $wc.Encoding = [System.Text.Encoding]::UTF8
+    $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+    $jsonStr = $wc.DownloadString("https://www.kap.org.tr/tr/api/company/items/IGS/ALL")
+    $rawCompanies = $jsonStr | ConvertFrom-Json
+    [System.IO.File]::WriteAllText($rawPath, $jsonStr, [System.Text.Encoding]::UTF8)
+    Write-Host "Successfully downloaded $($rawCompanies.Count) companies from KAP with UTF-8."
 } catch {
     Write-Warning "Could not fetch online KAP, falling back to local kap-all.json: $_"
     if (Test-Path $rawPath) {
-        $rawCompanies = Get-Content $rawPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $rawCompanies = [System.IO.File]::ReadAllText($rawPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
     } else {
         Write-Error "No local kap-all.json available!"
         exit 1
@@ -55,10 +59,9 @@ $aliasMap = @{
     'MIATK' = 'mia teknoloji bilisim yazilim'
 }
 
-# Sector detection helper
+# Sector detection helper (ASCII-safe matching)
 function Get-Sector([string]$title, [string]$code) {
-    $t = $title.ToUpper()
-    $c = $code.ToUpper()
+    $c = $code.ToUpper().Trim()
     if ($c -in @('THYAO','PGSUS','TAVHL','CLEBI')) { return 'Ulaştırma & Havacılık' }
     if ($c -in @('GARAN','AKBNK','ISCTR','YKBNK','VAKBN','HALKB','ALBRK','SKBNK','TSKB','QNBFB')) { return 'Bankacılık & Finans' }
     if ($c -in @('KCHOL','SAHOL','ALARK','AGHOL','TKFEN','BERA','GLYHO','DOHOL')) { return 'Holding & Yatırım' }
@@ -70,16 +73,22 @@ function Get-Sector([string]$title, [string]$code) {
     if ($c -in @('SASA','PETKM','HEKTS','GUBRF','EGGUB','BAGFS','KORDS','DEVA','SELEC','RTALB')) { return 'Kimya, İlaç & Gübre' }
     if ($c -in @('ASELS','SDTTR','KFEIN','MIATK','LOGO','ARDYZ','VBTYZ','PAPIL','REEDR')) { return 'Savunma & İleri Teknoloji' }
     if ($c -in @('TCELL','TTKOM','NETAS','KAREL')) { return 'Telekomünikasyon & Bilişim' }
-    if ($t -match 'GAYRİMENKUL|GYO') { return 'Gayrimenkul Yatırım Ortaklığı (GYO)' }
-    if ($t -match 'ÇİMENTO|BETON') { return 'Çimento & Yapı Malzemeleri' }
-    if ($t -match 'ENERJİ|ELEKTRİK|PETROL') { return 'Enerji & Altyapı' }
-    if ($t -match 'GIDA|UN|ŞEKER|SÜT|ET|İÇECEK|TARIM') { return 'Gıda, Tarım & İçecek' }
-    if ($t -match 'TEKSTİL|MENSUCAT|YÜN') { return 'Tekstil & Konfeksiyon' }
-    if ($t -match 'HOLDİNG|YATIRIM') { return 'Holding & Girişim Sermayesi' }
-    if ($t -match 'MADEN|MADENCİLİK') { return 'Madencilik & Doğal Kaynaklar' }
-    if ($t -match 'OTOMOTİV|MOTOR') { return 'Otomotiv & Ulaşım Araçları' }
-    if ($t -match 'BANKA|FİNANS|FAKTORİNG|VARLIK') { return 'Finansal Hizmetler' }
-    if ($t -match 'TURİZM|OTEL') { return 'Turizm & Otelcilik' }
+
+    $t = $title.ToUpper()
+    $cleanT = $t.Replace([char]0x0130,'I').Replace([char]0x015E,'S').Replace([char]0x011E,'G').Replace([char]0x00DC,'U').Replace([char]0x00D6,'O').Replace([char]0x00C7,'C')
+
+    if ($cleanT -match 'GAYRIMENKUL|GYO') { return 'Gayrimenkul Yatırım Ortaklığı (GYO)' }
+    if ($cleanT -match 'CIMENTO|BETON') { return 'Çimento & Yapı Malzemeleri' }
+    if ($cleanT -match 'ENERJI|ELEKTRIK|PETROL|DOGAL GAZ|SOLAR|RUZGAR') { return 'Enerji & Altyapı' }
+    if ($cleanT -match 'GIDA|UN |SEKER|SUT|ET |ICECEK|TARIM|MEYVE|ZEYTIN') { return 'Gıda, Tarım & İçecek' }
+    if ($cleanT -match 'TEKSTIL|MENSUCAT|YUN|IPLIK|DERI|GIYIM') { return 'Tekstil & Konfeksiyon' }
+    if ($cleanT -match 'HOLDING') { return 'Holding & Girişim Sermayesi' }
+    if ($cleanT -match 'MADEN|MADENCILIK|MERMER') { return 'Madencilik & Doğal Kaynaklar' }
+    if ($cleanT -match 'OTOMOTIV|MOTOR|TASIT|ARAC') { return 'Otomotiv & Ulaşım Araçları' }
+    if ($cleanT -match 'BANKA|FINANS|FAKTORING|VARLIK|MENKUL|PORTFOY|SIGORTA|EMEKLILIK') { return 'Finansal Hizmetler' }
+    if ($cleanT -match 'BILISIM|YAZILIM|TEKNOLOJI|TELEKOM|ELEKTRONIK|ILETISIM') { return 'Savunma & İleri Teknoloji' }
+    if ($cleanT -match 'TURIZM|OTEL|KONAKLAMA') { return 'Turizm & Otelcilik' }
+    if ($cleanT -match 'SAGLIK|ILAC|HASTANE|BIYO') { return 'Sağlık & İlaç Sanayi' }
     return 'Sanayi & İmalat'
 }
 
@@ -239,6 +248,146 @@ $curatedJson = @{
         altZ = "1.85"; altZStatus = "DİKKATLE İZLENMELİ"; pio = "5 / 9"
         analystSum = "SASA, Yumurtalık PTA tesisinin devreye girmesiyle hammadde ithalat bağımlılığını sonlandırmayı ve yıllık 1.5 milyon ton üretim kapasitesine ulaşmayı hedeflemektedir."
         riskOpp = "Yüksek finansman giderleri ve borçluluk seviyesi kârlılığı baskılamaktadır; tesisin tam kapasiteye geçişi kritik takip parametresidir."
+    }
+    'ASELS' = @{
+        price = "64,20"; priceNum = 64.20; change = "+%1,76"; changeAmount = "+$TL 1,10"; isPositive = $true; volume = "$TL 3.45 Mlr"
+        fk = "14.80"; pddd = "3.20"; fdFavok = "11.40"; netDebt = "0.75x"; roe = "%28.5"; roa = "%11.2"
+        score = 9.4; scoreStatus = "Stratejik Savunma Bakiye Sipariş Rekoru"; scorePercentile = "BIST Savunma: %99 Diliminde"
+        targetPrice = "$TL 88,00"; potential = "+%37,1 Potansiyel"; analystConsensus = "18 Analist: 16 Al, 2 Tut"
+        dayLow = "$TL 62,80"; dayHigh = "$TL 65,10"; yearLow = "$TL 38,50"; yearHigh = "$TL 72,00"
+        qRev = @(18.2, 21.5, 24.8, 29.2, 36.4)
+        qFav = @(4.5, 5.4, 6.2, 7.8, 9.8)
+        qMar = @(24.7, 25.1, 25.0, 26.7, 26.9)
+        annRev = "$TL 110.1 Mlr"; annFav = "$TL 29.2 Mlr"; netInc = "$TL 18.5 Mlr"
+        altZ = "3.80"; altZStatus = "GÜVENLİ BÖLGE"; pio = "8 / 9"
+        analystSum = "ASELSAN, 12 milyar doları aşan rekor bakiye sipariş portföyü ve artan ihracat sözleşmeleriyle güçlü finansal görünümünü korumaktadır. Elektronik harp ve radar teslimatları kâr marjlarını desteklemektedir."
+        riskOpp = "Küresel çip ve yarıiletken tedarik süreleri teslimat takvimini etkileyebilir; millileştirme programı bu riski minimize etmektedir."
+    }
+    'KCHOL' = @{
+        price = "218,40"; priceNum = 218.40; change = "+%0,60"; changeAmount = "+$TL 1,30"; isPositive = $true; volume = "$TL 2.95 Mlr"
+        fk = "6.20"; pddd = "1.35"; fdFavok = "5.10"; netDebt = "1.05x"; roe = "%34.2"; roa = "%8.5"
+        score = 9.2; scoreStatus = "Derin Holding İskontosu & İhracat Gücü"; scorePercentile = "BIST Holding: %95 Diliminde"
+        targetPrice = "$TL 310,00"; potential = "+%41,9 Potansiyel"; analystConsensus = "17 Analist: 15 Al, 2 Tut"
+        dayLow = "$TL 215,00"; dayHigh = "$TL 221,00"; yearLow = "$TL 138,00"; yearHigh = "$TL 265,00"
+        qRev = @(210.4, 235.8, 260.1, 295.4, 345.2)
+        qFav = @(28.4, 32.1, 36.5, 42.8, 51.2)
+        qMar = @(13.5, 13.6, 14.0, 14.5, 14.8)
+        annRev = "$TL 1.13 Trl"; annFav = "$TL 162.6 Mlr"; netInc = "$TL 84.1 Mlr"
+        altZ = "3.20"; altZStatus = "GÜVENLİ BÖLGE"; pio = "8 / 9"
+        analystSum = "Koç Holding, dengeli portföy yapısı (enerji, otomotiv, finans ve dayanıklı tüketim) ile kur dalgalanmalarına karşı üstün bir savunma kalkanına sahiptir. Solo net nakit pozisyonu yatırımlara esneklik sağlamaktadır."
+        riskOpp = "Avrupa pazarlarındaki otomotiv ve beyaz eşya talep döngüsü izlenmelidir; enerji ve rafineri kârlılığı bu döngüyü dengelemektedir."
+    }
+    'TUPRS' = @{
+        price = "172,50"; priceNum = 172.50; change = "+%2,40"; changeAmount = "+$TL 4,00"; isPositive = $true; volume = "$TL 4.10 Mlr"
+        fk = "6.10"; pddd = "1.85"; fdFavok = "4.80"; netDebt = "0.40x"; roe = "%38.2"; roa = "%15.4"
+        score = 9.0; scoreStatus = "Yüksek Rafineri Marjı & Temettü Gücü"; scorePercentile = "BIST Petrol: %92 Diliminde"
+        targetPrice = "$TL 235,00"; potential = "+%36,2 Potansiyel"; analystConsensus = "16 Analist: 14 Al, 2 Tut"
+        dayLow = "$TL 168,00"; dayHigh = "$TL 174,50"; yearLow = "$TL 125,00"; yearHigh = "$TL 198,00"
+        qRev = @(135.2, 148.5, 160.2, 178.4, 205.1)
+        qFav = @(18.5, 21.2, 23.4, 27.8, 34.2)
+        qMar = @(13.7, 14.3, 14.6, 15.6, 16.7)
+        annRev = "$TL 692.3 Mlr"; annFav = "$TL 106.9 Mlr"; netInc = "$TL 58.4 Mlr"
+        altZ = "3.65"; altZStatus = "GÜVENLİ BÖLGE"; pio = "8 / 9"
+        analystSum = "Tüpraş, Akdeniz kompleks rafineri marjlarındaki güçlü seyir ve sıfır karbon vizyonu kapsamındaki biyoyakıt ve yeşil hidrojen yatırımlarıyla cazip temettü getirisini sürdürmektedir."
+        riskOpp = "Küresel ham petrol fiyat oynaklığı ve bakım duruşları kısa vadeli marjları dalgalandırabilir; yüksek Nelson kompleksite endeksi avantaj sunmaktadır."
+    }
+    'ASTOR' = @{
+        price = "108,40"; priceNum = 108.40; change = "+%3,15"; changeAmount = "+$TL 3,30"; isPositive = $true; volume = "$TL 3.20 Mlr"
+        fk = "18.20"; pddd = "6.50"; fdFavok = "14.80"; netDebt = "-0.20x"; roe = "%42.1"; roa = "%18.6"
+        score = 9.1; scoreStatus = "Küresel Transformatör İhracatı & Net Nakit"; scorePercentile = "BIST Enerji: %94 Diliminde"
+        targetPrice = "$TL 155,00"; potential = "+%43,0 Potansiyel"; analystConsensus = "12 Analist: 11 Al, 1 Tut"
+        dayLow = "$TL 104,50"; dayHigh = "$TL 110,00"; yearLow = "$TL 78,00"; yearHigh = "$TL 142,00"
+        qRev = @(3.8, 4.5, 5.2, 6.4, 8.2)
+        qFav = @(1.4, 1.7, 2.0, 2.6, 3.4)
+        qMar = @(36.8, 37.8, 38.5, 40.6, 41.5)
+        annRev = "$TL 24.3 Mlr"; annFav = "$TL 9.7 Mlr"; netInc = "$TL 7.2 Mlr"
+        altZ = "4.50"; altZStatus = "GÜVENLİ BÖLGE"; pio = "8 / 9"
+        analystSum = "ASTOR, Avrupa ve Kuzey Amerika şebeke yenileme ihalelerinde transformatör teslimatlarıyla rekor ihracat marjları kaydetmektedir. Net nakit pozisyonu yeni fabrika yatırımlarını finanse etmektedir."
+        riskOpp = "Bakır ve silisli saç hammadde fiyat dalgalanmaları maliyetleri etkileyebilir; esnek fiyatlandırma mekanizması kâr marjını korumaktadır."
+    }
+    'KONTR' = @{
+        price = "52,80"; priceNum = 52.80; change = "+%2,30"; changeAmount = "+$TL 1,20"; isPositive = $true; volume = "$TL 1.85 Mlr"
+        fk = "21.40"; pddd = "5.80"; fdFavok = "16.20"; netDebt = "1.80x"; roe = "%31.5"; roa = "%12.4"
+        score = 8.6; scoreStatus = "Enerji Depolama ve Pomega Hücre Yatırımı"; scorePercentile = "BIST Teknoloji: %86 Diliminde"
+        targetPrice = "$TL 78,00"; potential = "+%47,7 Potansiyel"; analystConsensus = "10 Analist: 8 Al, 2 Tut"
+        dayLow = "$TL 51,20"; dayHigh = "$TL 53,90"; yearLow = "$TL 42,00"; yearHigh = "$TL 84,00"
+        qRev = @(2.4, 2.9, 3.5, 4.2, 5.4)
+        qFav = @(0.6, 0.8, 1.0, 1.3, 1.7)
+        qMar = @(25.0, 27.6, 28.6, 31.0, 31.5)
+        annRev = "$TL 16.0 Mlr"; annFav = "$TL 4.8 Mlr"; netInc = "$TL 3.1 Mlr"
+        altZ = "2.95"; altZStatus = "GÜVENLİ BÖLGE"; pio = "7 / 9"
+        analystSum = "Kontrolmatik, Pomega lityum-iyon batarya fabrikasının kapasite artışı ve ABD depolama projeleriyle küresel teknoloji ligine adım atmaktadır."
+        riskOpp = "Hızlı büyüme kaynaklı işletme sermayesi ihtiyacı borçluluk rasyolarını takip ettirmektedir; proje bazlı nakit girişleri bu ihtiyacı karşılamaktadır."
+    }
+    'MIATK' = @{
+        price = "48,60"; priceNum = 48.60; change = "+%4,15"; changeAmount = "+$TL 1,95"; isPositive = $true; volume = "$TL 2.10 Mlr"
+        fk = "19.50"; pddd = "7.10"; fdFavok = "15.40"; netDebt = "-0.40x"; roe = "%45.0"; roa = "%21.0"
+        score = 8.8; scoreStatus = "Yüksek Katma Değerli Savunma & Sağlık Yazılımı"; scorePercentile = "BIST Bilişim: %91 Diliminde"
+        targetPrice = "$TL 72,00"; potential = "+%48,1 Potansiyel"; analystConsensus = "9 Analist: 8 Al, 1 Tut"
+        dayLow = "$TL 46,20"; dayHigh = "$TL 49,80"; yearLow = "$TL 28,00"; yearHigh = "$TL 75,00"
+        qRev = @(0.8, 1.1, 1.4, 1.8, 2.5)
+        qFav = @(0.4, 0.6, 0.8, 1.1, 1.5)
+        qMar = @(50.0, 54.5, 57.1, 61.1, 60.0)
+        annRev = "$TL 6.8 Mlr"; annFav = "$TL 4.0 Mlr"; netInc = "$TL 3.2 Mlr"
+        altZ = "4.20"; altZStatus = "GÜVENLİ BÖLGE"; pio = "8 / 9"
+        analystSum = "MİA Teknoloji, biyometrik güvenlik, savunma sanayii entegrasyonu ve elektrikli araç şarj yazılımlarında yüksek kâr marjlı Ar-Ge sözleşmeleri kazanmaktadır."
+        riskOpp = "Teknoloji sektörünün genel çarpan oynaklığı ve proje teslim vadeleri değerlemeyi etkileyebilir; net nakit pozisyonu güven vermektedir."
+    }
+    'AKBNK' = @{
+        price = "58,40"; priceNum = 58.40; change = "+%2,20"; changeAmount = "+$TL 1,25"; isPositive = $true; volume = "$TL 3.70 Mlr"
+        fk = "4.30"; pddd = "1.10"; fdFavok = "3.90"; netDebt = "N/A"; roe = "%32.8"; roa = "%3.6"
+        score = 8.9; scoreStatus = "Güçlü Sermaye Tabanı & Dijital Bankacılık"; scorePercentile = "BIST Bankacılık: %91 Diliminde"
+        targetPrice = "$TL 78,00"; potential = "+%33,6 Potansiyel"; analystConsensus = "19 Analist: 17 Al, 2 Tut"
+        dayLow = "$TL 56,80"; dayHigh = "$TL 59,20"; yearLow = "$TL 29,50"; yearHigh = "$TL 65,00"
+        qRev = @(38.5, 44.2, 51.0, 58.4, 69.2)
+        qFav = @(20.4, 23.8, 27.2, 31.0, 37.5)
+        qMar = @(53.0, 53.8, 53.3, 53.1, 54.2)
+        annRev = "$TL 222.8 Mlr"; annFav = "$TL 119.5 Mlr"; netInc = "$TL 74.2 Mlr"
+        altZ = "N/A"; altZStatus = "BANKACILIK ÖZEL MODELİ"; pio = "7 / 9"
+        analystSum = "Akbank, %20.5 sermaye yeterlilik oranı ve lider dijital müşteri tabanı ile Türk bankacılık sektörünün en verimli kurumlarından biridir."
+        riskOpp = "Kredi mevduat faiz makası normalleşmesi net kârı desteklerken, regülasyon gevşemesi marj genişlemesini hızlandıracaktır."
+    }
+    'PGSUS' = @{
+        price = "248,50"; priceNum = 248.50; change = "+%3,20"; changeAmount = "+$TL 7,70"; isPositive = $true; volume = "$TL 2.65 Mlr"
+        fk = "6.80"; pddd = "1.45"; fdFavok = "5.20"; netDebt = "1.35x"; roe = "%36.4"; roa = "%12.8"
+        score = 9.0; scoreStatus = "Düşük Maliyetli Taşıyıcı Üstünlüğü"; scorePercentile = "BIST Havacılık: %89 Diliminde"
+        targetPrice = "$TL 345,00"; potential = "+%38,8 Potansiyel"; analystConsensus = "16 Analist: 14 Al, 2 Tut"
+        dayLow = "$TL 240,00"; dayHigh = "$TL 252,00"; yearLow = "$TL 160,00"; yearHigh = "$TL 275,00"
+        qRev = @(24.5, 29.8, 35.2, 42.1, 51.8)
+        qFav = @(7.2, 8.9, 10.8, 13.5, 17.2)
+        qMar = @(29.4, 29.9, 30.7, 32.1, 33.2)
+        annRev = "$TL 158.9 Mlr"; annFav = "$TL 50.4 Mlr"; netInc = "$TL 26.8 Mlr"
+        altZ = "3.15"; altZStatus = "GÜVENLİ BÖLGE"; pio = "8 / 9"
+        analystSum = "Pegasus, genç A321neo filo dönüşümü ile koltuk başı birim yakıt maliyetlerini minimize ederek uluslararası yan gelirlerde rekor seviyelere ulaşmıştır."
+        riskOpp = "Jeopolitik gerilimler hava sahası maliyetlerini etkilese de, transit hatlardaki esneklik yolcu doluluk oranlarını yüksek tutmaktadır."
+    }
+    'TCELL' = @{
+        price = "92,10"; priceNum = 92.10; change = "+%1,45"; changeAmount = "+$TL 1,30"; isPositive = $true; volume = "$TL 2.30 Mlr"
+        fk = "8.50"; pddd = "2.10"; fdFavok = "4.60"; netDebt = "1.10x"; roe = "%26.5"; roa = "%9.4"
+        score = 8.9; scoreStatus = "Enflasyon Üstü ARPU Büyümesi & Veri Merkezleri"; scorePercentile = "BIST Telekom: %93 Diliminde"
+        targetPrice = "$TL 128,00"; potential = "+%39,0 Potansiyel"; analystConsensus = "17 Analist: 15 Al, 2 Tut"
+        dayLow = "$TL 90,50"; dayHigh = "$TL 93,40"; yearLow = "$TL 52,00"; yearHigh = "$TL 105,00"
+        qRev = @(28.4, 32.1, 36.8, 41.5, 48.2)
+        qFav = @(11.8, 13.5, 15.6, 17.9, 21.0)
+        qMar = @(41.5, 42.1, 42.4, 43.1, 43.6)
+        annRev = "$TL 158.6 Mlr"; annFav = "$TL 68.4 Mlr"; netInc = "$TL 24.1 Mlr"
+        altZ = "3.10"; altZStatus = "GÜVENLİ BÖLGE"; pio = "8 / 9"
+        analystSum = "Turkcell, sözleşme yenileme fiyat ayarlamaları sayesinde abone başına gelirde (ARPU) enflasyonun üzerinde artış yakalamıştır. Bulut ve veri merkezi yatırımları yeni büyüme motorudur."
+        riskOpp = "5G frekans ihale yatırım harcamaları serbest nakit akımını etkileyebilir; güçlü FAVÖK marjı bu yatırımı rahatça absorbe edecek güçtedir."
+    }
+    'PETKM' = @{
+        price = "18,90"; priceNum = 18.90; change = "+%1,10"; changeAmount = "+$TL 0,20"; isPositive = $true; volume = "$TL 1.70 Mlr"
+        fk = "12.40"; pddd = "1.65"; fdFavok = "8.90"; netDebt = "2.10x"; roe = "%12.4"; roa = "%5.8"
+        score = 7.2; scoreStatus = "Etilen-Nafta Marj İyileşmesi Beklentisi"; scorePercentile = "BIST Kimya: %70 Diliminde"
+        targetPrice = "$TL 26,00"; potential = "+%37,6 Potansiyel"; analystConsensus = "12 Analist: 7 Al, 5 Tut"
+        dayLow = "$TL 18,50"; dayHigh = "$TL 19,20"; yearLow = "$TL 15,20"; yearHigh = "$TL 26,50"
+        qRev = @(14.2, 16.5, 18.2, 21.0, 24.5)
+        qFav = @(1.2, 1.5, 1.8, 2.3, 3.1)
+        qMar = @(8.5, 9.1, 9.9, 11.0, 12.7)
+        annRev = "$TL 80.2 Mlr"; annFav = "$TL 8.7 Mlr"; netInc = "$TL 4.5 Mlr"
+        altZ = "2.40"; altZStatus = "DENGELİ BÖLGE"; pio = "6 / 9"
+        analystSum = "Petkim, STAR Rafineri entegrasyonu ve hammadde tedarik avantajı ile küresel petrokimya arz fazlası döngüsünde marj toparlanmasını beklemektedir."
+        riskOpp = "Küresel petrokimya tesis kapanışları arz baskısını hafifletirken, yerli plastik ve sanayi talebi temel katalizördür."
     }
 }
 

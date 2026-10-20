@@ -5,16 +5,46 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
-# Editor directories and files
+# Editor & Local IDE Directories
 .vscode/
 .idea/
+.cursor/
+.mcp.json
 *.sublime-project
 *.sublime-workspace
 *.swp
 *.swo
 
-# Temporary and log files
+# Temporary, Scratch and Log Files
 *.log
 scratch/
 test-*.html
 
+# Python & Backend Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Environment Variables & Secrets (CRITICAL SECURITY)
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+secrets/
+credentials.json
+token.json
+
+# Local Deploy & Nested Repos
+.vercel/
+finansaldeneme/
