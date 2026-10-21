@@ -31,10 +31,14 @@ async function worker() {
     const code = codes[next++];
     const file = `${DIR}/${code}.json`;
     if (!force && existsSync(file)) { done++; ok++; continue; }
+    // Several tickers can return statements (share classes); keep the one with the largest balance sheet
     let d = { available: false };
+    let best = -1;
     for (const tryCode of allCodes[code] || [code]) {
-      d = await load(tryCode, 'TRY');
-      if (d.available) break;
+      const cand = await load(tryCode, 'TRY');
+      if (!cand.available) continue;
+      const total = Math.abs(cand.rows.find(r => r.c === '1BL' || r.c === '1Z')?.v[0] ?? 0);
+      if (total > best) { best = total; d = cand; }
     }
     if (d.available) {
       const slim = {
