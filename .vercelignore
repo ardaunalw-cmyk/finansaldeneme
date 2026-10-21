@@ -1,5 +1,5 @@
 # Build-time inputs and server-side code: not part of the static site
-data/
+/data/
 backend/
 nginx/
 generate-database.ps1
