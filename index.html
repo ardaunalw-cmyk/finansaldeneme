@@ -2119,10 +2119,11 @@
             <div class="utl-card p-6 space-y-4">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#1A2540]">
                 <div>
-                  <h4 class="font-serif font-bold text-white text-base">Fiyat ve Hareketli Ortalamalar</h4>
+                  <h4 class="font-serif font-bold text-white text-base">Mum Grafiği (OHLC) ve Hareketli Ortalamalar</h4>
                   <div class="flex items-center gap-2 mt-0.5">
                     <span id="techCurrentPriceLabel" class="text-xs font-mono font-bold text-red-400">₺312,50</span>
                     <span id="techCurrentChangeLabel" class="text-[11px] font-mono text-emerald-400">+%3,82</span>
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/60 text-slate-300 text-[9px] font-mono font-bold" title="Açılış, Yüksek, Düşük, Kapanış mum grafiği">MUM • OHLC</span>
                   </div>
                 </div>
 
@@ -2166,6 +2167,10 @@
                   <button id="toggleLayerBB" onclick="toggleTechnicalLayer('bollinger')" class="px-2.5 py-1 rounded-lg bg-red-950/40 text-red-300 border border-red-800/50 text-[11px] font-semibold transition-all">Bollinger</button>
                   <button id="toggleLayerFib" onclick="toggleTechnicalLayer('fibonacci')" class="px-2.5 py-1 rounded-lg bg-red-950/40 text-red-300 border border-red-800/50 text-[11px] font-semibold transition-all"><i class="fa-solid fa-bezier-curve text-[10px] mr-1"></i>Fibonacci</button>
                   <button id="toggleLayerVolume" onclick="toggleTechnicalLayer('volume')" class="px-2.5 py-1 rounded-lg bg-red-950/40 text-red-300 border border-red-800/50 text-[11px] font-semibold transition-all"><i class="fa-solid fa-chart-column text-[10px] mr-1"></i>Hacim (Volume)</button>
+                  <span class="hidden sm:flex items-center gap-1 text-[10px] font-mono text-slate-500 ml-1">
+                    <span class="w-2 h-2 rounded-sm bg-emerald-400"></span> Yükseliş
+                    <span class="w-2 h-2 rounded-sm bg-rose-400 ml-1"></span> Düşüş
+                  </span>
                 </div>
                 <div id="techPatternName" class="text-xs text-emerald-400 font-mono font-bold">Yükselen Üçgen Formasyonu</div>
               </div>
@@ -3826,7 +3831,7 @@
         }
         oaEngine.currentBasePrice = currentPrice > 0 ? (currentPrice / (1 + (initialChangePct / 100))) : currentPrice;
 
-        // Her 1.65 saniyede bir BIST mikro işlem (Tick) döngüsü
+        // Her 5 saniyede bir BIST mikro işlem (Tick) döngüsü
         oaEngine.stockInterval = setInterval(() => {
           if (document.hidden) return; // Arka plandayken sıfır CPU tüketimi
           // Sayfa sekmesi aktif değilse CPU koruma
@@ -3839,6 +3844,7 @@
           const ds = activeChart.data.datasets[0].data;
           if (!ds || ds.length === 0) return;
           const idx = ds.length - 1;
+          const maxPoints = activeChart.$maxPoints || ds.length;
           currentPrice = parseFloat(ds[idx]);
 
           const tickSize = getBistTickSize(currentPrice);
@@ -3855,10 +3861,11 @@
           const labels = activeChart.data.labels;
 
           if (oaEngine.stockTickCounter >= 9 && labels && labels.length) {
-            // ~14 saniyede bir yeni seans mum noktası ekle ve en eskiyi kaydır (sağa akıcı kayma efekti)
+            // ~45 saniyede bir yeni seans mum noktası ekle ve en eskiyi kaydır (sağa akıcı kayma efekti)
             oaEngine.stockTickCounter = 0;
             const now = new Date();
             const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const prevClose = parseFloat(ds[idx]) || currentPrice;
             labels.push(timeStr);
 
             activeChart.data.datasets.forEach((dataset, dIdx) => {
@@ -3869,12 +3876,35 @@
                 const prevVal = parseFloat(dataset.data[dataset.data.length - 1]) || currentPrice;
                 dataset.data.push(+(prevVal + (delta * 0.05)).toFixed(2));
               }
-              if (dataset.data.length > 28) dataset.data.shift();
+              if (dataset.data.length > maxPoints) dataset.data.shift();
             });
-            if (labels.length > 28) labels.shift();
+            if (labels.length > maxPoints) labels.shift();
+
+            // Mum serisini yeni OHLC mumuyla senkronize et
+            if (activeChart.$ohlc) {
+              const ohlc = activeChart.$ohlc;
+              ohlc.opens.push(prevClose);
+              ohlc.highs.push(Math.max(prevClose, currentPrice));
+              ohlc.lows.push(Math.min(prevClose, currentPrice));
+              if (ohlc.prices !== ds) {
+                ohlc.prices.push(currentPrice);
+                if (ohlc.prices.length > maxPoints) ohlc.prices.shift();
+              }
+              if (ohlc.opens.length > maxPoints) {
+                ohlc.opens.shift();
+                ohlc.highs.shift();
+                ohlc.lows.shift();
+              }
+            }
           } else {
             // Normal mikro tick güncellemesi
             ds[idx] = currentPrice;
+            if (activeChart.$ohlc && activeChart.$ohlc.highs && activeChart.$ohlc.highs.length > idx) {
+              const ohlc = activeChart.$ohlc;
+              if (ohlc.prices !== ds) ohlc.prices[idx] = currentPrice;
+              ohlc.highs[idx] = Math.max(ohlc.highs[idx], currentPrice);
+              ohlc.lows[idx] = Math.min(ohlc.lows[idx], currentPrice);
+            }
             if (activeChart.data.datasets[1] && activeChart.data.datasets[1].data.length > 0) {
               const smaData = activeChart.data.datasets[1].data;
               const smaLast = smaData.length - 1;

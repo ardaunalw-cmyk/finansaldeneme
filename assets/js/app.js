@@ -9,7 +9,7 @@
  * 1. Mock Financial API Engine (Yahoo Finance, TradingView & BIST DataFeed simulator)
  * 2. Complete Chart.js (v4) Renderers for All 8 Canvas IDs:
  *    - bistTrendChart (BIST 100 Area/Line Chart)
- *    - technicalPriceChart (Price + Moving Averages SMA 20/50/200 + Bollinger Bands)
+ *    - technicalPriceChart (OHLC Candlestick + Moving Averages SMA 20/50/200 + Bollinger Bands)
  *    - technicalOscillatorChart (RSI 14 / MACD 12,26,9 Dual Oscillator)
  *    - stockIncomeChart (Quarterly/Annual Revenue & EBITDA Bar + Margin Line)
  *    - portfolioPerformanceChart (UTL Model Portfolio vs BIST 100 Benchmark)
@@ -1246,6 +1246,9 @@ const MockFinancialApi = {
 
         const dates = [];
         const prices = [];
+        const opens = [];
+        const highs = [];
+        const lows = [];
         const sma20 = [];
         const sma50 = [];
         const sma200 = [];
@@ -1256,6 +1259,7 @@ const MockFinancialApi = {
         const macdSignal = [];
         const macdHist = [];
 
+        const seed = getStockHash(ticker);
         const today = new Date();
         let runningPrice = currentPrice * 0.88;
 
@@ -1265,11 +1269,25 @@ const MockFinancialApi = {
           const dateStr = d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
           dates.push(dateStr);
 
-          const changePercent = (Math.sin(i * 0.3) * 1.5) + ((Math.random() - 0.45) * 1.8);
+          // Deterministic OHLC random walk: the open is the previous close,
+          // so every stock gets a stable, realistic candlestick series.
+          const rndBody = pseudoRandom(seed, i * 17 + 1);
+          const rndWick = pseudoRandom(seed, i * 17 + 2);
+          const changePercent = (Math.sin(i * 0.3) * 1.15) + ((rndBody - 0.47) * 2.4);
+          const openPrice = parseFloat(runningPrice.toFixed(2));
           runningPrice = runningPrice * (1 + (changePercent / 100));
           if (i === 0) runningPrice = currentPrice;
 
           const p = parseFloat(runningPrice.toFixed(2));
+          const bodyHigh = Math.max(openPrice, p);
+          const bodyLow = Math.min(openPrice, p);
+          const wickUnit = Math.max(p * 0.0035, (bodyHigh - bodyLow) * 0.6);
+          const high = parseFloat((bodyHigh + wickUnit * (0.35 + rndWick * 0.9)).toFixed(2));
+          const low = parseFloat(Math.max(0.01, bodyLow - wickUnit * (0.35 + (1 - rndWick) * 0.9)).toFixed(2));
+
+          opens.push(openPrice);
+          highs.push(Math.max(high, openPrice, p));
+          lows.push(Math.min(low, openPrice, p));
           prices.push(p);
 
           const s20 = parseFloat((p * 0.985 + Math.sin(i * 0.2) * (currentPrice * 0.01)).toFixed(2));
@@ -1295,7 +1313,6 @@ const MockFinancialApi = {
 
         // Realistic Volume Data (Lot)
         const volumes = [];
-        const seed = getStockHash(ticker);
         const baseVolLot = (fin.paidCapitalRaw > 1000000000) ? 18000000 : 3500000;
         for (let i = 0; i < prices.length; i++) {
           const mult = 0.55 + (pseudoRandom(seed, i * 13) * 1.15) + (i === prices.length - 1 ? 0.35 : 0);
@@ -1345,6 +1362,9 @@ const MockFinancialApi = {
           changePercent: fin.change,
           dates,
           prices,
+          opens,
+          highs,
+          lows,
           volumes,
           fib,
           sma20,
@@ -1547,8 +1567,94 @@ async function initBistChart() {
 }
 
 /**
+ * Chart.js core does not ship a financial/candlestick controller. This local
+ * plugin paints the OHLC candles directly on the chart area (before overlays
+ * such as SMA, Bollinger, Fibonacci and volume), using the chart's own scales.
+ * The OHLC series is attached to the chart instance as `chart.$ohlc`.
+ */
+const bistCandlestickRenderer = {
+  id: 'bistCandlesticks',
+
+  beforeUpdate(chart) {
+    const ohlc = chart.$ohlc;
+    if (!ohlc || !ohlc.highs || !ohlc.highs.length) return;
+    const yOptions = chart.options.scales && chart.options.scales.y;
+    if (!yOptions) return;
+
+    let max = -Infinity;
+    let min = Infinity;
+    for (let i = 0; i < ohlc.highs.length; i++) {
+      if (Number.isFinite(ohlc.highs[i])) max = Math.max(max, ohlc.highs[i]);
+      if (Number.isFinite(ohlc.lows[i])) min = Math.min(min, ohlc.lows[i]);
+    }
+    if (!Number.isFinite(max) || !Number.isFinite(min)) return;
+
+    const pad = Math.max((max - min) * 0.06, max * 0.004);
+    yOptions.suggestedMin = min - pad;
+    yOptions.suggestedMax = max + pad;
+  },
+
+  beforeDatasetsDraw(chart) {
+    const ohlc = chart.$ohlc;
+    if (!ohlc || !ohlc.prices || !ohlc.prices.length) return;
+
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+    const yScale = scales.y;
+    if (!ctx || !chartArea || !xScale || !yScale) return;
+
+    const count = ohlc.prices.length;
+    const step = count > 1
+      ? Math.abs(xScale.getPixelForValue(1) - xScale.getPixelForValue(0))
+      : chartArea.width / 4;
+    const bodyWidth = Math.max(2, Math.min(18, step * 0.62));
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+    ctx.clip();
+
+    for (let i = 0; i < count; i++) {
+      const o = ohlc.opens[i];
+      const h = ohlc.highs[i];
+      const l = ohlc.lows[i];
+      const c = ohlc.prices[i];
+      if (![o, h, l, c].every(Number.isFinite)) continue;
+
+      const x = xScale.getPixelForValue(i);
+      if (!Number.isFinite(x) || x < chartArea.left - step || x > chartArea.right + step) continue;
+
+      const yOpen = yScale.getPixelForValue(o);
+      const yClose = yScale.getPixelForValue(c);
+      const yHigh = yScale.getPixelForValue(h);
+      const yLow = yScale.getPixelForValue(l);
+      const isBullish = c >= o;
+      const color = isBullish ? '#10B981' : '#F43F5E';
+      const fill = isBullish ? 'rgba(16, 185, 129, 0.92)' : 'rgba(244, 63, 94, 0.92)';
+      const bodyTop = Math.min(yOpen, yClose);
+      const bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
+
+      // Wick (high / low shadows)
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, yHigh);
+      ctx.lineTo(x, yLow);
+      ctx.stroke();
+
+      // Body (open / close)
+      ctx.fillStyle = fill;
+      ctx.fillRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
+      ctx.strokeRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
+    }
+
+    ctx.restore();
+  }
+};
+
+/**
  * 2 & 3. technicalPriceChart & technicalOscillatorChart:
- * Technical Price + Overlays (SMA, Bollinger) & Oscillators (RSI / MACD)
+ * Candlestick OHLC price chart + overlays (SMA, Bollinger) & oscillators (RSI / MACD)
  */
 async function initTechnicalCharts(ticker = 'THYAO') {
   const priceCanvas = document.getElementById('technicalPriceChart');
@@ -1610,15 +1716,14 @@ async function initTechnicalCharts(ticker = 'THYAO') {
   const priceDatasets = [
     {
       type: 'line',
-      label: 'Kapanış Fiyatı',
+      label: 'Kapanış (Mum)',
       data: tech.prices,
-      borderColor: '#38BDF8', // ice cyan
-      backgroundColor: 'rgba(56, 189, 248, 0.08)',
-      fill: true,
-      borderWidth: 2.4,
-      tension: 0.25,
-      pointRadius: 2,
-      pointHoverRadius: 6,
+      borderColor: 'rgba(56, 189, 248, 0)',
+      backgroundColor: 'transparent',
+      fill: false,
+      borderWidth: 0,
+      pointRadius: 0,
+      pointHoverRadius: 0,
       yAxisID: 'y'
     }
   ];
@@ -1749,6 +1854,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
   const maxVol = (tech.volumes && tech.volumes.length) ? Math.max(...tech.volumes) : 1000;
 
   appState.charts.techPrice = new Chart(priceCanvas.getContext('2d'), {
+    plugins: [bistCandlestickRenderer],
     data: {
       labels: tech.dates,
       datasets: priceDatasets
@@ -1769,6 +1875,20 @@ async function initTechnicalCharts(ticker = 'THYAO') {
           cornerRadius: 8,
           callbacks: {
             label: context => {
+              if (context.datasetIndex === 0) {
+                const ohlc = context.chart.$ohlc;
+                const i = context.dataIndex;
+                if (ohlc && ohlc.prices && Number.isFinite(ohlc.prices[i])) {
+                  const fmt = v => `₺${v.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+                  const isBullish = ohlc.prices[i] >= ohlc.opens[i];
+                  return [
+                    `Açılış: ${fmt(ohlc.opens[i])}`,
+                    `Yüksek: ${fmt(ohlc.highs[i])}`,
+                    `Düşük: ${fmt(ohlc.lows[i])}`,
+                    `Kapanış: ${fmt(ohlc.prices[i])} (${isBullish ? 'Yeşil mum' : 'Kırmızı mum'})`
+                  ];
+                }
+              }
               if (context.dataset.yAxisID === 'yVolume') {
                 const v = context.parsed.y;
                 const formatted = (v >= 1000000) ? `${(v / 1000000).toFixed(2)}M Lot` : `${(v / 1000).toFixed(0)}K Lot`;
@@ -1781,6 +1901,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
       },
       scales: {
         x: {
+          offset: true,
           grid: { display: false },
           ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#94A3B8' }
         },
@@ -1811,6 +1932,16 @@ async function initTechnicalCharts(ticker = 'THYAO') {
       }
     }
   });
+
+  // Attach the OHLC series used by the candlestick renderer and repaint once.
+  appState.charts.techPrice.$ohlc = {
+    opens: tech.opens,
+    highs: tech.highs,
+    lows: tech.lows,
+    prices: tech.prices
+  };
+  appState.charts.techPrice.$maxPoints = tech.prices.length;
+  appState.charts.techPrice.update('none');
 
   // --- Render Chart 3: technicalOscillatorChart (RSI, MACD, or Stochastic) ---
   const oscCtx = oscCanvas.getContext('2d');
