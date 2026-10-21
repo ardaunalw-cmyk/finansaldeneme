@@ -537,10 +537,16 @@ function getStockLogoHtml(ticker, size = 32, extraClass = '') {
   const code = (ticker || '').toUpperCase().trim();
   const radius = Math.max(6, Math.round(size * 0.22));
 
+  // Real company logo (site icon) laid over the fallback badge; removed if it fails to load
+  const domain = (typeof STOCK_LOGO_DOMAINS !== 'undefined') ? STOCK_LOGO_DOMAINS[code] : '';
+  const realLogo = domain
+    ? `<img class="tv-real-logo" src="https://www.google.com/s2/favicons?domain=${domain}&sz=128" alt="" loading="lazy" referrerpolicy="no-referrer" onload="if(this.naturalWidth<=16)this.remove();else this.classList.add('is-loaded')" onerror="this.remove()">`
+    : '';
+
   if (STOCK_LOGOS_DB[code]) {
     return `
       <div class="tv-stock-logo ${extraClass}" style="width:${size}px; height:${size}px; min-width:${size}px; border-radius:${radius}px;">
-        ${STOCK_LOGOS_DB[code]}
+        ${STOCK_LOGOS_DB[code]}${realLogo}
       </div>
     `;
   }
@@ -560,7 +566,7 @@ function getStockLogoHtml(ticker, size = 32, extraClass = '') {
 
   return `
     <div class="tv-stock-logo ${extraClass}" style="width:${size}px; height:${size}px; min-width:${size}px; border-radius:${radius}px; background:${grad.bg}; color:${grad.text}; box-shadow:${grad.glow};">
-      <span style="font-size:${fontSize}px; line-height:1; font-weight:800; font-family:var(--font-tv); letter-spacing:-0.03em;">${code}</span>
+      <span style="font-size:${fontSize}px; line-height:1; font-weight:800; font-family:var(--font-tv); letter-spacing:-0.03em;">${code}</span>${realLogo}
     </div>
   `;
 }
@@ -585,7 +591,7 @@ async function initApp() {
     initNavigation();
     
     // Fast First Render: Switch view immediately without blocking on heavy charts
-    const initialHash = window.location.hash.replace('#', '') || 'overview';
+    const initialHash = window.location.hash.replace('#', '') || 'home';
     switchView(initialHash);
 
     initSearch();
@@ -2677,6 +2683,8 @@ function switchView(viewName, stockCode = null) {
   }
 
   appState.activeView = viewName;
+  document.body.classList.toggle('is-home', viewName === 'home');
+  closeSiteMenu();
 
   // 1. Toggle visibility classes
   document.querySelectorAll('.view-panel').forEach(panel => {
@@ -2836,6 +2844,8 @@ async function loadStockDetails(ticker) {
     headerPotential.textContent = `▲ ${fin.potential}`;
     headerPotential.className = 'text-xs text-emerald-600 font-bold font-mono';
   }
+
+  if (typeof fillStockDetailAbout === 'function') fillStockDetailAbout(fin.code);
 
   // Dynamic Stock Logo & Visual Avatar
   const logoContainer = document.getElementById('stockDetailLogoContainer') || (headerIcon ? headerIcon.parentElement : null);
@@ -5637,14 +5647,43 @@ function initNavigation() {
     });
   });
 
-  const mobileBtn = document.getElementById('mobileMenuToggle');
-  const mobileNav = document.getElementById('mobileNavDrawer');
-  if (mobileBtn && mobileNav) {
-    mobileBtn.addEventListener('click', () => {
-      mobileNav.classList.toggle('hidden');
-    });
-  }
+  initSiteMenu();
 }
+
+/* ☰ slide-in menu: every section lives under its headings here */
+function setSiteMenuOpen(open) {
+  document.body.classList.toggle('menu-open', open);
+  const toggle = document.getElementById('menuToggle');
+  const menu = document.getElementById('siteMenu');
+  if (toggle) toggle.setAttribute('aria-expanded', String(open));
+  if (menu) menu.setAttribute('aria-hidden', String(!open));
+}
+
+function closeSiteMenu() {
+  setSiteMenuOpen(false);
+}
+
+function initSiteMenu() {
+  const toggle = document.getElementById('menuToggle');
+  const menu = document.getElementById('siteMenu');
+  if (!toggle || !menu) return;
+
+  toggle.addEventListener('click', () => setSiteMenuOpen(!document.body.classList.contains('menu-open')));
+  document.getElementById('menuClose')?.addEventListener('click', closeSiteMenu);
+  document.getElementById('siteMenuBackdrop')?.addEventListener('click', closeSiteMenu);
+  menu.addEventListener('click', e => {
+    if (e.target.closest('[data-menu-close]')) closeSiteMenu();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.body.classList.contains('menu-open')) closeSiteMenu();
+  });
+}
+
+function openHomeSearch() {
+  switchView('home');
+  setTimeout(() => document.getElementById('homeSearchInput')?.focus(), 80);
+}
+window.openHomeSearch = openHomeSearch;
 
 
 /* ==============================================================================
@@ -6321,9 +6360,10 @@ function renderOverviewStockTable() {
             <div class="flex items-center gap-3">
               ${getStockLogoHtml(s.code, 32, 'shadow flex-shrink-0')}
               <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
+                <div class="flex flex-wrap items-center gap-1.5">
                   <span class="font-bold text-red-200 bg-red-950/60 px-2 py-0.5 rounded-md border border-red-800/50 tracking-wide font-tv text-xs">${s.code}</span>
-                  ${s.isBist30 ? '<span class="text-[9px] px-1.5 py-px rounded bg-red-950/40 border border-red-800/50 text-red-300 font-mono font-bold">BIST 30</span>' : ''}
+                  ${s.isBist30 ? '<span class="whitespace-nowrap text-[9px] px-1.5 py-px rounded bg-red-950/40 border border-red-800/50 text-red-300 font-mono font-bold">BIST 30</span>' : ''}
+                  <button type="button" class="about-btn" onclick="openStockAbout('${s.code}')" title="${s.name} hakkında"><i class="fa-solid fa-circle-info"></i>Hakkında</button>
                 </div>
                 <div class="text-xs text-slate-300 font-medium truncate max-w-[200px] mt-0.5 inline-block" title="${s.name}">${s.name}</div>
               </div>

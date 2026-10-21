@@ -120,109 +120,130 @@
   </div>
 
   <!-- ======================================================================
-       2. PRIMARY MASTHEAD and NAVIGATION HEADER
+       2. SADE ÜST ÇUBUK: ☰ menü + marka + arama. Tüm bölümler ☰ menüsünün altında.
        ====================================================================== -->
-  <header class="bg-[#070B14]/95 backdrop-blur-md border-b border-[#1A2540] sticky top-0 z-40 transition-all shadow-xl shadow-black/40">
-    <div class="max-w-[1540px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-6">
-      
-      <!-- Brand Logo (The Economist Signature Red Box: Onc&Al Analyst) -->
-      <div class="flex items-center gap-3.5 cursor-pointer select-none group" onclick="switchView('overview')">
-        <!-- Exact brand cobalt Hallmark Badge -->
+  <header class="bg-[#070B14]/95 backdrop-blur-md border-b border-[#1A2540] sticky top-0 z-40 shadow-xl shadow-black/40">
+    <div class="max-w-[1540px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-4">
+
+      <!-- Hamburger: açılır menüyü aç -->
+      <button id="menuToggle" type="button" aria-label="Menüyü aç" aria-expanded="false" aria-controls="siteMenu" class="menu-toggle-btn flex-shrink-0">
+        <i class="fa-solid fa-bars text-lg"></i>
+      </button>
+
+      <!-- Marka -->
+      <div class="flex items-center gap-3 cursor-pointer select-none group flex-shrink-0" onclick="switchView('home')" title="Ana sayfa">
         <div class="oa-brand-badge economist-logo-badge flex items-center justify-center shadow-lg group-hover:shadow-red-600/50 transition-all flex-shrink-0">
           <div class="flex flex-col text-left leading-[0.92] select-none font-serif text-white">
             <span class="text-[14px] sm:text-[15px] font-black tracking-tight">Onc&amp;Al</span>
             <span class="text-[11px] sm:text-[12px] font-bold tracking-tight text-white/95 mt-0.5">Analyst</span>
           </div>
         </div>
-        
-        <!-- Typographic Masthead Subtitle with Slogan -->
-        <div class="hidden sm:flex flex-col">
-          <span class="text-[11px] font-serif text-white tracking-wide font-semibold leading-tight max-w-xs truncate" title="It does not matter the color of the cat, what matter is to catch the rat">
-            “It does not matter the color of the cat, what matter is to catch the rat”
-          </span>
-          <span class="text-[9px] font-mono font-bold uppercase tracking-[0.20em] text-red-400/90 mt-0.5">
-            SOVEREIGN FINANCIAL INTELLIGENCE &bull; EST. MMXXV
-          </span>
-        </div>
       </div>
 
-      <!-- Universal Search Bar (Across All 1048 BIST Stocks) -->
-      <div class="relative flex-1 max-w-lg hidden md:block">
+      <!-- Arama (ana sayfada büyük arama kullanılır, burada gizlenir) -->
+      <div id="headerSearch" class="relative flex-1 max-w-xl ml-auto hidden md:block">
         <div class="relative">
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-          <input 
-            type="text" 
-            placeholder="1048 BIST hissesi, şirket veya sektör ara (Örn: THYAO, ASELS, ASTOR)..." 
+          <input
+            type="text"
+            placeholder="Hisse veya şirket ara (Örn: THYAO, ASELS)..."
             class="global-search-input w-full pl-9 pr-12 py-2.5 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-600 focus:bg-[#111A2E] focus:ring-2 focus:ring-red-600/20 transition-all font-sans"
           >
           <kbd class="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] bg-[#162238] text-slate-400 rounded font-mono border border-slate-700/60 pointer-events-none">/</kbd>
         </div>
-        
-        <!-- Search Autocomplete Dropdown Menu -->
         <div id="searchDropdown" class="hidden absolute left-0 right-0 top-full mt-2 bg-[#0C1322] border border-[#1A2540] rounded-xl shadow-2xl p-2 z-50 max-h-96 overflow-y-auto font-sans backdrop-blur-md"></div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="hidden xl:flex items-center gap-7 text-[13px] font-medium font-sans">
-        <a href="#overview" data-view-target="overview" class="nav-tab-active py-2 transition-colors">Genel Bakış</a>
-        <a href="#news" data-view-target="news" class="text-slate-400 hover:text-white py-2 transition-colors flex items-center gap-1.5">
-          <span>Piyasa Gündemi</span>
-          <span class="px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-mono font-bold border border-rose-500/30">12 CANLI</span>
-        </a>
-        <a href="#stock-detail" data-view-target="stock-detail" class="text-slate-400 hover:text-white py-2 transition-colors">Hisse ve Bilanço Analizi</a>
-        <a href="#reports" data-view-target="reports" class="text-slate-400 hover:text-white py-2 transition-colors">Sektörel Raporlar</a>
-        <a href="#portfolio" data-view-target="portfolio" class="text-slate-400 hover:text-white py-2 transition-colors">Model Portföy</a>
-        <a href="#about" data-view-target="about" class="text-slate-400 hover:text-white py-2 transition-colors">Hakkımızda</a>
-      </nav>
+      <!-- Telefonda: aramayı ana sayfada aç -->
+      <button type="button" onclick="openHomeSearch()" aria-label="Ara" class="menu-toggle-btn ml-auto md:hidden flex-shrink-0">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+    </div>
+  </header>
 
-      <!-- Right Controls and User Profile -->
-      <div class="flex items-center gap-2 sm:gap-2.5">
-        <!-- Terminal Command Palette Button (Cmd+K / /) - Always Visible on Mobile and Desktop -->
-        <button onclick="openTerminalCommandPalette()" class="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono text-slate-300 hover:text-white bg-[#0C1322] border border-[#1A2540] hover:border-red-500/50 transition-all cursor-pointer shadow-sm active:scale-95" title="Terminal Komut Paleti (Ctrl+K veya /)">
-          <i class="fa-solid fa-terminal text-red-400 text-[11px]"></i>
-          <span class="text-[11px] font-semibold hidden sm:inline">Komut</span>
-          <kbd class="hidden sm:inline px-1.5 py-0.5 rounded bg-[#162238] text-[9px] text-slate-400 border border-slate-700/60 font-mono">⌘K</kbd>
-        </button>
-
-        <!-- Persistent Watchlist and Alerts Drawer Button - Always Visible on Mobile and Desktop -->
-        <button onclick="toggleWatchlistDrawer(true)" class="relative flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono text-slate-300 hover:text-white bg-[#0C1322] border border-[#1A2540] hover:border-amber-500/50 transition-all cursor-pointer shadow-sm active:scale-95" title="İzleme Listesi ve Fiyat Alarmları">
-          <i class="fa-solid fa-bookmark text-amber-400 text-[11px]"></i>
-          <span class="hidden sm:inline text-[11px] font-semibold">İzleme</span>
-          <span id="watchlistHeaderCountBadge" class="px-1.5 py-px rounded-full text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-800/60 font-mono">4</span>
-        </button>
-
-        <!-- O ve A PRO Action Button (Hidden on Mobile) -->
-        <button class="gold-btn px-4 py-2 rounded-xl text-xs font-bold hidden md:flex items-center gap-2">
-          <i class="fa-solid fa-crown text-[11px] text-white"></i>
-          <span>O ve A PRO</span>
-        </button>
-
-        <!-- User Profile Avatar (Hidden on Mobile) -->
-        <div class="w-9 h-9 rounded-xl bg-[#0C1322] border border-[#1A2540] text-white hidden md:flex items-center justify-center text-xs font-bold cursor-pointer hover:border-red-600 transition-all select-none" title="Can Güner - Once ve Always Üye">
-          CG
+  <!-- ======================================================================
+       ☰ AÇILIR MENÜ: tüm bölümler başlıklar altında toplanır
+       ====================================================================== -->
+  <div id="siteMenuBackdrop" class="site-menu-backdrop" aria-hidden="true"></div>
+  <aside id="siteMenu" class="site-menu" aria-label="Ana menü" aria-hidden="true">
+    <div class="site-menu-head">
+      <div class="flex items-center gap-3">
+        <div class="oa-brand-badge-sm economist-logo-badge-sm flex items-center justify-center shadow flex-shrink-0">
+          <div class="flex flex-col text-left leading-[0.88] select-none font-serif text-white">
+            <span class="text-[10px] font-black tracking-tight">Onc&amp;Al</span>
+            <span class="text-[8px] font-bold tracking-tight text-white/95">Analyst</span>
+          </div>
         </div>
+        <div>
+          <div class="font-serif font-bold text-sm text-white">Onc&amp;Al Analyst</div>
+          <div class="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Menü</div>
+        </div>
+      </div>
+      <button type="button" id="menuClose" aria-label="Menüyü kapat" class="menu-toggle-btn">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
 
-        <!-- Mobile Menu Toggle (Desktop/Tablet Drawer) -->
-        <button id="mobileMenuToggle" class="hidden xl:hidden p-2 text-slate-400 hover:text-white focus:outline-none">
-          <i class="fa-solid fa-bars text-lg"></i>
+    <nav class="site-menu-body">
+      <div class="menu-group">
+        <div class="menu-group-title">Piyasalar</div>
+        <a href="#overview" data-view-target="overview" class="menu-item">
+          <i class="fa-solid fa-table-columns"></i><span>Piyasa Özeti</span>
+        </a>
+        <a href="#news" data-view-target="news" class="menu-item">
+          <i class="fa-solid fa-newspaper"></i><span>Piyasa Gündemi</span>
+          <span class="menu-badge menu-badge-live">12 CANLI</span>
+        </a>
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-group-title">Analiz</div>
+        <a href="#stock-detail" data-view-target="stock-detail" class="menu-item">
+          <i class="fa-solid fa-chart-column"></i><span>Hisse ve Bilanço Analizi</span>
+        </a>
+        <a href="#reports" data-view-target="reports" class="menu-item">
+          <i class="fa-solid fa-book-bookmark"></i><span>Sektörel Raporlar</span>
+        </a>
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-group-title">Portföy</div>
+        <a href="#portfolio" data-view-target="portfolio" class="menu-item">
+          <i class="fa-solid fa-briefcase"></i><span>Model Portföy</span>
+        </a>
+        <button type="button" onclick="toggleWatchlistDrawer(true)" data-menu-close class="menu-item">
+          <i class="fa-solid fa-bookmark"></i><span>İzleme Listesi ve Alarmlar</span>
+          <span id="watchlistHeaderCountBadge" class="menu-badge">4</span>
         </button>
       </div>
 
-    </div>
+      <div class="menu-group">
+        <div class="menu-group-title">Araçlar</div>
+        <button type="button" onclick="openTerminalCommandPalette()" data-menu-close class="menu-item">
+          <i class="fa-solid fa-terminal"></i><span>Komut Paleti</span>
+          <kbd class="menu-kbd">Ctrl K</kbd>
+        </button>
+        <button type="button" data-menu-close class="menu-item">
+          <i class="fa-solid fa-crown"></i><span>O ve A PRO</span>
+        </button>
+      </div>
 
-    <!-- Mobile Navigation Drawer -->
-    <div id="mobileNavDrawer" class="hidden xl:hidden bg-[#070B14] border-b border-[#1A2540] px-4 py-3 space-y-2">
-      <a href="#overview" data-view-target="overview" class="block py-2 text-sm font-semibold text-slate-200 hover:text-red-400">Genel Bakış ve PİYASALAR</a>
-      <a href="#news" data-view-target="news" class="block py-2 text-sm font-semibold text-slate-200 hover:text-red-400 flex items-center justify-between">
-        <span>Piyasa Gündemi ve Haberler</span>
-        <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-xs font-mono font-bold">12 CANLI</span>
-      </a>
-      <a href="#stock-detail" data-view-target="stock-detail" class="block py-2 text-sm font-semibold text-slate-200 hover:text-red-400">Hisse ve Bilanço Analizi</a>
-      <a href="#reports" data-view-target="reports" class="block py-2 text-sm font-semibold text-slate-200 hover:text-red-400">Sektörel Raporlar</a>
-      <a href="#portfolio" data-view-target="portfolio" class="block py-2 text-sm font-semibold text-slate-200 hover:text-red-400">Model Portföy</a>
-      <a href="#about" data-view-target="about" class="block py-2 text-sm font-semibold text-slate-200 hover:text-red-400">Hakkımızda ve İletişim</a>
+      <div class="menu-group">
+        <div class="menu-group-title">Kurumsal</div>
+        <a href="#about" data-view-target="about" class="menu-item">
+          <i class="fa-solid fa-circle-info"></i><span>Hakkımızda ve İletişim</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="site-menu-foot">
+      <div class="w-9 h-9 rounded-xl bg-[#0C1322] border border-[#1A2540] text-white flex items-center justify-center text-xs font-bold">CG</div>
+      <div>
+        <div class="text-xs font-bold text-white">Can Güner</div>
+        <div class="text-[10px] text-slate-500 font-mono">Once ve Always Üye</div>
+      </div>
     </div>
-  </header>
+  </aside>
 
   <!-- ======================================================================
        3. MAIN CONTENT CONTAINER (Renders the 4 views via switchView)
@@ -230,9 +251,30 @@
   <main class="min-h-screen">
 
     <!-- ====================================================================
+         VIEW 0: ANA SAYFA (boş; yalnızca arama. Tüm bölümler ☰ menüsünde)
+         ==================================================================== -->
+    <div id="view-home" class="view-panel active">
+      <div class="home-empty">
+        <div class="relative w-full max-w-xl">
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input
+              id="homeSearchInput"
+              type="text"
+              autocomplete="off"
+              placeholder="Hisse veya şirket ara..."
+              class="global-search-input w-full pl-11 pr-4 py-4 bg-[#0C1322] border border-[#1A2540] rounded-2xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#2F6BFF] focus:bg-[#111A2E] focus:ring-2 focus:ring-[#2F6BFF]/20 transition-all font-sans"
+            >
+          </div>
+        </div>
+        <p class="home-hint"><i class="fa-solid fa-bars"></i> Tüm bölümler için sol üstteki menüyü kullanın</p>
+      </div>
+    </div>
+
+    <!-- ====================================================================
          VIEW 1: GENEL BAKIŞ ve PİYASALAR (Once ve Always Editorial Overview)
          ==================================================================== -->
-    <div id="view-overview" class="view-panel active">
+    <div id="view-overview" class="view-panel">
       <div class="max-w-[1540px] mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         <!-- Editorial Masthead Headline -->
@@ -807,69 +849,6 @@
     <div id="view-stock-detail" class="view-panel">
       <div class="flex flex-col lg:flex-row min-h-screen">
         
-        <!-- Left Terminal Sidebar (Hidden on Mobile/Tablet to Eliminate Vertical Scroll Bottleneck) -->
-        <aside class="hidden lg:flex w-full lg:w-64 bg-[#070B14] border-r border-[#1A2540] flex-col justify-between p-5 flex-shrink-0">
-          <div class="space-y-6">
-            <!-- Sidebar Header / Terminal Title -->
-            <div class="flex items-center gap-3 pb-4 border-b border-[#1A2540] cursor-pointer" onclick="switchView('overview')">
-              <div class="oa-brand-badge-sm economist-logo-badge-sm flex items-center justify-center shadow flex-shrink-0">
-                <div class="flex flex-col text-left leading-[0.88] select-none font-serif text-white">
-                  <span class="text-[10px] font-black tracking-tight">Onc&amp;Al</span>
-                  <span class="text-[8px] font-bold tracking-tight text-white/95">Analyst</span>
-                </div>
-              </div>
-              <div>
-                <div class="font-serif font-bold text-sm tracking-wide text-white">
-                  Onc&amp;Al Analyst
-                </div>
-                <div class="text-[9px] font-mono font-semibold tracking-wider text-red-400 uppercase">KANTİTATİF TERMİNAL</div>
-              </div>
-            </div>
-
-            <!-- Portfolio Value Widget -->
-            <div class="p-4 bg-[#0C1322] border border-[#1A2540] rounded-xl space-y-1">
-              <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">PORTFÖY DEĞERİ</div>
-              <div class="text-xl font-bold font-mono text-white">₺1.428.950</div>
-              <div class="text-xs text-emerald-400 font-bold font-mono">▲ %11.2 (Alfa +%4.8)</div>
-            </div>
-
-            <!-- Sidebar Navigation Links -->
-            <nav class="space-y-1 font-sans text-xs font-medium">
-              <a href="#overview" data-view-target="overview" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#0C1322] transition-colors">
-                <i class="fa-solid fa-table-columns text-slate-500 w-4"></i>
-                <span>Genel Bakış ve PİYASALAR</span>
-              </a>
-              <a href="#news" data-view-target="news" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#0C1322] transition-colors">
-                <i class="fa-solid fa-newspaper text-slate-500 w-4"></i>
-                <span>Piyasa Gündemi</span>
-              </a>
-              <a href="#stock-detail" data-view-target="stock-detail" class="sidebar-nav-item sidebar-link-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 transition-colors">
-                <i class="fa-solid fa-chart-column text-red-400 w-4"></i>
-                <span>Hisse ve Bilanço Analizi</span>
-              </a>
-              <a href="#reports" data-view-target="reports" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#0C1322] transition-colors">
-                <i class="fa-solid fa-book-bookmark text-slate-500 w-4"></i>
-                <span>Sektörel Raporlar</span>
-              </a>
-              <a href="#portfolio" data-view-target="portfolio" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#0C1322] transition-colors">
-                <i class="fa-solid fa-briefcase text-slate-500 w-4"></i>
-                <span>Model Portföy</span>
-              </a>
-            </nav>
-          </div>
-
-          <!-- Bottom User Card -->
-          <div class="pt-4 border-t border-[#1A2540] flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-[#0C1322] border border-red-500/40 text-white flex items-center justify-center font-bold text-xs">
-              CG
-            </div>
-            <div>
-              <div class="text-xs font-bold text-white">Can Güner</div>
-              <div class="text-[10px] text-red-400 font-mono font-semibold">Once ve Always PRO</div>
-            </div>
-          </div>
-        </aside>
-
         <!-- Right Main Deep Analysis Content -->
         <div class="flex-1 p-4 sm:p-6 lg:p-8 space-y-7 max-w-[1360px]">
           
@@ -981,12 +960,19 @@
                 <div class="range-track"><div class="range-indicator" style="left: 76%;"></div></div>
               </div>
             </div>
+
+            <!-- Hakkında: şirketin ne yaptığının kısa özeti -->
+            <div id="stockDetailAbout" class="stock-about-block">
+              <div class="stock-about-title"><i class="fa-solid fa-circle-info"></i> Hakkında</div>
+              <p id="stockDetailAboutText" class="stock-about-text"></p>
+              <div id="stockDetailAboutMeta" class="stock-about-meta"></div>
+            </div>
           </div>
 
           <!-- ================================================================
                Sticky Sub-Navigation Bar (Terminal Alt Sekme Çubuğu - Mobile Touch Scrollable)
                ================================================================ -->
-          <div id="stockSubnavBar" class="sticky top-14 sm:top-16 md:top-20 z-30 bg-[#070B14]/95 backdrop-blur-md border border-[#1A2540] rounded-2xl p-1.5 shadow-2xl flex items-center justify-between gap-2 my-4 overflow-x-auto no-scrollbar flex-nowrap" style="-webkit-overflow-scrolling: touch;">
+          <div id="stockSubnavBar" class="sticky top-16 z-30 bg-[#070B14]/95 backdrop-blur-md border border-[#1A2540] rounded-2xl p-1.5 shadow-2xl flex items-center justify-between gap-2 my-4 overflow-x-auto no-scrollbar flex-nowrap" style="-webkit-overflow-scrolling: touch;">
             <!-- 4 Logical Sub-Tab Buttons (Horizontal Touch Swipe on Mobile) -->
             <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar flex-nowrap w-full sm:w-auto" style="-webkit-overflow-scrolling: touch;">
               <button 
@@ -3722,6 +3708,7 @@
        ====================================================================== -->
   <script src="assets/js/kap-database.js"></script>
   <script src="assets/js/stocks-data.js"></script>
+  <script src="assets/js/company-about.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/chat-widget.js" defer></script>
@@ -4153,43 +4140,6 @@
       });
     })();
   </script>
-
-  <!-- ======================================================================
-       3. MOBİL ALT NAVİGASYON ÇUBUĞU (iOS Safe Area & Standalone PWA Fixed Dock)
-       ====================================================================== -->
-  <nav id="mobileBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070B14]/95 backdrop-blur-md border-t border-[#1A2540] px-1 select-none shadow-[0_-8px_25px_rgba(0,0,0,0.55)]" style="padding-bottom: max(0.4rem, env(safe-area-inset-bottom, 0px));">
-    <div class="grid grid-cols-5 items-center justify-around text-center max-w-md mx-auto pt-1">
-      <!-- 1. Piyasalar -->
-      <button type="button" onclick="switchView('overview')" data-bottom-nav="overview" class="bottom-nav-item py-1.5 px-1 flex flex-col items-center justify-center transition-all text-[#2F6BFF]">
-        <i class="fa-solid fa-chart-line text-base mb-0.5"></i>
-        <span class="text-[10px] font-sans font-semibold tracking-tight">Piyasalar</span>
-      </button>
-
-      <!-- 2. Gündem -->
-      <button type="button" onclick="switchView('news')" data-bottom-nav="news" class="bottom-nav-item py-1.5 px-1 flex flex-col items-center justify-center transition-all text-slate-400 hover:text-white">
-        <i class="fa-regular fa-newspaper text-base mb-0.5"></i>
-        <span class="text-[10px] font-sans font-medium tracking-tight">Gündem</span>
-      </button>
-
-      <!-- 3. Analiz -->
-      <button type="button" onclick="switchView('stock-detail')" data-bottom-nav="stock-detail" class="bottom-nav-item py-1.5 px-1 flex flex-col items-center justify-center transition-all text-slate-400 hover:text-white">
-        <i class="fa-solid fa-magnifying-glass-chart text-base mb-0.5"></i>
-        <span class="text-[10px] font-sans font-medium tracking-tight">Analiz</span>
-      </button>
-
-      <!-- 4. Raporlar -->
-      <button type="button" onclick="switchView('reports')" data-bottom-nav="reports" class="bottom-nav-item py-1.5 px-1 flex flex-col items-center justify-center transition-all text-slate-400 hover:text-white">
-        <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
-        <span class="text-[10px] font-sans font-medium tracking-tight">Raporlar</span>
-      </button>
-
-      <!-- 5. Portföy -->
-      <button type="button" onclick="switchView('portfolio')" data-bottom-nav="portfolio" class="bottom-nav-item py-1.5 px-1 flex flex-col items-center justify-center transition-all text-slate-400 hover:text-white">
-        <i class="fa-solid fa-briefcase text-base mb-0.5"></i>
-        <span class="text-[10px] font-sans font-medium tracking-tight">Portföy</span>
-      </button>
-    </div>
-  </nav>
 
   <!-- PWA Service Worker Registration -->
   <script>
