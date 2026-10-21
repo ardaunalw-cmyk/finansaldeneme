@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "build": "node build.mjs",
-    "dev": "node dev.mjs"
+    "dev": "node dev.mjs",
+    "data": "node scripts/fetch-fundamentals.mjs"
   },
   "devDependencies": {
     "tailwindcss": "3.4.17"

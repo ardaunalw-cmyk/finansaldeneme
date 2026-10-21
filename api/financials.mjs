@@ -98,7 +98,7 @@ function build(symbol, rows, year, period) {
   };
 }
 
-async function load(symbol) {
+export async function load(symbol) {
   const hit = cache.get(symbol);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.data;
 

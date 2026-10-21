@@ -133,6 +133,7 @@ const LiveData = (() => {
       const quotes = await getQuotes(stale);
       let changed = false;
       stale.forEach(c => { if (applyQuote(c, quotes[c])) changed = true; });
+      if (await applyStaticFundamentals(codes)) changed = true;
       stale.forEach(c => { if (!quotes[c]) misses.set(c, (misses.get(c) || 0) + 1); });
       // Tickers the first attempt missed get one more try shortly after
       if (stale.some(c => !quotes[c] && misses.get(c) < MAX_MISSES) && !retryScheduled) {
@@ -195,6 +196,54 @@ const LiveData = (() => {
   const mlr = v => `₺${fmt.format(v / 1e9)} Mlr`;
   const ratio = (v, digits = 2) => (Number.isFinite(v) ? v.toFixed(digits) : 'N/A');
 
+  /** Combines a statement summary with the stock's current price into the ratio fields. */
+  function applyFundamentals(fin, f) {
+    const mcap = fin.priceNum * f.shares;          // BIST par value is 1 TL, so capital = share count
+    const t = f.ttm;
+    const fk = t.netIncome > 0 ? mcap / t.netIncome : NaN;
+    const pddd = f.equity > 0 ? mcap / f.equity : NaN;
+    const fdFavok = t.ebitda > 0 ? (mcap + f.netDebt) / t.ebitda : NaN;
+    const netDebtFavok = t.ebitda > 0 ? f.netDebt / t.ebitda : NaN;
+    const roe = f.equity > 0 ? t.netIncome / f.equity * 100 : NaN;
+    const roa = f.totalAssets > 0 ? t.netIncome / f.totalAssets * 100 : NaN;
+
+    Object.assign(fin, {
+      fk: ratio(fk), pddd: ratio(pddd), fdFavok: ratio(fdFavok),
+      netDebt: Number.isFinite(netDebtFavok) ? `${ratio(netDebtFavok)}x` : 'N/A',
+      roe: Number.isFinite(roe) ? `%${ratio(roe, 1)}` : 'N/A',
+      roa: Number.isFinite(roa) ? `%${ratio(roa, 1)}` : 'N/A',
+      fkNum: fk, pdddNum: pddd, fdFavokNum: fdFavok, netDebtNum: netDebtFavok, roeNum: roe, roaNum: roa,
+      annualRevenue: mlr(t.revenue), annualFavok: mlr(t.ebitda), netIncome: mlr(t.netIncome),
+      fundamentalsLive: true
+    });
+  }
+
+  /** Pre-fetched statements for every covered company (assets/data/fundamentals.json). */
+  let staticFund = null;
+  function loadStaticFundamentals() {
+    if (!staticFund) {
+      staticFund = fetch('/assets/data/fundamentals.json')
+        .then(r => (r.ok ? r.json() : null))
+        .then(j => (j ? j.data : {}))
+        .catch(() => ({}));
+    }
+    return staticFund;
+  }
+
+  async function applyStaticFundamentals(codes) {
+    const data = await loadStaticFundamentals();
+    let changed = false;
+    codes.forEach(code => {
+      const row = data[code];
+      const fin = getCachedStockFinancials(code);
+      // Ratios need the real price; a sample price would give meaningless multiples
+      if (!row || !fin || !fin.liveTime || fin.fundamentalsLive) return;
+      const [period, shares, equity, totalAssets, netDebt, revenue, ebitda, netIncome] = row;
+      applyFundamentals(fin, { period, shares, equity, totalAssets, netDebt, ttm: { revenue, ebitda, netIncome } });
+      changed = true;
+    });
+    return changed;
+  }
   async function syncFundamentals(fin, note, priceBadge) {
     const code = fin.code;
     try {
@@ -211,24 +260,7 @@ const LiveData = (() => {
         return;
       }
 
-      const mcap = fin.priceNum * f.shares;          // BIST par value is 1 TL, so capital = share count
-      const t = f.ttm;
-      const fk = t.netIncome > 0 ? mcap / t.netIncome : NaN;
-      const pddd = f.equity > 0 ? mcap / f.equity : NaN;
-      const fdFavok = t.ebitda > 0 ? (mcap + f.netDebt) / t.ebitda : NaN;
-      const netDebtFavok = t.ebitda > 0 ? f.netDebt / t.ebitda : NaN;
-      const roe = f.equity > 0 ? t.netIncome / f.equity * 100 : NaN;
-      const roa = f.totalAssets > 0 ? t.netIncome / f.totalAssets * 100 : NaN;
-
-      Object.assign(fin, {
-        fk: ratio(fk), pddd: ratio(pddd), fdFavok: ratio(fdFavok),
-        netDebt: Number.isFinite(netDebtFavok) ? `${ratio(netDebtFavok)}x` : 'N/A',
-        roe: Number.isFinite(roe) ? `%${ratio(roe, 1)}` : 'N/A',
-        roa: Number.isFinite(roa) ? `%${ratio(roa, 1)}` : 'N/A',
-        fkNum: fk, pdddNum: pddd, fdFavokNum: fdFavok, netDebtNum: netDebtFavok, roeNum: roe, roaNum: roa,
-        annualRevenue: mlr(t.revenue), annualFavok: mlr(t.ebitda), netIncome: mlr(t.netIncome),
-        fundamentalsLive: true
-      });
+      applyFundamentals(fin, f);
 
       const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
       set('stockDetailFK', fin.fk);
