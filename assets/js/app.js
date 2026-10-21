@@ -1214,6 +1214,13 @@ const MockFinancialApi = {
    * Simulates BIST 100 real-time trend line with timeframe variations.
    */
   async fetchBistTrend(timeframe = '1G') {
+    if (window.TechData) {
+      try { return await TechData.bist(timeframe); } catch (e) { console.warn('[BIST chart] real history unavailable, using sample:', e.message); }
+    }
+    return this.fetchBistTrendSample(timeframe);
+  },
+
+  fetchBistTrendSample(timeframe = '1G') {
     return new Promise(resolve => {
       setTimeout(() => {
         const datasets = {
@@ -1257,6 +1264,13 @@ const MockFinancialApi = {
    * Generates realistic OHLCV and Technical Indicator series for ANY BIST stock code.
    */
   async fetchTechnicalData(ticker = 'THYAO', timeframe = '1M') {
+    if (window.TechData) {
+      try { return await TechData.stock(ticker, timeframe); } catch (e) { console.warn('[Technical] real history unavailable, using sample:', e.message); }
+    }
+    return this.fetchTechnicalDataSample(ticker, timeframe);
+  },
+
+  fetchTechnicalDataSample(ticker = 'THYAO', timeframe = '1M') {
     return new Promise(resolve => {
       setTimeout(() => {
         const fin = getOrGenerateStockFinancials(ticker);
@@ -1493,6 +1507,31 @@ function initAllMasterCharts() {
   initProjectionChart();
 }
 
+/** Point size, data-status badge and reference-level cards for the BIST 100 chart. */
+function paintBistExtras(chart, data) {
+  if (chart) {
+    const ds = chart.data.datasets[0];
+    const dense = data.data.length > 40;
+    ds.pointRadius = dense ? 0 : 4;
+    ds.pointHoverRadius = dense ? 4 : 6;
+    ds.tension = dense ? 0.15 : 0.4;
+    chart.update('none');
+  }
+  const badge = document.getElementById('bistChartBadge');
+  if (badge) {
+    badge.className = data.isReal ? 'data-badge live' : 'data-badge sample';
+    badge.textContent = data.isReal ? 'GERÇEK VERİ · GECİKMELİ' : 'ÖRNEK VERİ';
+  }
+  if (data.isReal && data.levels) {
+    const fmtLvl = v => `${Math.round(v).toLocaleString('tr-TR')} Puan`;
+    const set = (id, v) => { const n = document.getElementById(id); if (n) n.textContent = fmtLvl(v); };
+    set('bistLvlSupport', data.levels.support);
+    set('bistLvlResistance', data.levels.resistance);
+    set('bistLvlMa20', data.levels.ma20);
+    set('bistLvlMa200', data.levels.ma200);
+  }
+}
+
 /**
  * 1. bistTrendChart: BIST 100 Real-Time Trend (Line/Area Chart)
  */
@@ -1568,6 +1607,8 @@ async function initBistChart() {
     }
   });
 
+  paintBistExtras(appState.charts.bist, data);
+
   // Timeframe Switcher Hook
   document.querySelectorAll('.bist-timeframe-btn').forEach(btn => {
     btn.onclick = async () => {
@@ -1583,6 +1624,7 @@ async function initBistChart() {
       if (appState.charts.bist) {
         appState.charts.bist.data.labels = updated.labels;
         appState.charts.bist.data.datasets[0].data = updated.data;
+        paintBistExtras(appState.charts.bist, updated);
         appState.charts.bist.update();
       }
     };
@@ -1686,6 +1728,12 @@ async function initTechnicalCharts(ticker = 'THYAO') {
 
   const tech = await MockFinancialApi.fetchTechnicalData(ticker, appState.technical.timeframe);
 
+  const techNote = document.getElementById('techDataNote');
+  if (techNote) {
+    techNote.className = tech.isReal ? 'data-badge live' : 'data-badge sample';
+    techNote.textContent = tech.isReal ? 'GERÇEK GEÇMİŞ VERİ · YAHOO FINANCE · GECİKMELİ' : 'ÖRNEK VERİ';
+  }
+
   // Update DOM Labels in Technical Header
   const priceLabel = document.getElementById('techCurrentPriceLabel');
   const changeLabel = document.getElementById('techCurrentChangeLabel');
@@ -1695,9 +1743,10 @@ async function initTechnicalCharts(ticker = 'THYAO') {
 
   if (priceLabel) priceLabel.textContent = `₺${_trFmt2.format(tech.currentPrice)}`;
   if (changeLabel) changeLabel.textContent = tech.changePercent;
-  if (vSMA20) vSMA20.textContent = tech.sma20[tech.sma20.length - 1];
-  if (vSMA50) vSMA50.textContent = tech.sma50[tech.sma50.length - 1];
-  if (vSMA200) vSMA200.textContent = tech.sma200[tech.sma200.length - 1];
+  const lastVal = arr => { const v = arr[arr.length - 1]; return v == null ? 'N/A' : `₺${_trFmt2.format(v)}`; };
+  if (vSMA20) vSMA20.textContent = lastVal(tech.sma20);
+  if (vSMA50) vSMA50.textContent = lastVal(tech.sma50);
+  if (vSMA200) vSMA200.textContent = lastVal(tech.sma200);
 
   // Update Volume Summary in Header
   const volSummaryEl = document.getElementById('valVolumeSummary');
@@ -1980,7 +2029,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
   if (activeOsc === 'rsi') {
     const lastRsi = tech.rsi[tech.rsi.length - 1];
     if (oscStatus) {
-      oscStatus.innerHTML = `RSI (14): <span class="font-mono">${lastRsi}</span> (${lastRsi > 70 ? 'Aşırı Alım' : lastRsi < 30 ? 'Aşırı Satım' : 'Pozitif Boğa Trendi'})`;
+      oscStatus.innerHTML = `RSI (14): <span class="font-mono">${lastRsi}</span> (${lastRsi > 70 ? 'Aşırı Alım' : lastRsi < 30 ? 'Aşırı Satım' : 'Nötr Bölge'})`;
       oscStatus.className = `font-mono text-xs font-bold ${lastRsi > 70 ? 'text-rose-400' : lastRsi < 30 ? 'text-emerald-400' : 'text-red-400'}`;
     }
     if (oscNote) {

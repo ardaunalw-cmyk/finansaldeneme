@@ -4,24 +4,14 @@
 // Prices only: Yahoo's fundamentals endpoints need a login crumb, so ratios and balance
 // sheet data are NOT served here and stay labelled as sample data in the UI.
 
-const SPECIAL = {
-  BIST100: 'XU100.IS',
-  USDTRY: 'USDTRY=X',
-  EURTRY: 'EURTRY=X',
-  ALTIN: 'GC=F',
-  BRENT: 'BZ=F'
-};
+import { toYahoo, yahooChart } from './_yahoo.mjs';
+
 const MAX_SYMBOLS = 60;
 const BATCH = 12;
 const CACHE_MS = 45 * 1000;
 const FETCH_TIMEOUT_MS = 5000;
 
 const cache = new Map(); // key -> { at, data }
-
-function toYahoo(key) {
-  if (SPECIAL[key]) return SPECIAL[key];
-  return /^[A-Z0-9]{2,6}$/.test(key) ? `${key}.IS` : null;
-}
 
 async function fetchOne(key) {
   const hit = cache.get(key);
@@ -38,38 +28,24 @@ async function fetchOnce(key) {
   const yahoo = toYahoo(key);
   if (!yahoo) return null;
 
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const r = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahoo)}?range=1d&interval=1d`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: ctrl.signal }
-    );
-    if (!r.ok) return null;
-    const meta = (await r.json())?.chart?.result?.[0]?.meta;
-    if (!meta || typeof meta.regularMarketPrice !== 'number') return null;
+  const meta = (await yahooChart(yahoo, { range: '1d', interval: '1d' }, FETCH_TIMEOUT_MS))?.meta;
+  if (!meta || typeof meta.regularMarketPrice !== 'number') return null;
 
-    const prev = meta.previousClose ?? meta.chartPreviousClose;
-    const data = {
-      key,
-      price: meta.regularMarketPrice,
-      prevClose: typeof prev === 'number' ? prev : null,
-      dayHigh: meta.regularMarketDayHigh ?? null,
-      dayLow: meta.regularMarketDayLow ?? null,
-      yearHigh: meta.fiftyTwoWeekHigh ?? null,
-      yearLow: meta.fiftyTwoWeekLow ?? null,
-      volume: meta.regularMarketVolume ?? null,
-      time: meta.regularMarketTime ? meta.regularMarketTime * 1000 : null
-    };
-    cache.set(key, { at: Date.now(), data });
-    return data;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
+  const prev = meta.previousClose ?? meta.chartPreviousClose;
+  const data = {
+    key,
+    price: meta.regularMarketPrice,
+    prevClose: typeof prev === 'number' ? prev : null,
+    dayHigh: meta.regularMarketDayHigh ?? null,
+    dayLow: meta.regularMarketDayLow ?? null,
+    yearHigh: meta.fiftyTwoWeekHigh ?? null,
+    yearLow: meta.fiftyTwoWeekLow ?? null,
+    volume: meta.regularMarketVolume ?? null,
+    time: meta.regularMarketTime ? meta.regularMarketTime * 1000 : null
+  };
+  cache.set(key, { at: Date.now(), data });
+  return data;
 }
-
 export default async function handler(req, res) {
   const send = (status, body, extra = {}) => {
     res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', ...extra });

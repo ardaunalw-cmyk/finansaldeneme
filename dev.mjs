@@ -8,6 +8,7 @@ import { networkInterfaces } from 'node:os';
 import { extname, join, normalize, resolve } from 'node:path';
 import chatHandler from './api/chat.mjs';
 import quoteHandler from './api/quote.mjs';
+import historyHandler from './api/history.mjs';
 import financialsHandler from './api/financials.mjs';
 
 const PORT = Number(process.env.PORT) || 8080;
@@ -47,6 +48,10 @@ createServer(async (req, res) => {
     }
     if (path === '/api/financials') {
       await financialsHandler(req, res);
+      return;
+    }
+    if (path === '/api/history') {
+      await historyHandler(req, res);
       return;
     }
     if (path === '/api/quote') {
