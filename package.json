@@ -5,6 +5,7 @@
     "build": "node build.mjs",
     "dev": "node dev.mjs",
     "data": "node scripts/fetch-fundamentals.mjs",
+    "data:multiples": "node scripts/fetch-sector-multiples.mjs",
     "data:statements": "node scripts/fetch-statements.mjs"
   },
   "devDependencies": {

@@ -957,9 +957,9 @@ function getOrGenerateStockFinancials(ticker = 'THYAO') {
       netDebt: curated.netDebt || '1.15x',
       roe: curated.roe,
       roa: curated.roa,
-      score: curated.score,
-      scoreStatus: curated.scoreStatus,
-      scorePercentile: curated.scorePercentile,
+      score: null, // set from the real balance sheet (VerityScore); the curated sample score is not shown
+      scoreStatus: 'Bilanço verisi yok',
+      scorePercentile: '',
       targetPrice: curated.targetPrice,
       potential: curated.potential,
       analystConsensus: curated.analystConsensus,
@@ -1143,9 +1143,9 @@ function getOrGenerateStockFinancials(ticker = 'THYAO') {
     netDebt: `${(0.6 + r1 * 1.6).toFixed(2)}x`,
     roe: roe,
     roa: roa,
-    score: score,
-    scoreStatus: scoreStatus,
-    scorePercentile: scorePercentile,
+    score: null, // set from the real balance sheet (VerityScore)
+    scoreStatus: 'Bilanço verisi yok',
+    scorePercentile: '',
     targetPrice: targetPrice,
     potential: potential,
     analystConsensus: analystConsensus,
@@ -2935,12 +2935,7 @@ async function loadStockDetails(ticker) {
       : 'text-rose-400 font-bold text-xs sm:text-sm font-mono';
   }
   if (headerVolume) headerVolume.textContent = `Hacim: ${fin.volume}`;
-  if (headerScore) headerScore.textContent = fin.score;
-  if (headerTarget) headerTarget.textContent = fin.targetPrice;
-  if (headerPotential) {
-    headerPotential.textContent = `▲ ${fin.potential}`;
-    headerPotential.className = 'text-xs text-emerald-600 font-bold font-mono';
-  }
+  if (window.VerityScore) VerityScore.paintHeader(fin);
 
   if (typeof fillStockDetailAbout === 'function') fillStockDetailAbout(fin.code);
   if (window.PlainSummary) PlainSummary.render(fin);
@@ -4346,7 +4341,7 @@ function createPeerTableRow(stockFin, isActive, isSelected, medFk, medPd) {
       <td class="py-2.5 px-2 text-right text-slate-300">${stockFin.fdFavok}</td>
       <td class="py-2.5 px-2 text-right text-emerald-400 font-bold">${stockFin.roe}</td>
       <td class="py-2.5 px-2 text-right text-slate-300">${stockFin.netDebt}</td>
-      <td class="py-2.5 px-2 text-right text-amber-300 font-bold">${stockFin.score}</td>
+      <td class="py-2.5 px-2 text-right text-amber-300 font-bold">${stockFin.score ?? '—'}</td>
       <td class="py-2.5 px-3 text-center">${diffBadge}</td>
     </tr>
   `;
@@ -4388,7 +4383,7 @@ function renderPeerComparisonModule(fin) {
   const fds = allList.map(f => parseFloat(f.fdFavok) || 4.5).sort((a,b)=>a-b);
   const roes = allList.map(f => parseFloat(f.roe) || 20.0).sort((a,b)=>a-b);
   const debts = allList.map(f => parseFloat(f.netDebt) || 1.1).sort((a,b)=>a-b);
-  const scores = allList.map(f => parseFloat(f.score) || 7.5).sort((a,b)=>a-b);
+  const scores = allList.map(f => f.score).filter(v => v != null).sort((a,b)=>a-b);
 
   const getMedian = (arr) => {
     const mid = Math.floor(arr.length / 2);
@@ -4400,7 +4395,7 @@ function renderPeerComparisonModule(fin) {
   const medFd = getMedian(fds);
   const medRoe = getMedian(roes);
   const medDebt = getMedian(debts);
-  const medScore = getMedian(scores);
+  const medScore = scores.length ? getMedian(scores) : null;
 
   // Radar median axis scores
   const allAxisScores = allList.map(f => getRadarAxisScores(f));
@@ -4444,7 +4439,7 @@ function renderPeerComparisonModule(fin) {
         <td class="py-2.5 px-2 text-right text-emerald-400">${medFd.toFixed(1)}x</td>
         <td class="py-2.5 px-2 text-right text-emerald-400">%${medRoe.toFixed(1)}</td>
         <td class="py-2.5 px-2 text-right text-emerald-400">${medDebt.toFixed(2)}x</td>
-        <td class="py-2.5 px-2 text-right text-emerald-400">${medScore.toFixed(1)}</td>
+        <td class="py-2.5 px-2 text-right text-emerald-400">${medScore === null ? '—' : medScore.toFixed(1)}</td>
         <td class="py-2.5 px-3 text-center">
           <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950/70 border border-red-800/40 text-red-300">
             BAZ DÜZEY
@@ -5891,7 +5886,7 @@ function exportOverviewTableToCsv() {
       fin.fdFavok.replace('.', ','),
       (fin.roe || '').replace('%', '').trim().replace('.', ','),
       (fin.netDebt || '').replace('x', '').trim().replace('.', ','),
-      fin.score.toFixed(1).replace('.', ',')
+      fin.score == null ? '' : fin.score.toFixed(1).replace('.', ',')
     ].join(';');
   });
 
@@ -6009,7 +6004,7 @@ function getFilteredAndSortedStocks(allStocks) {
       const roeb = finB.roeNum !== undefined ? finB.roeNum : (parseFloat((finB.roe || '0').replace('%', '').replace(',', '.')) || 0);
       return (roea - roeb) * sortDir;
     } else if (sortKey === 'score') {
-      return (finA.score - finB.score) * sortDir;
+      return ((finA.score ?? -1) - (finB.score ?? -1)) * sortDir;
     }
     return 0;
   });
@@ -6117,7 +6112,7 @@ function renderOverviewStockTable() {
           <td class="text-right font-mono text-emerald-300 font-semibold font-tradingview-nums${fin.fundamentalsLive ? ' is-real' : ''}">${fin.roe}</td>
           <td class="text-center">
             <span class="px-2 py-0.5 rounded font-mono font-bold text-xs border font-tradingview-nums ${scoreClass}">
-              ${fin.score}
+              ${fin.score ?? '—'}
             </span>
           </td>
           <td class="text-center">

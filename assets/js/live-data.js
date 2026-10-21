@@ -187,7 +187,7 @@ const LiveData = (() => {
       const priceBadge = `<i class="data-badge live">GECİKMELİ FİYAT</i> Yahoo Finance · ${clock(q.time)} `;
       if (note) {
         note.innerHTML = priceBadge +
-          '<i class="data-badge sample">ÖRNEK</i> F/K, PD/DD, ROE, skor ve hedef fiyat örnek veridir; resmi KAP bilançosu değildir.';
+          '<i class="data-badge sample">ÖRNEK</i> F/K, PD/DD ve ROE örnek veridir; skor ve model değer için gerçek bilanço gerekir.';
       }
       syncFundamentals(fin, note, priceBadge);
     } catch {
@@ -221,6 +221,7 @@ const LiveData = (() => {
       annualRevenue: mlr(t.revenue), annualFavok: mlr(t.ebitda), netIncome: mlr(t.netIncome),
       fundamentalsLive: true
     });
+    if (window.VerityScore) VerityScore.apply(fin, f);
   }
 
   /** Pre-fetched statements for every covered company (assets/data/fundamentals.json). */
@@ -237,6 +238,7 @@ const LiveData = (() => {
 
   async function applyStaticFundamentals(codes) {
     const data = await loadStaticFundamentals();
+    if (window.VerityScore) await VerityScore.ready();
     let changed = false;
     codes.forEach(code => {
       const row = data[code];
@@ -260,12 +262,15 @@ const LiveData = (() => {
           const why = f && f.reason === 'financial-company'
             ? 'Banka ve finans şirketlerinin bilanço verisi henüz bağlanmadı'
             : 'Bu şirket için bilanço verisi bulunamadı';
-          note.innerHTML = priceBadge + `<i class="data-badge sample">ÖRNEK</i> ${why}; rasyolar, skor ve hedef fiyat örnek veridir.`;
+          note.innerHTML = priceBadge + `<i class="data-badge sample">ÖRNEK</i> ${why}; rasyolar örnek veridir; skor ve model değer hesaplanamaz.`;
         }
         return;
       }
 
+      if (window.VerityScore) await VerityScore.ready();
+      if (appState.currentStock !== code) return;
       applyFundamentals(fin, f);
+      if (window.VerityScore) VerityScore.paintHeader(fin);
       if (window.PlainSummary) PlainSummary.render(fin);
 
       const set =(id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
@@ -279,7 +284,7 @@ const LiveData = (() => {
       if (note) {
         note.innerHTML = priceBadge +
           `<i class="data-badge live">GERÇEK BİLANÇO</i> ${f.source} · ${f.period} · ${f.basis}; son 12 ay toplamı. ` +
-          '<i class="data-badge sample">ÖRNEK</i> Skor, hedef fiyat, analist sayıları ve "sektör ort." değerleri örnektir.';
+          '<i class="data-badge live">GERÇEK HESAP</i> Skor ve model değer bu bilançodan ve sektör medyanlarından hesaplanır. <i class="data-badge sample">ÖRNEK</i> "Sektör ort." kartları örnektir.';
       }
     } catch (e) {
       console.warn('[LiveData] fundamentals unavailable:', e.message);

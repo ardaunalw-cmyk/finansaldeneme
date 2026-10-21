@@ -1,0 +1,126 @@
+{
+ "generatedAt": "2026-10-21T22:08:53.690Z",
+ "source": "İş Yatırım bilançoları (KAP) ve Yahoo Finance fiyatları; sektör = KAP sektörü",
+ "all": {
+  "n": 595,
+  "pe": 10.65,
+  "pb": 0.8
+ },
+ "sectors": {
+  "Sanayi & İmalat": {
+   "n": 206,
+   "pe": 12.72,
+   "pb": 0.89
+  },
+  "Savunma & İleri Teknoloji": {
+   "n": 41,
+   "pe": 12.68,
+   "pb": 1.7
+  },
+  "Gayrimenkul Yatırım Ortaklığı (GYO)": {
+   "n": 62,
+   "pe": 5.72,
+   "pb": 0.41
+  },
+  "Çimento & Yapı Malzemeleri": {
+   "n": 16,
+   "pe": 25.36,
+   "pb": 1.11
+  },
+  "Holding & Girişim Sermayesi": {
+   "n": 40,
+   "pe": 5.44,
+   "pb": 0.6
+  },
+  "Enerji & Altyapı": {
+   "n": 58,
+   "pe": 10.94,
+   "pb": 0.78
+  },
+  "Turizm & Otelcilik": {
+   "n": 14,
+   "pe": 9.97,
+   "pb": 0.56
+  },
+  "Gıda, Tarım & İçecek": {
+   "n": 45,
+   "pe": 12.41,
+   "pb": 0.72
+  },
+  "Tekstil & Konfeksiyon": {
+   "n": 16,
+   "pe": 4.48,
+   "pb": 0.73
+  },
+  "Enerji & Petrol Rafineri": {
+   "n": 15,
+   "pe": 14.24,
+   "pb": 0.92
+  },
+  "Holding & Yatırım": {
+   "n": 8,
+   "pe": 8,
+   "pb": 0.51
+  },
+  "Otomotiv & Ulaşım Araçları": {
+   "n": 5,
+   "pe": 11.75,
+   "pb": 0.73
+  },
+  "Madencilik & Doğal Kaynaklar": {
+   "n": 5,
+   "pe": 20.25,
+   "pb": 0.9
+  },
+  "Finansal Hizmetler": {
+   "n": 21,
+   "pe": 4.86,
+   "pb": 1.26
+  },
+  "Kimya, İlaç & Gübre": {
+   "n": 10,
+   "pe": 14.88,
+   "pb": 0.55
+  },
+  "Perakende & Tüketim": {
+   "n": 7,
+   "pe": 12.5,
+   "pb": 0.87
+  },
+  "Demir-Çelik & Metal Sanayi": {
+   "n": 4,
+   "pe": 22.54,
+   "pb": 0.64
+  },
+  "Ulaştırma & Havacılık": {
+   "n": 4,
+   "pe": 12.74,
+   "pb": 0.92
+  },
+  "Otomotiv & Yan Sanayi": {
+   "n": 6,
+   "pe": 8.13,
+   "pb": 1.52
+  },
+  "Sağlık & İlaç Sanayi": {
+   "n": 6,
+   "pe": 14.43,
+   "pb": 1.24
+  },
+  "Telekomünikasyon & Bilişim": {
+   "n": 4,
+   "pe": 7.79,
+   "pb": 0.68
+  },
+  "Cam & Seramik Sanayi": {
+   "n": 1,
+   "pe": 9.2,
+   "pb": 0.4
+  },
+  "Bankacılık & Finans": {
+   "n": 1,
+   "pe": 5.24,
+   "pb": 1.08
+  }
+ }
+}
