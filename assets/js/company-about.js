@@ -19,7 +19,45 @@ const STOCK_LOGO_DOMAINS = {
   VESTL: 'vestel.com', TKFEN: 'tekfen.com.tr', KOZAL: 'kozaaltin.com.tr', ENJSA: 'enerjisa.com',
   AKSEN: 'aksaenerji.com.tr', ODAS: 'odasenerji.com', GUBRF: 'gubretas.com.tr', HEKTS: 'hektas.com.tr',
   SOKM: 'www.sokmarket.com.tr', TTRAK: 'turktraktor.com.tr', DOAS: 'dogusotomotiv.com.tr', OTKAR: 'otokar.com.tr',
-  LOGO: 'www.logo.com.tr', MAVI: 'mavi.com', TRKCM: 'sisecam.com', AKSA: 'aksa.com', CIMSA: 'cimsa.com.tr'
+  LOGO: 'www.logo.com.tr', MAVI: 'mavi.com', TRKCM: 'sisecam.com', AKSA: 'aksa.com', CIMSA: 'cimsa.com.tr',
+  // Bankalar ve finans
+  TSKB: 'tskb.com.tr', SKBNK: 'sekerbank.com.tr', ALBRK: 'albaraka.com.tr', ICBCT: 'icbc.com.tr',
+  QNBTR: 'qnb.com.tr', ODEA: 'odeabank.com.tr', TEBNK: 'teb.com.tr', ANHYT: 'anadolusigorta.com.tr',
+  TURSG: 'turkiyesigorta.com.tr', AKGRT: 'aksigorta.com.tr', ANSGR: 'anadolusigorta.com.tr', QUICK: 'quicksigorta.com',
+  HALKF: 'halkleasing.com.tr', 
+  // Holdingler
+  
+  FBHOL: 'www.fibaholding.com.tr', DGHOL: 'dogusgrubu.com.tr', AKFEN: 'akfen.com.tr', RNHOL: 'ronesans.com',
+  NRHOL: 'nurolholding.com.tr', POLHO: 'polisanholding.com', 
+  GSDHO: 'gsdholding.com.tr', 
+  // Enerji
+  ZOREN: 'zorlu.com.tr', AKENR: 'akenerji.com.tr', AYDEM: 'aydem.com.tr', EEDAS: 'enerjisa.com',
+  CLKEN: 'calik.com', GWIND: 'galatawind.com.tr', ODAS: 'odasenerji.com', HUNER: 'hunenerji.com',
+  AYTMZ: 'aytemiz.com.tr', PTOFS: 'petrolofisi.com.tr', SHTRP: 'shell.com.tr', 
+  // PETKM, TUPRS yukarıda
+  // Sanayi, demir-çelik, çimento
+  KRDMA: 'kardemir.com', KRDMB: 'kardemir.com',
+  ANACM: 'sisecam.com', CMSAN: 'camsan.com.tr', CEMAS: 'cemas.com.tr', BUCIM: 'bursacimento.com.tr',
+  SODA: 'sisecam.com', BSHEV: 'bsh-group.com', 
+  KARSN: 'karsan.com.tr', KATMR: 'katmerciler.com.tr', OTOSR: 'otosor.com.tr', SZUKI: 'suzuki.com.tr',
+  TKNKA: 'teknikaplast.com', 
+  // Gıda, perakende, tekstil
+  KOTON: 'koton.com', BOYP: 'beymen.com', EBEBK: 'ebebek.com', DARDL: 'www.dardanel.com.tr',
+  BESLR: 'beslergida.com', KERVN: 'kervansaray.com.tr', 
+  KSEKR: 'konyaseker.com.tr', PASTA: 'pastavilla.com.tr',
+  OBAMS: 'obamakarna.com', DIMES: 'dimes.com.tr', BYDNR: 'baydoner.com', ECILC: 'eczacibasi.com.tr',
+  SELEC: 'selcukecza.com.tr', NOBEL: 'nobel.com.tr', 
+  // Medya, spor, sağlık
+  GSRAY: 'galatasaray.org', HURGZ: 'hurriyet.com.tr', SABAH: 'sabah.com.tr', ACIBD: 'acibadem.com.tr',
+  DNYGZ: 'dunyagoz.com',
+  // Gayrimenkul
+  ZRGYO: 'ziraatgyo.com.tr', ISGYO: 'isgyo.com.tr', HLGYO: 'halkgyo.com.tr',
+  VKGYO: 'vakifgyo.com.tr', TRGYO: 'torunlargyo.com.tr', PSGYO: 'pasifikgyo.com.tr', AKFGY: 'akfengyo.com.tr',
+  SNGYO: 'sinpas.com.tr', TSGYO: 'tskbgyo.com.tr',
+  // İnşaat, teknoloji, diğer
+  TURKR: 'turkerler.com.tr', ENPRA: 'enpara.com',
+  HTTBT: 'hititcs.com', ODINE: 'odine.com.tr',
+  SDTTR: 'sdt.com.tr', ALTNY: 'altinay.com', 
 };
 
 
