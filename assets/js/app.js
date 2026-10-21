@@ -397,7 +397,7 @@ function updateIntroStepDots(activeDotIndex) {
     if (idx < activeDotIndex) {
       dot.className = 'intro-dot w-2 h-2 rounded-full bg-emerald-400 transition-all duration-300 shadow-[0_0_8px_rgba(52,211,153,0.8)]';
     } else if (idx === activeDotIndex) {
-      dot.className = 'intro-dot w-2 h-2 rounded-full bg-[#E3120B] scale-125 transition-all duration-300 shadow-[0_0_10px_rgba(227,18,11,1)]';
+      dot.className = 'intro-dot w-2 h-2 rounded-full bg-[#2F6BFF] scale-125 transition-all duration-300 shadow-[0_0_10px_rgba(47, 107, 255,1)]';
     } else {
       dot.className = 'intro-dot w-2 h-2 rounded-full bg-slate-800 transition-all duration-300';
     }
@@ -1402,9 +1402,9 @@ const MockFinancialApi = {
     return new Promise(resolve => {
       setTimeout(() => {
         resolve([
-          { name: 'Ulaştırma ve Lojistik', weight: 25, value: '₺312.500', color: '#E3120B' },
+          { name: 'Ulaştırma ve Lojistik', weight: 25, value: '₺312.500', color: '#2F6BFF' },
           { name: 'Bankacılık ve Finans', weight: 20, value: '₺250.000', color: '#F43F5E' },
-          { name: 'Sanayi ve Holding', weight: 20, value: '₺250.000', color: '#B80A04' },
+          { name: 'Sanayi ve Holding', weight: 20, value: '₺250.000', color: '#1D4ED8' },
           { name: 'Savunma ve Teknoloji', weight: 20, value: '₺250.000', color: '#10B981' },
           { name: 'Perakende ve Tüketim', weight: 15, value: '₺187.500', color: '#D97706' }
         ]);
@@ -1461,10 +1461,10 @@ async function initBistChart() {
   const data = await MockFinancialApi.fetchBistTrend('1G');
   const ctx = canvas.getContext('2d');
   
-  // The Economist Red Gradient (#E3120B)
+  // brand cobalt Gradient (#2F6BFF)
   const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-  gradient.addColorStop(0, 'rgba(227, 18, 11, 0.35)');
-  gradient.addColorStop(1, 'rgba(227, 18, 11, 0.00)');
+  gradient.addColorStop(0, 'rgba(47, 107, 255, 0.35)');
+  gradient.addColorStop(1, 'rgba(47, 107, 255, 0.00)');
 
   if (appState.charts.bist) {
     appState.charts.bist.destroy();
@@ -1478,12 +1478,12 @@ async function initBistChart() {
         {
           label: 'BIST 100 Endeksi',
           data: data.data,
-          borderColor: '#E3120B',
+          borderColor: '#2F6BFF',
           backgroundColor: gradient,
           fill: true,
           tension: 0.4,
           borderWidth: 2.5,
-          pointBackgroundColor: '#E3120B',
+          pointBackgroundColor: '#2F6BFF',
           pointBorderColor: '#0E1626',
           pointBorderWidth: 2,
           pointRadius: 4,
@@ -1530,10 +1530,10 @@ async function initBistChart() {
   document.querySelectorAll('.bist-timeframe-btn').forEach(btn => {
     btn.onclick = async () => {
       document.querySelectorAll('.bist-timeframe-btn').forEach(b => {
-        b.classList.remove('bg-[#E3120B]', 'text-white', 'font-bold');
+        b.classList.remove('bg-[#2F6BFF]', 'text-white', 'font-bold');
         b.classList.add('text-slate-400');
       });
-      btn.classList.add('bg-[#E3120B]', 'text-white', 'font-bold');
+      btn.classList.add('bg-[#2F6BFF]', 'text-white', 'font-bold');
       btn.classList.remove('text-slate-400');
 
       const tf = btn.textContent.trim();
@@ -1631,7 +1631,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
         type: 'line',
         label: 'SMA 20 (Kısa Vade)',
         data: tech.sma20,
-        borderColor: '#E3120B', // the economist red
+        borderColor: '#2F6BFF', // brand cobalt
         borderWidth: 1.8,
         pointRadius: 0,
         fill: false,
@@ -1687,7 +1687,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
         borderWidth: 1.2,
         pointRadius: 0,
         fill: '-1',
-        backgroundColor: 'rgba(227, 18, 11, 0.05)',
+        backgroundColor: 'rgba(47, 107, 255, 0.05)',
         yAxisID: 'y'
       }
     );
@@ -1836,8 +1836,8 @@ async function initTechnicalCharts(ticker = 'THYAO') {
     }
 
     const rsiGradient = oscCtx.createLinearGradient(0, 0, 0, 180);
-    rsiGradient.addColorStop(0, 'rgba(227, 18, 11, 0.35)');
-    rsiGradient.addColorStop(1, 'rgba(227, 18, 11, 0.02)');
+    rsiGradient.addColorStop(0, 'rgba(47, 107, 255, 0.35)');
+    rsiGradient.addColorStop(1, 'rgba(47, 107, 255, 0.02)');
 
     appState.charts.techOsc = new Chart(oscCtx, {
       data: {
@@ -1847,7 +1847,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
             type: 'line',
             label: 'RSI (14)',
             data: tech.rsi,
-            borderColor: '#E3120B', // the economist red
+            borderColor: '#2F6BFF', // brand cobalt
             backgroundColor: rsiGradient,
             fill: true,
             borderWidth: 2.2,
@@ -2182,9 +2182,9 @@ async function initStockIncomeChart() {
   const aBtn = document.getElementById('toggleAnnual');
   if (qBtn && aBtn) {
     qBtn.onclick = () => {
-      qBtn.classList.add('bg-[#E3120B]', 'text-white', 'font-bold');
+      qBtn.classList.add('bg-[#2F6BFF]', 'text-white', 'font-bold');
       qBtn.classList.remove('text-slate-400');
-      aBtn.classList.remove('bg-[#E3120B]', 'text-white', 'font-bold');
+      aBtn.classList.remove('bg-[#2F6BFF]', 'text-white', 'font-bold');
       aBtn.classList.add('text-slate-400');
 
       if (appState.charts.stockIncome) {
@@ -2196,9 +2196,9 @@ async function initStockIncomeChart() {
     };
 
     aBtn.onclick = () => {
-      aBtn.classList.add('bg-[#E3120B]', 'text-white', 'font-bold');
+      aBtn.classList.add('bg-[#2F6BFF]', 'text-white', 'font-bold');
       aBtn.classList.remove('text-slate-400');
-      qBtn.classList.remove('bg-[#E3120B]', 'text-white', 'font-bold');
+      qBtn.classList.remove('bg-[#2F6BFF]', 'text-white', 'font-bold');
       qBtn.classList.add('text-slate-400');
 
       if (appState.charts.stockIncome) {
@@ -2227,8 +2227,8 @@ async function initPortfolioPerformanceChart() {
   const ctx = canvas.getContext('2d');
 
   const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-  gradient.addColorStop(0, 'rgba(227, 18, 11, 0.30)');
-  gradient.addColorStop(1, 'rgba(227, 18, 11, 0.00)');
+  gradient.addColorStop(0, 'rgba(47, 107, 255, 0.30)');
+  gradient.addColorStop(1, 'rgba(47, 107, 255, 0.00)');
 
   if (appState.charts.portfolio) {
     appState.charts.portfolio.destroy();
@@ -2242,7 +2242,7 @@ async function initPortfolioPerformanceChart() {
         {
           label: 'Once ve Always Model Portföy',
           data: data.portfolio,
-          borderColor: '#E3120B',
+          borderColor: '#2F6BFF',
           backgroundColor: gradient,
           fill: true,
           tension: 0.4,
@@ -2360,12 +2360,12 @@ async function initProjectionChart() {
         {
           label: 'Gerçekleşen Çeyreklik Hasılat',
           data: proj.chart.historical,
-          borderColor: '#E3120B', // the economist red
-          backgroundColor: 'rgba(227, 18, 11, 0.15)',
+          borderColor: '#2F6BFF', // brand cobalt
+          backgroundColor: 'rgba(47, 107, 255, 0.15)',
           fill: true,
           tension: 0.35,
           borderWidth: 2.5,
-          pointBackgroundColor: '#E3120B',
+          pointBackgroundColor: '#2F6BFF',
           pointBorderColor: '#0E1626',
           pointRadius: 4
         },
@@ -2452,7 +2452,7 @@ async function initSectorComparisonChart() {
         {
           label: 'F/K Ortalaması',
           data: sectors.map(d => d.fk),
-          backgroundColor: '#E3120B', // the economist red
+          backgroundColor: '#2F6BFF', // brand cobalt
           borderRadius: 6,
           barPercentage: 0.45,
           categoryPercentage: 0.8,
@@ -2556,7 +2556,7 @@ function switchView(viewName, stockCode = null) {
   // 2b. Update mobile bottom bar active state
   document.querySelectorAll('[data-bottom-nav]').forEach(btn => {
     if (btn.getAttribute('data-bottom-nav') === viewName) {
-      btn.classList.add('text-[#E3120B]');
+      btn.classList.add('text-[#2F6BFF]');
       btn.classList.remove('text-slate-400');
       const label = btn.querySelector('span');
       if (label) {
@@ -2564,7 +2564,7 @@ function switchView(viewName, stockCode = null) {
         label.classList.remove('font-medium');
       }
     } else {
-      btn.classList.remove('text-[#E3120B]');
+      btn.classList.remove('text-[#2F6BFF]');
       btn.classList.add('text-slate-400');
       const label = btn.querySelector('span');
       if (label) {
@@ -2945,13 +2945,13 @@ function switchStockSubTab(tabName) {
     const target = btn.getAttribute('data-stock-tab');
     if (target === 'all') {
       if (tabName === 'all') {
-        btn.className = 'stock-subtab-btn px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 transition-all bg-[#E3120B] text-white shadow-lg shadow-red-600/30';
+        btn.className = 'stock-subtab-btn px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 transition-all bg-[#2F6BFF] text-white shadow-lg shadow-red-600/30';
       } else {
         btn.className = 'stock-subtab-btn px-3 py-1.5 rounded-xl text-xs font-mono font-medium flex items-center gap-1.5 transition-all text-slate-400 hover:text-white hover:bg-[#121C30] border border-transparent hover:border-[#1E2B45]';
       }
     } else {
       if (target === tabName) {
-        btn.className = 'stock-subtab-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-[#E3120B] text-white shadow-lg shadow-red-600/30 font-mono';
+        btn.className = 'stock-subtab-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-[#2F6BFF] text-white shadow-lg shadow-red-600/30 font-mono';
       } else {
         btn.className = 'stock-subtab-btn px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-[#121C30] font-mono';
       }
@@ -3174,7 +3174,7 @@ function setBalanceCurrency(currency) {
   ].forEach(b => {
     if (!b.el) return;
     if (b.id === currency) {
-      b.el.className = 'balance-cur-btn px-2.5 py-1 rounded-lg font-bold bg-[#E3120B] text-white shadow-sm transition-all';
+      b.el.className = 'balance-cur-btn px-2.5 py-1 rounded-lg font-bold bg-[#2F6BFF] text-white shadow-sm transition-all';
     } else {
       b.el.className = 'balance-cur-btn px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white transition-all';
     }
@@ -3218,7 +3218,7 @@ function setBalancePeriod(period) {
 
   document.querySelectorAll('.balance-period-btn').forEach(b => {
     if (b.textContent.includes(period) || b.id.includes(period.replace('/', ''))) {
-      b.className = 'balance-period-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-[#E3120B] text-white shadow-sm';
+      b.className = 'balance-period-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-[#2F6BFF] text-white shadow-sm';
     } else {
       b.className = 'balance-period-btn px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white';
     }
@@ -3436,7 +3436,7 @@ function renderBalanceSheetTable(fin) {
       return `
         <tr class="bg-[#121C30]/80 font-bold border-t border-b border-[#1E2B45] text-white">
           <td class="py-3 px-4 font-bold text-slate-100 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#E3120B]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-[#2F6BFF]"></span>
             <span>${it.name}</span>
           </td>
           <td class="py-3 px-4 text-right font-mono text-red-400 font-bold">${val24}</td>
@@ -3586,14 +3586,14 @@ function updateDcfMatrix() {
           }
 
           if (isBaseCell) {
-            cellBg = 'bg-red-900/60 text-white ring-2 ring-red-500 shadow-[0_0_15px_rgba(227,18,11,0.55)] relative font-black';
+            cellBg = 'bg-red-900/60 text-white ring-2 ring-red-500 shadow-[0_0_15px_rgba(47, 107, 255,0.55)] relative font-black';
           }
 
           return `
             <td onclick="selectDcfCell(${w}, ${g})" class="py-2 px-2 cursor-pointer transition-all hover:scale-[1.03] ${cellBg} ${isBaseCell ? 'z-10' : ''}">
               <div class="font-mono text-xs font-bold leading-tight">${valFormatted}</div>
               <div class="font-mono text-[10px] mt-0.5 ${pillClass}">${upFormatted}</div>
-              ${isBaseCell ? '<span class="absolute top-1 right-1 text-[8px] bg-[#E3120B] text-white font-extrabold px-1 rounded shadow">BAZ</span>' : ''}
+              ${isBaseCell ? '<span class="absolute top-1 right-1 text-[8px] bg-[#2F6BFF] text-white font-extrabold px-1 rounded shadow">BAZ</span>' : ''}
             </td>
           `;
         }).join('')}
@@ -4311,13 +4311,13 @@ function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
           label: activeFin.code || 'Aktif Hisse',
           data: activeData,
           fill: true,
-          backgroundColor: 'rgba(227, 18, 11, 0.22)',
-          borderColor: '#E3120B',
+          backgroundColor: 'rgba(47, 107, 255, 0.22)',
+          borderColor: '#2F6BFF',
           borderWidth: 2,
-          pointBackgroundColor: '#E3120B',
+          pointBackgroundColor: '#2F6BFF',
           pointBorderColor: '#fff',
           pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: '#E3120B',
+          pointHoverBorderColor: '#2F6BFF',
           pointRadius: 3.5
         },
         {
@@ -4418,10 +4418,10 @@ function createPeerTableRow(stockFin, isActive, isSelected, medFk, medPd) {
         <div>
           <div class="flex items-center gap-1.5">
             <span class="font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm text-xs font-tv">${stockFin.code}</span>
-            ${isActive ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-red-950/40 text-red-300 border border-red-800/40 font-bold">AKTİF</span>' : ''}
-            ${isSelected ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800/40 font-bold">RADARDA</span>' : ''}
+            ${isActive ? '<span class="text-[9px] px-1.5 py-px rounded bg-red-950/40 text-red-300 border border-red-800/40 font-bold">AKTİF</span>' : ''}
+            ${isSelected ? '<span class="text-[9px] px-1.5 py-px rounded bg-purple-950 text-purple-300 border border-purple-800/40 font-bold">RADARDA</span>' : ''}
           </div>
-          <span class="inline-block text-[10px] text-black font-bold bg-white/90 px-1.5 py-0.2 rounded truncate max-w-[130px] mt-0.5" title="${stockFin.name}">${stockFin.name}</span>
+          <span class="inline-block text-[10px] text-black font-bold bg-white/90 px-1.5 py-px rounded truncate max-w-[130px] mt-0.5" title="${stockFin.name}">${stockFin.name}</span>
         </div>
       </td>
       <td class="py-2.5 px-2 text-right font-bold text-slate-200">${stockFin.fk}</td>
@@ -4977,7 +4977,7 @@ function renderPortfolioHoldingsTable() {
     const pnlSign = isPnlPositive ? '+' : '';
     const logoHtml = (typeof getStockLogoHtml === 'function')
       ? getStockLogoHtml(h.code, 26, 'flex-shrink-0 shadow')
-      : `<span class="w-6.5 h-6.5 rounded bg-[#E3120B] text-white font-bold flex items-center justify-center text-[10px]">${h.code.slice(0, 2)}</span>`;
+      : `<span class="w-6.5 h-6.5 rounded bg-[#2F6BFF] text-white font-bold flex items-center justify-center text-[10px]">${h.code.slice(0, 2)}</span>`;
 
     return `
       <tr class="hover:bg-[#121C30]/60 transition-colors border-b border-[#141E33]">
@@ -4987,9 +4987,9 @@ function renderPortfolioHoldingsTable() {
             <div>
               <div class="flex items-center gap-1.5">
                 <span class="font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm text-xs font-mono">${h.code}</span>
-                <span class="px-1.5 py-0.2 rounded text-[9px] font-mono border ${h.roleBadgeClass} hidden md:inline-block">${h.role}</span>
+                <span class="px-1.5 py-px rounded text-[9px] font-mono border ${h.roleBadgeClass} hidden md:inline-block">${h.role}</span>
               </div>
-              <span class="inline-block text-[10px] text-black font-bold bg-white/90 px-1.5 py-0.2 rounded truncate max-w-[130px] mt-0.5" title="${h.name}">${h.name}</span>
+              <span class="inline-block text-[10px] text-black font-bold bg-white/90 px-1.5 py-px rounded truncate max-w-[130px] mt-0.5" title="${h.name}">${h.name}</span>
             </div>
           </div>
         </td>
@@ -5000,7 +5000,7 @@ function renderPortfolioHoldingsTable() {
           <div class="space-y-1">
             <span class="font-bold text-red-400 font-mono text-xs">%${h.weight.toFixed(1).replace('.', ',')}</span>
             <div class="w-14 ml-auto h-1 rounded-full bg-red-950/40 overflow-hidden">
-              <div class="h-full bg-[#E3120B]" style="width: ${(h.weight / 25) * 100}%"></div>
+              <div class="h-full bg-[#2F6BFF]" style="width: ${(h.weight / 25) * 100}%"></div>
             </div>
           </div>
         </td>
@@ -5058,7 +5058,7 @@ function renderCorrelationHeatmap() {
       let cellClass = 'bg-[#0E1626] text-slate-400';
       if (i === j) {
         // Diagonal 1.00
-        cellClass = 'bg-[#E3120B] text-white font-extrabold shadow-sm';
+        cellClass = 'bg-[#2F6BFF] text-white font-extrabold shadow-sm';
       } else if (val >= 0.70) {
         cellClass = 'bg-red-900/90 text-red-200 font-bold';
       } else if (val >= 0.40) {
@@ -5234,7 +5234,7 @@ function setTechnicalOscillator(osc) {
     const el = document.getElementById(b.id);
     if (!el) return;
     if (b.key === osc) {
-      el.className = 'px-2.5 py-0.5 rounded text-xs font-bold bg-[#E3120B] text-white shadow-sm shadow-red-500/20 transition-all';
+      el.className = 'px-2.5 py-0.5 rounded text-xs font-bold bg-[#2F6BFF] text-white shadow-sm shadow-red-500/20 transition-all';
     } else {
       el.className = 'px-2.5 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white transition-all';
     }
@@ -5249,7 +5249,7 @@ function setTechnicalTimeframe(tf) {
     const el = document.getElementById(`btnTimeframe${t}`);
     if (el) {
       if (t === tf) {
-        el.className = 'px-2.5 py-1 rounded-md text-white font-bold bg-[#E3120B] shadow-sm shadow-red-500/20 transition-all';
+        el.className = 'px-2.5 py-1 rounded-md text-white font-bold bg-[#2F6BFF] shadow-sm shadow-red-500/20 transition-all';
       } else {
         el.className = 'px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition-all';
       }
@@ -5418,16 +5418,16 @@ function initSearch() {
             const priceDisplay = fin.price.includes('₺') ? fin.price : `₺${fin.price}`;
 
             return `
-              <div onclick="selectStock('${s.code}')" class="p-2.5 hover:bg-[#E3120B]/15 rounded-lg cursor-pointer flex items-center justify-between transition-colors border-b border-[#162238] last:border-0 group">
+              <div onclick="selectStock('${s.code}')" class="p-2.5 hover:bg-[#2F6BFF]/15 rounded-lg cursor-pointer flex items-center justify-between transition-colors border-b border-[#162238] last:border-0 group">
                 <div class="flex items-center gap-3 min-w-0 pr-2">
                   ${getStockLogoHtml(s.code, 28, 'shadow flex-shrink-0')}
                   <div class="min-w-0">
                     <div class="flex items-center gap-2">
                       <span class="font-mono font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm text-xs font-tv">${s.code}</span>
-                      ${s.isBist30 ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-red-950/40 border border-red-800/50 text-red-300 font-mono font-bold">BIST 30</span>' : ''}
+                      ${s.isBist30 ? '<span class="text-[9px] px-1.5 py-px rounded bg-red-950/40 border border-red-800/50 text-red-300 font-mono font-bold">BIST 30</span>' : ''}
                       <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#162238] text-slate-400 truncate max-w-[120px]">${s.sector}</span>
                     </div>
-                    <div class="text-[11px] text-black font-bold bg-white/90 px-1.5 py-0.2 rounded inline-block truncate max-w-xs sm:max-w-md mt-0.5">${s.name}</div>
+                    <div class="text-[11px] text-black font-bold bg-white/90 px-1.5 py-px rounded inline-block truncate max-w-xs sm:max-w-md mt-0.5">${s.name}</div>
                   </div>
                 </div>
                 <div class="text-right flex-shrink-0">
@@ -6167,9 +6167,9 @@ function renderOverviewStockTable() {
               <div class="min-w-0">
                 <div class="flex items-center gap-1.5">
                   <span class="font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm font-tv text-xs">${s.code}</span>
-                  ${s.isBist30 ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-red-950/40 border border-red-800/50 text-red-300 font-mono font-bold">BIST 30</span>' : ''}
+                  ${s.isBist30 ? '<span class="text-[9px] px-1.5 py-px rounded bg-red-950/40 border border-red-800/50 text-red-300 font-mono font-bold">BIST 30</span>' : ''}
                 </div>
-                <div class="text-xs text-black font-bold truncate max-w-[200px] mt-0.5 bg-white/90 px-1.5 py-0.2 rounded inline-block" title="${s.name}">${s.name}</div>
+                <div class="text-xs text-black font-bold truncate max-w-[200px] mt-0.5 bg-white/90 px-1.5 py-px rounded inline-block" title="${s.name}">${s.name}</div>
               </div>
             </div>
           </td>
@@ -6189,7 +6189,7 @@ function renderOverviewStockTable() {
             </span>
           </td>
           <td class="text-center">
-            <button onclick="switchView('stock-detail', '${s.code}')" class="px-3 py-1 rounded-lg bg-[#E3120B]/20 hover:bg-[#E3120B] text-red-300 hover:text-white border border-red-500/30 font-semibold text-xs transition-all">
+            <button onclick="switchView('stock-detail', '${s.code}')" class="px-3 py-1 rounded-lg bg-[#2F6BFF]/20 hover:bg-[#2F6BFF] text-red-300 hover:text-white border border-red-500/30 font-semibold text-xs transition-all">
               Detay
             </button>
           </td>
@@ -6223,7 +6223,7 @@ function initStockTableFilters() {
       tabs.forEach(t => {
         t.className = 'overview-table-tab px-3 py-2 rounded-xl bg-[#090D18] text-slate-400 hover:text-white hover:bg-[#121C30] border border-[#1E2B45] transition-all';
       });
-      tab.className = 'overview-table-tab px-3 py-2 rounded-xl bg-[#E3120B] text-white shadow-md shadow-red-600/30 transition-all';
+      tab.className = 'overview-table-tab px-3 py-2 rounded-xl bg-[#2F6BFF] text-white shadow-md shadow-red-600/30 transition-all';
 
       overviewTableState.filter = tab.getAttribute('data-filter') || 'all';
       overviewTableState.currentPage = 1;
@@ -6857,7 +6857,7 @@ function renderNewsCenter(categoryFilter = null, impactFilter = null, searchQuer
         </div>
         <h4 class="font-serif font-bold text-white text-base">Aradığınız Kriterlere Uygun Gündem Haberi Bulunamadı</h4>
         <p class="text-xs text-slate-400 max-w-md mx-auto">Lütfen arama terimini değiştirin veya kategori / etki filtrelerini sıfırlayın.</p>
-        <button onclick="resetNewsFilters()" class="px-4 py-2 rounded-xl bg-[#E3120B] hover:bg-red-700 text-white font-bold text-xs transition-colors">
+        <button onclick="resetNewsFilters()" class="px-4 py-2 rounded-xl bg-[#2F6BFF] hover:bg-red-700 text-white font-bold text-xs transition-colors">
           Filtreleri Sıfırla
         </button>
       </div>
@@ -7074,11 +7074,11 @@ function initNewsCenter() {
   document.querySelectorAll('.news-cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.news-cat-tab').forEach(b => {
-        b.classList.remove('bg-[#E3120B]', 'text-white', 'shadow-md', 'shadow-red-600/30');
-        b.classList.add('bg-[#0B0D12]', 'text-slate-400', 'border', 'border-[#232738]');
+        b.classList.remove('bg-[#2F6BFF]', 'text-white', 'shadow-md', 'shadow-red-600/30');
+        b.classList.add('bg-[#070B14]', 'text-slate-400', 'border', 'border-[#1A2540]');
       });
-      btn.classList.remove('bg-[#0B0D12]', 'text-slate-400', 'border', 'border-[#232738]');
-      btn.classList.add('bg-[#E3120B]', 'text-white', 'shadow-md', 'shadow-red-600/30');
+      btn.classList.remove('bg-[#070B14]', 'text-slate-400', 'border', 'border-[#1A2540]');
+      btn.classList.add('bg-[#2F6BFF]', 'text-white', 'shadow-md', 'shadow-red-600/30');
 
       const cat = btn.getAttribute('data-news-cat') || 'all';
       renderNewsCenter(cat, null, null);
@@ -7089,11 +7089,11 @@ function initNewsCenter() {
   document.querySelectorAll('.news-impact-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.news-impact-tab').forEach(b => {
-        b.classList.remove('bg-[#E3120B]', 'text-white', 'shadow-md', 'shadow-red-600/30');
-        b.classList.add('bg-[#0B0D12]', 'text-slate-400', 'border', 'border-[#232738]');
+        b.classList.remove('bg-[#2F6BFF]', 'text-white', 'shadow-md', 'shadow-red-600/30');
+        b.classList.add('bg-[#070B14]', 'text-slate-400', 'border', 'border-[#1A2540]');
       });
-      btn.classList.remove('bg-[#0B0D12]', 'text-slate-400', 'border', 'border-[#232738]');
-      btn.classList.add('bg-[#E3120B]', 'text-white', 'shadow-md', 'shadow-red-600/30');
+      btn.classList.remove('bg-[#070B14]', 'text-slate-400', 'border', 'border-[#1A2540]');
+      btn.classList.add('bg-[#2F6BFF]', 'text-white', 'shadow-md', 'shadow-red-600/30');
 
       const impact = btn.getAttribute('data-news-impact') || 'all';
       renderNewsCenter(null, impact, null);
@@ -7128,22 +7128,22 @@ function resetNewsFilters() {
   document.querySelectorAll('.news-cat-tab').forEach(b => {
     const isAll = b.getAttribute('data-news-cat') === 'all';
     if (isAll) {
-      b.classList.add('bg-[#E3120B]', 'text-white', 'shadow-md', 'shadow-red-600/30');
-      b.classList.remove('bg-[#0B0D12]', 'text-slate-400', 'border', 'border-[#232738]');
+      b.classList.add('bg-[#2F6BFF]', 'text-white', 'shadow-md', 'shadow-red-600/30');
+      b.classList.remove('bg-[#070B14]', 'text-slate-400', 'border', 'border-[#1A2540]');
     } else {
-      b.classList.remove('bg-[#E3120B]', 'text-white', 'shadow-md', 'shadow-red-600/30');
-      b.classList.add('bg-[#0B0D12]', 'text-slate-400', 'border', 'border-[#232738]');
+      b.classList.remove('bg-[#2F6BFF]', 'text-white', 'shadow-md', 'shadow-red-600/30');
+      b.classList.add('bg-[#070B14]', 'text-slate-400', 'border', 'border-[#1A2540]');
     }
   });
 
   document.querySelectorAll('.news-impact-tab').forEach(b => {
     const isAll = b.getAttribute('data-news-impact') === 'all';
     if (isAll) {
-      b.classList.add('bg-[#E3120B]', 'text-white', 'shadow-md', 'shadow-red-600/30');
-      b.classList.remove('bg-[#0B0D12]', 'text-slate-400', 'border', 'border-[#232738]');
+      b.classList.add('bg-[#2F6BFF]', 'text-white', 'shadow-md', 'shadow-red-600/30');
+      b.classList.remove('bg-[#070B14]', 'text-slate-400', 'border', 'border-[#1A2540]');
     } else {
-      b.classList.remove('bg-[#E3120B]', 'text-white', 'shadow-md', 'shadow-red-600/30');
-      b.classList.add('bg-[#0B0D12]', 'text-slate-400', 'border', 'border-[#232738]');
+      b.classList.remove('bg-[#2F6BFF]', 'text-white', 'shadow-md', 'shadow-red-600/30');
+      b.classList.add('bg-[#070B14]', 'text-slate-400', 'border', 'border-[#1A2540]');
     }
   });
 
@@ -7793,7 +7793,7 @@ function switchWatchlistDrawerTab(tab) {
   if (tab === 'watchlist') {
     wPane.classList.remove('hidden');
     aPane.classList.add('hidden');
-    wBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-bold transition-all bg-[#E3120B] text-white flex items-center justify-center gap-1.5 shadow-md';
+    wBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-bold transition-all bg-[#2F6BFF] text-white flex items-center justify-center gap-1.5 shadow-md';
     aBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-bold transition-all text-slate-400 hover:text-white bg-[#090D18] border border-[#1E2B45] flex items-center justify-center gap-1.5';
     renderWatchlistItems();
   } else {
@@ -7860,7 +7860,7 @@ function renderWatchlistItems() {
               <span class="font-mono font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm text-xs">${ticker}</span>
               <span class="text-[9px] font-mono text-slate-400">${fin.sector ? fin.sector.split('&')[0] : 'BIST'}</span>
             </div>
-            <div class="text-[10px] text-black font-bold bg-white/90 px-1.5 py-0.2 rounded inline-block truncate max-w-[140px] mt-0.5" title="${fin.name}">${fin.name}</div>
+            <div class="text-[10px] text-black font-bold bg-white/90 px-1.5 py-px rounded inline-block truncate max-w-[140px] mt-0.5" title="${fin.name}">${fin.name}</div>
           </div>
         </div>
 
@@ -8070,7 +8070,7 @@ function renderAlertsItems() {
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2">
             <span class="font-mono font-bold text-xs text-white">${alt.ticker}</span>
-            <span class="text-[9px] font-mono px-1.5 py-0.2 rounded ${alt.triggered ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-red-950/40 text-red-300 border border-red-800/40'} font-bold">
+            <span class="text-[9px] font-mono px-1.5 py-px rounded ${alt.triggered ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-red-950/40 text-red-300 border border-red-800/40'} font-bold">
               ${alt.triggered ? 'TETİKLENDİ (' + (alt.triggeredAt || 'Bugün') + ')' : typeBadge}
             </span>
           </div>
@@ -8224,7 +8224,7 @@ function showTerminalToast(title, message, ticker, type = 'info') {
       <p class="text-[11px] text-slate-300 mt-1 leading-snug font-light">${message}</p>
       ${ticker ? `
         <div class="mt-2.5 flex items-center gap-2">
-          <button onclick="switchView('stock-detail'); loadStockDetails('${ticker}'); dismissTerminalToast('${id}');" class="px-2.5 py-1 rounded-lg bg-[#E3120B] hover:bg-red-700 text-white font-mono text-[10px] font-bold transition-colors">
+          <button onclick="switchView('stock-detail'); loadStockDetails('${ticker}'); dismissTerminalToast('${id}');" class="px-2.5 py-1 rounded-lg bg-[#2F6BFF] hover:bg-red-700 text-white font-mono text-[10px] font-bold transition-colors">
             Hisseye Git &rarr;
           </button>
         </div>
@@ -8474,7 +8474,7 @@ function renderMacroEarningsCalendar() {
 
         <td class="py-3 px-3">
           <div class="font-bold text-slate-100 text-xs leading-snug">${item.title}</div>
-          ${item.isEarnings ? `<span class="inline-block mt-0.5 text-[9px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800/40">KAP RESMİ BİLANÇO</span>` : ''}
+          ${item.isEarnings ? `<span class="inline-block mt-0.5 text-[9px] px-1.5 py-px rounded bg-purple-950 text-purple-300 border border-purple-800/40">KAP RESMİ BİLANÇO</span>` : ''}
         </td>
 
         <td class="py-3 px-2 text-center text-xs">
@@ -8503,7 +8503,7 @@ function filterCalendarCategory(cat) {
   const btns = document.querySelectorAll('.cal-cat-btn');
   btns.forEach(b => {
     if (b.getAttribute('data-cal-cat') === cat) {
-      b.className = 'cal-cat-btn px-3 py-1.5 rounded-lg bg-[#E3120B] text-white font-bold border border-red-600 transition-colors shadow-sm';
+      b.className = 'cal-cat-btn px-3 py-1.5 rounded-lg bg-[#2F6BFF] text-white font-bold border border-red-600 transition-colors shadow-sm';
     } else {
       b.className = 'cal-cat-btn px-3 py-1.5 rounded-lg bg-[#090D18] hover:bg-[#121C30] text-slate-300 border border-[#1E2B45] transition-colors';
     }
