@@ -22,6 +22,20 @@ const STOCK_LOGO_DOMAINS = {
   LOGO: 'www.logo.com.tr', MAVI: 'mavi.com', TRKCM: 'sisecam.com', AKSA: 'aksa.com', CIMSA: 'cimsa.com.tr'
 };
 
+
+/**
+ * Some companies are listed under a KAP internal code first (for example ISATR for Is Bankasi),
+ * while prices and statements are published under the trading ticker (ISCTR). Maps the former to the latter.
+ */
+const TICKER_ALIASES = {
+  ISATR: 'ISCTR', YKB: 'YKBNK', TVB: 'VAKBN', SEK: 'SKBNK', TSK: 'TSKB', ICB: 'ICBCT', KLN: 'KLNMA', FIN: 'QNBTR',
+  GLB: 'GLBMD', OMD: 'OSMEN', OYA: 'OYYAT', SKY: 'SKYMD'
+};
+function tradingCode(code) {
+  const c = String(code || '').toUpperCase();
+  return TICKER_ALIASES[c] || c;
+}
+window.tradingCode = tradingCode;
 const STOCK_ABOUT = {
   THYAO: 'Türkiye\'nin bayrak taşıyıcı havayolu şirketidir. İstanbul Havalimanı\'ndaki ana üssünden dünyanın en geniş uçuş ağlarından birini işletir; yolcu taşımacılığının yanında kargo (Turkish Cargo), uçak bakım (Turkish Technic) ve yer hizmetleri gibi iştirakleri vardır.',
   EREGL: 'Türkiye\'nin en büyük yassı çelik üreticisidir. Sıcak ve soğuk haddelenmiş sac, kaplamalı ürünler ve teneke üretir; İskenderun Demir Çelik de grubun bağlı ortaklığıdır. Otomotiv, beyaz eşya ve inşaat sektörlerine hammadde sağlar.',

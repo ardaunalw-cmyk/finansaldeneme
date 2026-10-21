@@ -16,9 +16,14 @@ const LiveData = (() => {
   let retryScheduled = false;
 
   async function getQuotes(keys) {
-    const res = await fetch(`/api/quote?symbols=${encodeURIComponent(keys.join(','))}`);
+    // Ask for the trading ticker, hand results back under the code the caller used
+    const pairs = keys.map(k => [k, typeof tradingCode === 'function' ? tradingCode(k) : k]);
+    const res = await fetch(`/api/quote?symbols=${encodeURIComponent(pairs.map(p => p[1]).join(','))}`);
     if (!res.ok) throw new Error(`quote ${res.status}`);
-    return (await res.json()).quotes || {};
+    const quotes = (await res.json()).quotes || {};
+    const out = {};
+    pairs.forEach(([orig, tick]) => { if (quotes[tick]) out[orig] = quotes[tick]; });
+    return out;
   }
 
   function clock(ms) {
@@ -247,7 +252,7 @@ const LiveData = (() => {
   async function syncFundamentals(fin, note, priceBadge) {
     const code = fin.code;
     try {
-      const res = await fetch(`/api/financials?symbol=${encodeURIComponent(code)}`);
+      const res = await fetch(`/api/financials?symbol=${encodeURIComponent(typeof tradingCode === 'function' ? tradingCode(code) : code)}`);
       const f = res.ok ? await res.json() : null;
       if (appState.currentStock !== code) return;
       if (!f || !f.available) {

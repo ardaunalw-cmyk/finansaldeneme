@@ -22,6 +22,7 @@ const TechData = (() => {
   const inflight = new Map();   // request key -> Promise, so tabs/buttons do not refetch
 
   function history(symbol, range, interval) {
+    symbol = typeof tradingCode === 'function' ? tradingCode(symbol) : symbol;
     const key = `${symbol}|${range}|${interval}`;
     if (!inflight.has(key)) {
       const p = fetch(`/api/history?symbol=${encodeURIComponent(symbol)}&range=${range}&interval=${interval}`)

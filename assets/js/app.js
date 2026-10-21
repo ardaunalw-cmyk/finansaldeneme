@@ -2293,7 +2293,7 @@ async function initStockIncomeChart() {
       datasets: [
         {
           type: 'bar',
-          label: 'Satış Hasılatı',
+          label: (q.seriesLabels && q.seriesLabels[0]) || 'Satış Hasılatı',
           data: q.revenue,
           backgroundColor: '#2563EB', // royal blue
           borderRadius: 6,
@@ -2303,7 +2303,7 @@ async function initStockIncomeChart() {
         },
         {
           type: 'bar',
-          label: 'FAVÖK',
+          label: (q.seriesLabels && q.seriesLabels[1]) || 'FAVÖK',
           data: q.favok,
           backgroundColor: '#38BDF8', // ice cyan
           borderRadius: 6,
@@ -2313,7 +2313,7 @@ async function initStockIncomeChart() {
         },
         {
           type: 'line',
-          label: 'FAVÖK Marjı (%)',
+          label: (q.seriesLabels && q.seriesLabels[2]) || 'FAVÖK Marjı (%)',
           data: q.margin,
           borderColor: '#10B981', // emerald-500
           backgroundColor: '#10B981',
@@ -5235,8 +5235,9 @@ function getFullBistStockList() {
   cachedBistStockList = KAP_RAW_COMPANIES.map(c => {
     const primaryCode = (c.c || '').split(',')[0].trim().toUpperCase();
     const cleanSector = normalizeSector(c.sec);
-    const searchTarget = normalizeSearchText(`${primaryCode} ${c.n || ''} ${cleanSector} ${c.s || ''}`);
-    const isBist30 = c.idx === 'BIST 30' || BIST30_TICKERS.has(primaryCode);
+    const allCodes = (c.c || '').split(',').map(x => x.trim().toUpperCase()).filter(Boolean);
+    const searchTarget = normalizeSearchText(`${allCodes.join(' ')} ${c.n || ''} ${cleanSector} ${c.s || ''}`);
+    const isBist30 = c.idx === 'BIST 30' || allCodes.some(x => BIST30_TICKERS.has(x));
 
     return {
       raw: c,

@@ -98,6 +98,32 @@ function build(symbol, rows, year, period) {
   };
 }
 
+/** Bank layout: 1Z total assets, 2O equity (2OVA minority), 3ZA group net income, 3CE total operating income. */
+function buildBank(symbol, rows, year, period) {
+  const get = reader(rows);
+  const ttm = code => period === 12 ? get(code, 1) : get(code, 1) + get(code, 2) - get(code, 3);
+  return {
+    available: true,
+    kind: 'bank',
+    symbol,
+    source: 'İş Yatırım (KAP finansal raporları)',
+    basis: 'Konsolide, banka (UFRS) formatı',
+    period: `${year}/${period}`,
+    shares: get('2OA', 1),
+    equity: get('2O', 1) - get('2OVA', 1),
+    totalAssets: get('1Z', 1),
+    finDebt: 0,
+    cash: 0,
+    netDebt: 0,                             // not meaningful for banks
+    ttm: {
+      revenue: ttm('3CE'),                  // total operating income
+      grossProfit: ttm('3C'),               // net interest income
+      operatingProfit: ttm('3CH'),          // net operating profit
+      ebitda: 0,                            // not defined for banks
+      netIncome: ttm('3ZA')
+    }
+  };
+}
 export async function load(symbol) {
   const hit = cache.get(symbol);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.data;
@@ -119,10 +145,24 @@ export async function load(symbol) {
     }
   }
   if (!data.available) {
-    const [year, period] = periods[periods.length > 1 ? 1 : 0];
-    const bank = await getTable(symbol, BANK_GROUP, year, period);
-    if (bank && bank.length) data = { available: false, reason: 'financial-company', symbol };
+    // Banks use a different statement layout (UFRS_K): totals are 1Z (assets) and 2O (equity)
+    const bankTables = await Promise.all(periods.map(async ([year, period]) =>
+      (await getTable(symbol, BANK_GROUP, year, period)) ?? (await getTable(symbol, BANK_GROUP, year, period))));
+    let sawRows = false;
+    for (let i = 0; i < periods.length; i++) {
+      const rows = bankTables[i];
+      if (rows && rows.length) sawRows = true;
+      if (rows && rows.length && num(rows.find(r => r.itemCode === '1Z')?.value1) && num(rows.find(r => r.itemCode === '3CE')?.value1) != null) {
+        const [year, period] = periods[i];
+        data = buildBank(symbol, rows, year, period);
+        break;
+      }
+    }
+    if (!data.available && sawRows) data = { available: false, reason: 'financial-company', symbol };
   }
+
+  // Implausible capital/equity (share classes with no statements of their own) counts as no data
+  if (data.available && !(data.shares >= 1e6 && data.equity > 0)) data = { available: false, reason: 'no-data', symbol };
 
   cache.set(symbol, { at: Date.now(), data });
   return data;

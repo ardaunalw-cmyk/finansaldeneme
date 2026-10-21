@@ -70,6 +70,59 @@ async function retry(fn) {
   return (await fn()) ?? (await fn());
 }
 
+/** Indent level of a row: non-financial tables indent descriptions; bank tables number them (I., 1.1, 1.1.1). */
+function levelOf(rawDesc, kind) {
+  if (kind === 'bank') {
+    const d = rawDesc.trim();
+    if (/^\d+\.\d+\.\d+/.test(d)) return 2;
+    if (/^\d+\.\d+/.test(d)) return 1;
+    return 0;
+  }
+  const lead = rawDesc.length - rawDesc.trimStart().length;
+  return Math.min(2, Math.floor(lead / 2));
+}
+
+/** Tries one statement layout (group) for the newest published period; returns data or null. */
+async function tryGroup(symbol, exchange, group, totalCode, kind) {
+  const cands = candidateLatest();
+  if (latestGuess && !cands.some(([y, p]) => y === latestGuess[0] && p === latestGuess[1])) cands.unshift(latestGuess);
+  const tables = await Promise.all(cands.map(c => retry(() => table(symbol, group, exchange, periodsFrom(c, 4)))));
+  const hitIdx = tables.findIndex(rows => rows && rows.length && num(rows.find(r => r.itemCode === totalCode)?.value1)
+    && (kind !== 'bank' || num(rows.find(r => r.itemCode === '3CE')?.value1) != null));   // insurers share 1Z but have no 3CE
+  if (hitIdx < 0) return { data: null, sawRows: tables.some(r => r && r.length) };
+
+  const latest = cands[hitIdx];
+  const all = periodsFrom(latest, PERIOD_COUNT);
+  const first = tables[hitIdx];
+  const second = await retry(() => table(symbol, group, exchange, all.slice(4)));
+  const secondBy = new Map((second || []).map(r => [r.itemCode, r]));
+
+  const rows = [];
+  for (const r of first) {
+    const name = (r.itemDescTr || '').trim();
+    if (!name || /^\(Ara Toplam\)/i.test(name)) continue;
+    const s = secondBy.get(r.itemCode);
+    const v = [r.value1, r.value2, r.value3, r.value4, s?.value1, s?.value2].map(x => num(x) ?? 0);
+    if (v.every(x => x === 0)) continue;
+    rows.push({ c: r.itemCode, n: name, l: levelOf(r.itemDescTr || '', kind), v });
+  }
+  if (!latestGuess || latest[0] * 100 + latest[1] > latestGuess[0] * 100 + latestGuess[1]) latestGuess = latest;
+
+  return {
+    sawRows: true,
+    data: {
+      available: true,
+      kind,
+      symbol,
+      exchange,
+      source: 'İş Yatırım (KAP finansal raporları)',
+      basis: kind === 'bank' ? 'Konsolide, banka (UFRS) formatı' : 'Konsolide, TMS 29 enflasyon düzeltmeli',
+      periods: all.map(([y, p]) => `${y}/${p}`),
+      rows
+    }
+  };
+}
+
 export async function load(symbol, exchange) {
   const key = `${symbol}|${exchange}`;
   const hit = cache.get(key);
@@ -77,49 +130,19 @@ export async function load(symbol, exchange) {
 
   let data = { available: false, reason: 'no-data', symbol };
 
-  // 1) newest published period among the last three quarter-ends (asked in parallel)
-  const cands = candidateLatest();
-  if (latestGuess && !cands.some(([y, p]) => y === latestGuess[0] && p === latestGuess[1])) cands.unshift(latestGuess);
-  const tables = await Promise.all(cands.map(c => retry(() => table(symbol, GROUP, exchange, periodsFrom(c, 4)))));
-  const hitIdx = tables.findIndex(rows => rows && rows.length && num(rows.find(r => r.itemCode === '1BL')?.value1));
-
-  if (hitIdx >= 0) {
-    const latest = cands[hitIdx];
-    const all = periodsFrom(latest, PERIOD_COUNT);
-    const first = tables[hitIdx];
-    const second = await retry(() => table(symbol, GROUP, exchange, all.slice(4)));
-    const secondBy = new Map((second || []).map(r => [r.itemCode, r]));
-
-    const rows = [];
-    for (const r of first) {
-      const name = (r.itemDescTr || '').trim();
-      if (!name || /^\(Ara Toplam\)/i.test(name)) continue;
-      const s = secondBy.get(r.itemCode);
-      const v = [r.value1, r.value2, r.value3, r.value4, s?.value1, s?.value2].map(x => num(x) ?? 0);
-      if (v.every(x => x === 0)) continue;
-      const lead = (r.itemDescTr || '').length - (r.itemDescTr || '').trimStart().length;
-      rows.push({ c: r.itemCode, n: name, l: Math.min(2, Math.floor(lead / 2)), v });
-    }
-
-    data = {
-      available: true,
-      symbol,
-      exchange,
-      source: 'İş Yatırım (KAP finansal raporları)',
-      basis: 'Konsolide, TMS 29 enflasyon düzeltmeli',
-      periods: all.map(([y, p]) => `${y}/${p}`),
-      rows
-    };
-    if (!latestGuess || latest[0] * 100 + latest[1] > latestGuess[0] * 100 + latestGuess[1]) latestGuess = latest;
+  const industrial = await tryGroup(symbol, exchange, GROUP, '1BL', 'industrial');
+  if (industrial.data) {
+    data = industrial.data;
   } else {
-    const bank = await table(symbol, BANK_GROUP, exchange, periodsFrom(cands[1] || cands[0], 4));
-    if (bank && bank.length) data = { available: false, reason: 'financial-company', symbol };
+    // Banks: UFRS_K layout, totals 1Z (assets) / 2O (equity)
+    const bank = await tryGroup(symbol, exchange, BANK_GROUP, '1Z', 'bank');
+    if (bank.data) data = bank.data;
+    else if (bank.sawRows) data = { available: false, reason: 'financial-company', symbol };
   }
 
   cache.set(key, { at: Date.now(), data });
   return data;
 }
-
 export default async function handler(req, res) {
   const send = (status, body, extra = {}) => {
     res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', ...extra });
