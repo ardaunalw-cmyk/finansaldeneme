@@ -80,10 +80,18 @@ const Statements = (() => {
   };
 
   const isBank = d => d.kind === 'bank';
+  const isIns = d => d.kind === 'insurance';
+  // Premiums, claims and technical lines of insurers (non-life + life)
+  const premium = (d, i) => val(d, '3AA', i) + val(d, '3DAA', i);
+  const claims = (d, i) => val(d, '3BA', i) + val(d, '3EA', i);
+  const techProvisions = (d, i) => d.rows.filter(r => /Sigortacılık Teknik Karşılıkları/.test(r.n) && r.c.startsWith('2') && r.l <= 1).reduce((a, r) => a + r.v[i], 0);
 
   function category(code, kind) {
     if (code.startsWith('1')) return 'varlik';
-    if (kind === 'bank') {
+    if (kind === 'insurance') {
+      if (/^2ME/.test(code) || code === '2O' || code === '2Z') return 'ozkaynak';
+      if (code.startsWith('2')) return 'yukumluluk';
+    } else if (kind === 'bank') {
       if (/^2O/.test(code) || code === '2Z') return 'ozkaynak';
       if (code.startsWith('2')) return 'yukumluluk';
     } else {
@@ -120,7 +128,7 @@ const Statements = (() => {
 
   /* ---------- status messages ---------- */
   function messageFor(reason) {
-    if (reason === 'financial-company') return 'Bu finansal şirketin (sigorta, faktoring, varlık yönetimi vb.) bilanço yapısı henüz bağlanmadı.';
+    if (reason === 'financial-company') return 'Bu finansal şirketin (faktoring, finansal kiralama, varlık yönetimi vb.) bilançosu veri kaynağında bulunmuyor.';
     if (reason === 'no-data') return 'Bu şirket için bilanço verisi bulunamadı.';
     return 'Bilanço verisi şu an alınamadı. Birazdan tekrar deneyin.';
   }
@@ -160,6 +168,11 @@ const Statements = (() => {
     ['bsCardAssetsYoY', 'bsCardEquityRoe', 'bsCardNetDebtRatio', 'bsCardNetMargin', 'bsCardMonetaryRatio',
       'inc5RevYoY', 'inc5CostRatio', 'inc5GrossMargin', 'inc5FavokMargin', 'inc5NetMargin'].forEach(id => set(id, '—'));
     set('inc5AuditNote', msg);
+    // Back to the default captions (a previous bank/insurer may have changed them)
+    INCOME_IDS.forEach(restore);
+    BALANCE_IDS.forEach(restore);
+    set('bsCardMonetaryTitle', 'CARİ ORAN (LİKİDİTE)');
+    set('bsCardMonetaryLabel', 'Nakit / Kısa Vadeli Yük.');
     set('bsPeriodBadge', 'VERİ YOK');
     set('income5PeriodBadge', 'VERİ YOK');
     placeholder('stockIncomeChart');
@@ -190,6 +203,7 @@ const Statements = (() => {
     if (!d || !d.available) { renderUnavailable(); return; }
     const ex = state.ex;
     const bank = isBank(d);
+    const ins = isIns(d);
     let idx = d.periods.indexOf(currentBalancePeriod);
     if (idx < 0) { idx = 0; currentBalancePeriod = d.periods[0]; }
     const v = code => val(d, code, idx);
@@ -208,6 +222,18 @@ const Statements = (() => {
         { id: 'inc5NetProfit', title: '5. NET DÖNEM KÂRI', value: v('3ZA'), sub: 'Net Kâr / Faaliyet Geliri', ratio: pctOf(v('3ZA'), opInc) }
       ];
       note = `${fin.name}: ${d.periods[idx]} döneminde net faiz geliri ${money(v('3C'), ex)}, net ücret ve komisyon geliri ${money(v('3CA'), ex)}, faaliyet gelirleri ${money(opInc, ex)} ve net kâr ${money(v('3ZA'), ex)}.`;
+    } else if (ins) {
+      const prem = premium(d, idx);
+      base = prem;
+      revCode = null;
+      cards = [
+        { id: 'inc5Revenue', title: '1. KAZANILMIŞ PRİMLER', value: prem, sub: 'Yıllık Değişim' },
+        { id: 'inc5Cost', title: '2. GERÇEKLEŞEN HASARLAR', value: claims(d, idx), sub: 'Hasar / Prim Oranı', ratio: pctOf(Math.abs(claims(d, idx)), prem) },
+        { id: 'inc5Gross', title: '3. TEKNİK BÖLÜM DENGESİ', value: v('3K'), sub: 'Teknik Denge / Prim', ratio: pctOf(v('3K'), prem) },
+        { id: 'inc5Favok', title: '4. YATIRIM GELİRLERİ', value: v('3L'), sub: 'Yatırım Geliri / Prim', ratio: pctOf(v('3L'), prem) },
+        { id: 'inc5NetProfit', title: '5. NET DÖNEM KÂRI', value: v('3Z'), sub: 'Net Kâr / Prim', ratio: pctOf(v('3Z'), prem) }
+      ];
+      note = `${fin.name}: ${d.periods[idx]} döneminde kazanılmış primler ${money(prem, ex)}, gerçekleşen hasarlar ${money(Math.abs(claims(d, idx)), ex)}, teknik bölüm dengesi ${money(v('3K'), ex)}, yatırım gelirleri ${money(v('3L'), ex)} ve net kâr ${money(v('3Z'), ex)}. Hayat ve hayat dışı branşlar toplanmıştır.`;
     } else {
       const rev = v('3C');
       const ebitda = v('3DF') + v('4B');
@@ -222,18 +248,19 @@ const Statements = (() => {
       ];
       note = `${fin.name}: ${d.periods[idx]} döneminde (${d.periods[idx].endsWith('/12') ? 'yıllık' : 'yılbaşından itibaren'}) ${money(rev, ex)} hasılat, ${money(v('3D'), ex)} brüt kâr ve ${money(v('3Z'), ex)} net kâr; brüt marj ${pctOf(v('3D'), rev)}, FAVÖK marjı ${pctOf(ebitda, rev)}. FAVÖK = faaliyet kârı + amortisman.`;
     }
-    if (!bank) INCOME_IDS.forEach(restore);
+    if (!bank && !ins) INCOME_IDS.forEach(restore);
 
     cards.forEach(c => {
       set(c.id, money(c.value, ex));
-      if (bank) relabel(c.id, c.title, c.sub);
+      if (bank || ins) relabel(c.id, c.title, c.sub);
     });
     // ratio line of each card
     const ratioIds = { inc5Cost: 'inc5CostRatio', inc5Gross: 'inc5GrossMargin', inc5Favok: 'inc5FavokMargin', inc5NetProfit: 'inc5NetMargin' };
     cards.forEach(c => { if (ratioIds[c.id] && c.ratio) set(ratioIds[c.id], c.ratio); });
 
-    const cur = bank ? val(d, '3C', idx) : val(d, revCode, idx);
-    const y = idx === 0 ? yoy(cur, val(d, revCode, LY)) : null;
+    const cur = ins ? premium(d, idx) : val(d, '3C', idx);
+    const prevYear = ins ? premium(d, LY) : val(d, '3C', LY);
+    const y = idx === 0 ? yoy(cur, prevYear) : null;
     set('inc5RevYoY', y || '—');
     cls('inc5RevYoY', `font-mono font-bold ${y && y.startsWith('-') ? 'text-rose-400' : 'text-emerald-400'}`);
 
@@ -251,13 +278,35 @@ const Statements = (() => {
 
     // KPI cards
     const bank = isBank(d);
-    const assets = bank ? val(d, '1Z', 0) : val(d, '1BL', 0);
+    const ins = isIns(d);
+    const assets = bank || ins ? val(d, '1Z', 0) : val(d, '1BL', 0);
     set('bsCardTotalAssets', money(assets, ex));
-    const ay = yoy(assets, bank ? val(d, '1Z', LY) : val(d, '1BL', LY));
+    const ay = yoy(assets, bank || ins ? val(d, '1Z', LY) : val(d, '1BL', LY));
     set('bsCardAssetsYoY', ay || '—');
     cls('bsCardAssetsYoY', `font-mono font-bold ${ay && ay.startsWith('-') ? 'text-rose-400' : 'text-emerald-400'}`);
 
-    if (bank) {
+    if (ins) {
+      const equity = val(d, '2O', 0);
+      const niTtm = ttm(d, '3Z');
+      const premNow = premium(d, 0);
+      const prov = techProvisions(d, 0);
+      set('bsCardTotalEquity', money(equity, ex));
+      set('bsCardEquityRoe', equity > 0 ? `%${pct1(niTtm / equity * 100)}` : '—');
+      relabel('bsCardNetDebt', 'SİGORTACILIK TEKNİK KARŞILIKLARI', 'Teknik Karşılık / Aktif');
+      set('bsCardNetDebt', money(prov, ex));
+      set('bsCardNetDebtRatio', assets ? `%${pct1(prov / assets * 100)}` : '—');
+      relabel('bsCardNetIncome', 'DÖNEM NET KÂRI', 'Net Kâr / Prim');
+      set('bsCardNetIncome', money(val(d, '3Z', 0), ex));
+      set('bsCardNetMargin', premNow ? `%${pct1(val(d, '3Z', 0) / premNow * 100)}` : '—');
+      set('bsCardMonetaryTitle', 'ÖZKAYNAK / AKTİF');
+      set('bsCardMonetaryBadge', 'HESAPLANDI');
+      set('bsCardMonetaryGain', assets ? `%${pct1(equity / assets * 100)}` : '—');
+      cls('bsCardMonetaryGain', 'text-2xl font-mono font-bold text-amber-300 tracking-tight');
+      set('bsCardMonetaryLabel', 'Yükümlülük / Özkaynak');
+      set('bsCardMonetaryRatio', equity > 0 ? `${((assets - equity) / equity).toFixed(1).replace('.', ',')}x` : '—');
+      cls('bsCardMonetaryRatio', 'font-mono font-bold text-amber-400');
+      set('bsCardMonetaryNote', 'Özkaynak / toplam aktif');
+    } else if (bank) {
       const equity = val(d, '2O', 0);
       const equityParent = equity - val(d, '2OVA', 0);
       const niTtm = ttm(d, '3ZA');
@@ -346,7 +395,7 @@ const Statements = (() => {
       }
       const v0 = r.v[0], vFy = r.v[fy], vLy = r.v[LY];
       const change = yoy(v0, vLy);
-      const incBase = bank ? val(d, '3CE', 0) : val(d, '3C', 0);
+      const incBase = bank ? val(d, '3CE', 0) : ins ? premium(d, 0) : val(d, '3C', 0);
       const share = cat === 'gelir' ? (incBase ? v0 / incBase * 100 : null)
         : cat === 'nakit' ? null : (assets ? v0 / assets * 100 : null);
       const up = !change || !change.startsWith('-');
@@ -367,13 +416,15 @@ const Statements = (() => {
   /* ---------- quarterly series, annual figures and charts ---------- */
   function applyDerived(fin, d) {
     const bank = isBank(d);
+    const ins = isIns(d);
     // Five quarters of flows (oldest first); a quarter needs its in-year predecessor unless it is Q1
     const qs = [];
     for (let i = 4; i >= 0; i--) {
       const [y, p] = d.periods[i].split('/').map(Number);
       // Banks: total operating income and net income; others: revenue and EBITDA
-      const rev = (bank ? flow(d, '3CE', i) : flow(d, '3C', i)) / 1e9;
-      const fav = (bank ? flow(d, '3ZA', i) : flow(d, '3DF', i) + flow(d, '4B', i)) / 1e9;
+      const f = code => flow(d, code, i);
+      const rev = (bank ? f('3CE') : ins ? f('3AA') + f('3DAA') : f('3C')) / 1e9;
+      const fav = (bank ? f('3ZA') : ins ? f('3Z') : f('3DF') + f('4B')) / 1e9;
       qs.push({ label: `${String(y).slice(2)}/${p}`, rev, fav });
     }
     const r1 = x => Math.round(x * 10) / 10;
@@ -382,7 +433,8 @@ const Statements = (() => {
       revenue: qs.map(q => r1(q.rev)),
       favok: qs.map(q => r1(q.fav)),
       margin: qs.map(q => (q.rev > 0 ? r1(q.fav / q.rev * 100) : 0)),
-      seriesLabels: bank ? ['Faaliyet Gelirleri', 'Net Kâr', 'Net Kâr / Faaliyet Geliri (%)'] : null
+      seriesLabels: bank ? ['Faaliyet Gelirleri', 'Net Kâr', 'Net Kâr / Faaliyet Geliri (%)']
+        : ins ? ['Kazanılmış Primler', 'Net Kâr', 'Net Kâr / Prim (%)'] : null
     };
 
     // Simple trend projection: each of the next four quarters = the same quarter a year earlier x latest YoY growth
@@ -406,8 +458,8 @@ const Statements = (() => {
     fin.projections.growth = growth;
 
     // Annual (last twelve months) figures
-    const revTtm = bank ? ttm(d, '3CE') : ttm(d, '3C');
-    const favTtm = bank ? ttm(d, '3ZA') : ttm(d, '3DF') + ttm(d, '4B');
+    const revTtm = bank ? ttm(d, '3CE') : ins ? ttm(d, '3AA') + ttm(d, '3DAA') : ttm(d, '3C');
+    const favTtm = bank ? ttm(d, '3ZA') : ins ? ttm(d, '3Z') : ttm(d, '3DF') + ttm(d, '4B');
     const niTtm = bank ? ttm(d, '3ZA') : ttm(d, '3Z');
     fin.annualRevenue = formatKapMoney(revTtm);
     fin.annualFavok = formatKapMoney(favTtm);
@@ -416,26 +468,26 @@ const Statements = (() => {
     set('stockAnnualFavok', fin.annualFavok);
 
     // Summary used by the capital / bonus-share module
-    const equity = bank ? val(d, '2O', 0) : val(d, '2N', 0);
-    const parentEq = bank ? equity - val(d, '2OVA', 0) : val(d, '2O', 0);
-    const finDebt = bank ? 0 : val(d, '2AA', 0) + val(d, '2BA', 0);
-    const cash = bank ? 0 : val(d, '1AA', 0) + val(d, '1AB', 0);
+    const equity = bank || ins ? val(d, '2O', 0) : val(d, '2N', 0);
+    const parentEq = bank ? equity - val(d, '2OVA', 0) : ins ? equity : val(d, '2O', 0);
+    const finDebt = bank || ins ? 0 : val(d, '2AA', 0) + val(d, '2BA', 0);
+    const cash = bank || ins ? 0 : val(d, '1AA', 0) + val(d, '1AB', 0);
     fin.balanceSheet = {
       summary: {
-        totalAssets: formatKapMoney(bank ? val(d, '1Z', 0) : val(d, '1BL', 0)),
+        totalAssets: formatKapMoney(bank || ins ? val(d, '1Z', 0) : val(d, '1BL', 0)),
         totalEquity: formatKapMoney(equity),
         netDebt: formatKapMoney(Math.max(0, finDebt - cash)),
         netIncome: formatKapMoney(niTtm),
         roe: parentEq > 0 ? `%${pct1(niTtm / parentEq * 100)}` : 'N/A',
-        netDebtRatio: !bank && favTtm > 0 ? `${((finDebt - cash) / favTtm).toFixed(2)}x` : 'N/A',
+        netDebtRatio: !bank && !ins && favTtm > 0 ? `${((finDebt - cash) / favTtm).toFixed(2)}x` : 'N/A',
         netMargin: revTtm ? `%${pct1(niTtm / revTtm * 100)}` : 'N/A'
       },
       items: []
     };
     // Captions of the two annual figures differ for banks
     const lbl = (id, text) => { const n = document.getElementById(id); if (n && n.previousSibling) n.previousSibling.textContent = text; };
-    lbl('stockAnnualRevenue', bank ? 'Son 12 Ay Faaliyet Geliri: ' : 'Son 12 Ay Satış: ');
-    lbl('stockAnnualFavok', bank ? 'Son 12 Ay Net Kâr: ' : 'Son 12 Ay FAVÖK: ');
+    lbl('stockAnnualRevenue', bank ? 'Son 12 Ay Faaliyet Geliri: ' : ins ? 'Son 12 Ay Prim: ' : 'Son 12 Ay Satış: ');
+    lbl('stockAnnualFavok', bank || ins ? 'Son 12 Ay Net Kâr: ' : 'Son 12 Ay FAVÖK: ');
     fin.quarterlyLive = true;
 
     // Chart captions

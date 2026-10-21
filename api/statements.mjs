@@ -78,18 +78,36 @@ function levelOf(rawDesc, kind) {
     if (/^\d+\.\d+/.test(d)) return 1;
     return 0;
   }
+  if (kind === 'insurance') {
+    // Totals and roman-numeral headings are top level; "A-", "B-" lines second; "1-", "1.1-" lines deeper
+    const d = rawDesc.trim();
+    if (/Toplamı|TOPLAMI/.test(d) || /^[IVX]+\s*-/.test(d)) return 0;
+    if (/^\d+(\.\d+)+-/.test(d)) return 2;
+    if (/^\d+-/.test(d)) return 2;
+    return 1;
+  }
   const lead = rawDesc.length - rawDesc.trimStart().length;
   return Math.min(2, Math.floor(lead / 2));
 }
 
+/** UFRS layouts share the totals 1Z / 2O: banks have 3CE (operating income), insurers have 2E (technical provisions). */
+function detectKind(rows) {
+  const has = code => num(rows.find(r => r.itemCode === code)?.value1) != null;
+  if (has('3CE')) return 'bank';
+  if (has('2E')) return 'insurance';
+  return null;
+}
+
 /** Tries one statement layout (group) for the newest published period; returns data or null. */
-async function tryGroup(symbol, exchange, group, totalCode, kind) {
+async function tryGroup(symbol, exchange, group, totalCode, wantedKind) {
+  let kind = wantedKind;
   const cands = candidateLatest();
   if (latestGuess && !cands.some(([y, p]) => y === latestGuess[0] && p === latestGuess[1])) cands.unshift(latestGuess);
   const tables = await Promise.all(cands.map(c => retry(() => table(symbol, group, exchange, periodsFrom(c, 4)))));
   const hitIdx = tables.findIndex(rows => rows && rows.length && num(rows.find(r => r.itemCode === totalCode)?.value1)
-    && (kind !== 'bank' || num(rows.find(r => r.itemCode === '3CE')?.value1) != null));   // insurers share 1Z but have no 3CE
+    && (wantedKind !== 'auto' || detectKind(rows)));
   if (hitIdx < 0) return { data: null, sawRows: tables.some(r => r && r.length) };
+  if (wantedKind === 'auto') kind = detectKind(tables[hitIdx]);
 
   const latest = cands[hitIdx];
   const all = periodsFrom(latest, PERIOD_COUNT);
@@ -120,7 +138,9 @@ async function tryGroup(symbol, exchange, group, totalCode, kind) {
       symbol,
       exchange,
       source: 'İş Yatırım (KAP finansal raporları)',
-      basis: kind === 'bank' ? 'Konsolide, banka (UFRS) formatı' : 'Konsolide, TMS 29 enflasyon düzeltmeli',
+      basis: kind === 'bank' ? 'Konsolide, banka (UFRS) formatı'
+        : kind === 'insurance' ? (group === 'UFRS' ? 'Solo, sigorta (UFRS) formatı' : 'Konsolide, sigorta (UFRS) formatı')
+        : 'Konsolide, TMS 29 enflasyon düzeltmeli',
       periods: all.map(([y, p]) => `${y}/${p}`),
       rows
     }
@@ -138,10 +158,14 @@ export async function load(symbol, exchange) {
   if (industrial.data) {
     data = industrial.data;
   } else {
-    // Banks: UFRS_K layout, totals 1Z (assets) / 2O (equity)
-    const bank = await tryGroup(symbol, exchange, BANK_GROUP, '1Z', 'bank');
-    if (bank.data) data = bank.data;
-    else if (bank.sawRows) data = { available: false, reason: 'financial-company', symbol };
+    // Banks and insurers: UFRS layouts (consolidated first, then stand-alone), totals 1Z / 2O
+    const fin = await tryGroup(symbol, exchange, BANK_GROUP, '1Z', 'auto');
+    if (fin.data) data = fin.data;
+    else {
+      const solo = await tryGroup(symbol, exchange, 'UFRS', '1Z', 'auto');
+      if (solo.data) data = solo.data;
+      else if (fin.sawRows || solo.sawRows) data = { available: false, reason: 'financial-company', symbol };
+    }
   }
 
   cache.set(key, { at: Date.now(), data });

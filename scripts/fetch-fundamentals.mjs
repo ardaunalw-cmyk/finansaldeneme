@@ -23,12 +23,18 @@ const codes = Object.keys(allCodes);
 const aliases = {};
 
 const missingOnly = process.argv.includes('--missing');
+const onlyArg = process.argv.find(a => a.startsWith('--only='));   // --only=AGESA,ANSGR: just these companies
 let data = {};
 let codesToFetch = codes;
 if (missingOnly && existsSync(OUT)) {
   // Only companies without data yet (for example after adding a new statement layout); keep the rest
   data = JSON.parse(readFileSync(OUT, 'utf8')).data;
   codesToFetch = codes.filter(c => !data[c]);
+}
+if (onlyArg) {
+  data = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')).data : {};
+  const only = onlyArg.slice(7).split(',').map(x => x.trim().toUpperCase());
+  codesToFetch = codes.filter(c => only.includes(c));
 }
 const skipped = { 'financial-company': 0, 'no-data': 0 };
 let done = 0;

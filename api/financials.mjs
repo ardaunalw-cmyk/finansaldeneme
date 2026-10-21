@@ -124,6 +124,58 @@ function buildBank(symbol, rows, year, period) {
     }
   };
 }
+/** Insurance layout: 1Z assets, 2O equity, 2MEA paid-in capital, 3AA + 3DAA earned premiums, 3Z net income. */
+function buildInsurance(symbol, rows, year, period, group) {
+  const get = reader(rows);
+  const ttm = code => period === 12 ? get(code, 1) : get(code, 1) + get(code, 2) - get(code, 3);
+  return {
+    available: true,
+    kind: 'insurance',
+    symbol,
+    source: 'İş Yatırım (KAP finansal raporları)',
+    basis: group === 'UFRS' ? 'Solo, sigorta (UFRS) formatı' : 'Konsolide, sigorta (UFRS) formatı',
+    period: `${year}/${period}`,
+    shares: get('2MEA', 1),
+    equity: get('2O', 1),
+    totalAssets: get('1Z', 1),
+    finDebt: 0,
+    cash: 0,
+    netDebt: 0,
+    ttm: {
+      revenue: ttm('3AA') + ttm('3DAA'),   // earned premiums, non-life + life
+      grossProfit: ttm('3K'),              // general technical balance
+      operatingProfit: ttm('3K'),
+      ebitda: 0,
+      netIncome: ttm('3Z')
+    }
+  };
+}
+
+function detectFinancialKind(rows) {
+  const has = code => num(rows.find(r => r.itemCode === code)?.value1) != null;
+  if (has('3CE')) return 'bank';
+  if (has('2E')) return 'insurance';
+  return null;
+}
+
+async function tryFinancialLayouts(symbol, periods) {
+  let sawRows = false;
+  for (const group of [BANK_GROUP, 'UFRS']) {
+    const tables = await Promise.all(periods.map(async ([year, period]) =>
+      (await getTable(symbol, group, year, period)) ?? (await getTable(symbol, group, year, period))));
+    for (let i = 0; i < periods.length; i++) {
+      const rows = tables[i];
+      if (rows && rows.length) sawRows = true;
+      if (!rows || !rows.length || !num(rows.find(r => r.itemCode === '1Z')?.value1)) continue;
+      const kind = detectFinancialKind(rows);
+      if (!kind) continue;
+      const [year, period] = periods[i];
+      return { sawRows, data: kind === 'bank' ? buildBank(symbol, rows, year, period) : buildInsurance(symbol, rows, year, period, group) };
+    }
+  }
+  return { sawRows, data: null };
+}
+
 export async function load(symbol) {
   const hit = cache.get(symbol);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.data;
@@ -145,20 +197,10 @@ export async function load(symbol) {
     }
   }
   if (!data.available) {
-    // Banks use a different statement layout (UFRS_K): totals are 1Z (assets) and 2O (equity)
-    const bankTables = await Promise.all(periods.map(async ([year, period]) =>
-      (await getTable(symbol, BANK_GROUP, year, period)) ?? (await getTable(symbol, BANK_GROUP, year, period))));
-    let sawRows = false;
-    for (let i = 0; i < periods.length; i++) {
-      const rows = bankTables[i];
-      if (rows && rows.length) sawRows = true;
-      if (rows && rows.length && num(rows.find(r => r.itemCode === '1Z')?.value1) && num(rows.find(r => r.itemCode === '3CE')?.value1) != null) {
-        const [year, period] = periods[i];
-        data = buildBank(symbol, rows, year, period);
-        break;
-      }
-    }
-    if (!data.available && sawRows) data = { available: false, reason: 'financial-company', symbol };
+    // Banks and insurers use UFRS layouts (consolidated first, then stand-alone): totals 1Z / 2O
+    const fin = await tryFinancialLayouts(symbol, periods);
+    if (fin.data) data = fin.data;
+    else if (fin.sawRows) data = { available: false, reason: 'financial-company', symbol };
   }
 
   // Implausible capital/equity (share classes with no statements of their own) counts as no data
