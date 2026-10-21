@@ -1,0 +1,12 @@
+# Build-time inputs and server-side code: not part of the static site
+data/
+backend/
+nginx/
+generate-database.ps1
+server.ps1
+start.bat
+docker-compose.yml
+
+# Unreferenced assets
+assets/backup/
+assets/images/references/

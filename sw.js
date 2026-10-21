@@ -2,14 +2,18 @@
    Once and Always - PWA Service Worker (Cache-First / Stale-While-Revalidate)
    ========================================================================== */
 
-const CACHE_NAME = 'oa-terminal-cache-v1';
+const CACHE_NAME = 'oa-terminal-cache-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './assets/css/styles.css',
-  './assets/js/app.js',
+  './assets/lib/chart.min.js',
+  './assets/lib/fa/all.min.css',
   './assets/js/kap-database.js',
+  './assets/js/stocks-data.js',
+  './assets/js/api.js',
+  './assets/js/app.js',
   './assets/icons/icon-192.svg',
   './assets/icons/icon-512.svg'
 ];

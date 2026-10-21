@@ -2,6 +2,7 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $port = 8080
+if ($env:PORT) { $port = [int]$env:PORT }
 $localIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback|vEthernet" -and $_.IPAddress -notlike "169.254*" } | Select-Object -First 1).IPAddress
 if ([string]::IsNullOrWhiteSpace($localIp)) { $localIp = "127.0.0.1" }
 
@@ -33,7 +34,11 @@ try {
     $tcpListener.Start()
     while ($true) {
         $client = $tcpListener.AcceptTcpClient()
-        [System.Threading.Tasks.Task]::Run([Action]{
+        # Browsers open idle speculative connections; don't let one stall the loop
+        $client.ReceiveTimeout = 2000
+        # Handled synchronously: a PowerShell scriptblock passed to Task::Run has no
+        # runspace on the thread-pool thread, so it never executed and every request hung
+        & {
             try {
                 $stream = $client.GetStream()
                 $reader = [System.IO.StreamReader]::new($stream, [System.Text.Encoding]::ASCII)
@@ -97,7 +102,7 @@ try {
             } catch {
                 try { $client.Close() } catch {}
             }
-        }) | Out-Null
+        }
     }
 } finally {
     $tcpListener.Stop()
