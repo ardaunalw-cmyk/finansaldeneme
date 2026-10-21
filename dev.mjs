@@ -7,6 +7,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { networkInterfaces } from 'node:os';
 import { extname, join, normalize, resolve } from 'node:path';
 import chatHandler from './api/chat.mjs';
+import quoteHandler from './api/quote.mjs';
 
 const PORT = Number(process.env.PORT) || 8080;
 const ROOT = resolve('.');
@@ -41,6 +42,10 @@ createServer(async (req, res) => {
     // Same serverless function Vercel runs; needs ANTHROPIC_API_KEY in this shell
     if (path === '/api/chat') {
       await chatHandler(req, res);
+      return;
+    }
+    if (path === '/api/quote') {
+      await quoteHandler(req, res);
       return;
     }
     if (path.endsWith('/')) path += 'index.html';

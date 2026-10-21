@@ -192,7 +192,7 @@
         </a>
         <a href="#news" data-view-target="news" class="menu-item">
           <i class="fa-solid fa-newspaper"></i><span>Piyasa Gündemi</span>
-          <span class="menu-badge menu-badge-live">12 CANLI</span>
+          <span class="menu-badge">12</span>
         </a>
       </div>
 
@@ -320,22 +320,22 @@
           <div class="utl-card p-5 space-y-3">
             <div class="flex items-center justify-between text-xs text-slate-400">
               <span class="font-bold tracking-wider uppercase text-[10px]">BIST 100 GÖSTERGESİ</span>
-              <span class="font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded text-[11px] font-bold">▲ +%1,42</span>
+              <span id="bistCardChange" class="font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded text-[11px] font-bold">▲ +%1,42</span>
             </div>
             <div class="flex items-baseline justify-between">
-              <div class="text-2xl sm:text-3xl font-bold font-mono text-white">9.428,50</div>
-              <span class="text-xs text-slate-500 font-mono">+132,10 Puan</span>
+              <div id="bistCardPrice" class="text-2xl sm:text-3xl font-bold font-mono text-white">9.428,50</div>
+              <span id="bistCardPoints" class="text-xs text-slate-500 font-mono">+132,10 Puan</span>
             </div>
             <div class="pt-2 border-t border-[#1A2540] flex items-center justify-between text-[11px] text-slate-400">
-              <span>Günlük Hacim:</span>
-              <span class="font-mono font-bold text-slate-200">₺114,8 Mlr</span>
+              <span id="bistCardExtraLabel">Günlük Hacim:</span>
+              <span id="bistCardExtraValue" class="font-mono font-bold text-slate-200">₺114,8 Mlr</span>
             </div>
           </div>
 
           <!-- Card 2: BIST 30 HACİM LİDERİ -->
           <div class="utl-card p-5 space-y-3">
             <div class="flex items-center justify-between text-xs text-slate-400">
-              <span class="font-bold tracking-wider uppercase text-[10px]">PİYASA HACİM LİDERİ</span>
+              <span class="font-bold tracking-wider uppercase text-[10px]">PİYASA HACİM LİDERİ <i class="data-badge sample">ÖRNEK</i></span>
               <span class="font-mono text-red-400 bg-red-950/40 border border-red-800/40 px-2 py-0.5 rounded text-[11px] font-bold">THYAO</span>
             </div>
             <div class="flex items-baseline justify-between">
@@ -351,7 +351,7 @@
           <!-- Card 3: PİYASA RİSKİ ve Volatilite -->
           <div class="utl-card p-5 space-y-3">
             <div class="flex items-center justify-between text-xs text-slate-400">
-              <span class="font-bold tracking-wider uppercase text-[10px]">TÜRKİYE 5Y CDS ve RİSK</span>
+              <span class="font-bold tracking-wider uppercase text-[10px]">TÜRKİYE 5Y CDS ve RİSK <i class="data-badge sample">ÖRNEK</i></span>
               <span class="font-mono text-slate-300 bg-slate-800/60 border border-slate-700/40 px-2 py-0.5 rounded text-[11px]">DENGELİ</span>
             </div>
             <div class="flex items-baseline justify-between">
@@ -367,7 +367,7 @@
           <!-- Card 4: O ve A ALFA MODELİ -->
           <div class="utl-card p-5 space-y-3">
             <div class="flex items-center justify-between text-xs text-slate-400">
-              <span class="font-bold tracking-wider uppercase text-[10px]">O ve A MODEL PORTFÖY</span>
+              <span class="font-bold tracking-wider uppercase text-[10px]">O ve A MODEL PORTFÖY <i class="data-badge sample">ÖRNEK</i></span>
               <span class="font-mono text-red-300 bg-red-950/40 border border-red-800/40 px-2 py-0.5 rounded text-[11px] font-bold">BIST+ %18.4</span>
             </div>
             <div class="flex items-baseline justify-between">
@@ -392,6 +392,7 @@
                 <div>
                   <div class="flex items-center gap-2">
                     <h2 class="font-serif font-bold text-white text-lg">BIST 100 Performans ve Derinlik Grafiği</h2>
+                    <i class="data-badge sample">ÖRNEK VERİ</i>
                     <span class="text-[10px] bg-red-950/40 border border-red-800/40 text-red-300 px-2 py-0.5 rounded font-mono font-bold">BIST100</span>
                   </div>
                   <p class="text-xs text-slate-400 mt-0.5">Mum grafiği, hacim ağırlıklı ortalama ve teknik direnç koridoru</p>
@@ -566,6 +567,7 @@
                 <span class="text-[10px] bg-red-950/40 border border-red-800/40 text-red-300 px-2 py-0.5 rounded font-mono font-bold">1048 ŞİRKET &bull; CANLI KAP</span>
               </div>
               <p class="text-xs text-slate-400 mt-1 font-light">Günlük fiyat hareketleri, değerleme çarpanları ve Once ve Always Alpha skor sıralaması.</p>
+              <p id="overviewDataNote" class="data-note"><i class="data-badge sample">ÖRNEK VERİ</i> Fiyat ve değişim gecikmeli piyasa verisidir (yalnızca ekrandaki hisseler). F/K, PD/DD, ROE ve skorlar örnek veridir; resmi KAP bilançosu değildir.</p>
             </div>
 
             <!-- Filter Tabs, Screener and Quick Search -->
@@ -907,6 +909,7 @@
                     <span id="stockDetailChange" class="text-emerald-400 font-bold text-sm font-mono">+%3,82 (+₺11,50)</span>
                     <span id="stockDetailVolume" class="text-xs text-slate-500 font-mono">Hacim: ₺4.82 Mlr</span>
                   </div>
+                  <div id="stockDetailDataNote" class="data-note mt-2"><i class="data-badge sample">ÖRNEK VERİ</i> Fiyat ve rasyolar örnek veridir.</div>
                 </div>
               </div>
 
@@ -949,7 +952,7 @@
                   <span class="font-medium">Gün İçi Fiyat Aralığı</span>
                   <span class="font-mono text-slate-300"><span id="stockDayLow">₺308,00</span> - <span id="stockDayHigh">₺314,20</span></span>
                 </div>
-                <div class="range-track"><div class="range-indicator" style="left: 72%;"></div></div>
+                <div class="range-track"><div id="stockDayRangeInd" class="range-indicator" style="left: 72%;"></div></div>
               </div>
 
               <div>
@@ -957,7 +960,7 @@
                   <span class="font-medium">52 Haftalık Zirve / Dip</span>
                   <span class="font-mono text-slate-300"><span id="stockYearLow">₺218,50</span> - <span id="stockYearHigh">₺345,00</span></span>
                 </div>
-                <div class="range-track"><div class="range-indicator" style="left: 76%;"></div></div>
+                <div class="range-track"><div id="stockYearRangeInd" class="range-indicator" style="left: 76%;"></div></div>
               </div>
             </div>
 
@@ -3711,6 +3714,7 @@
   <script src="assets/js/company-about.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/live-data.js"></script>
   <script src="assets/js/chat-widget.js" defer></script>
   <!-- ======================================================================
        Once ve Always - LIVE MICRO-TICK SIMULATION ENGINE (CANLI BORSA MOTORU)

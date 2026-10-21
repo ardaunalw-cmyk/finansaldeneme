@@ -1459,3 +1459,19 @@ body.is-home #headerSearch { display: none; }
   /* Alt gezinme çubuğu kaldırıldı: tüm bölümler ☰ menüsünde */
   main { padding-bottom: 1.5rem; }
 }
+/* Veri durumu etiketleri: canlı / örnek */
+.data-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.data-badge.sample { background: rgba(245, 158, 11, 0.12); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.35); }
+.data-badge.live { background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.35); }
+.data-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 11px; line-height: 1.5; color: #7C8BA6; }

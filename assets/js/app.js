@@ -1116,7 +1116,7 @@ function getOrGenerateStockFinancials(ticker = 'THYAO') {
   const analystSum = `${name}, ${sector} sektöründe güçlü operasyonel verimliliği ve son dönem finansal sonuçlarıyla öne çıkmaktadır. Ödenmiş sermayesi (${paidCap}) ve kayıtlı sermaye tavanı (${capCeil}) ile güçlü bir sermaye esnekliğine sahiptir.`;
   const riskOpp = `${city} merkezli şirket, sektöründeki pazar payı genişleme dinamikleriyle olumlu ayrışmaktadır. Girdi maliyetleri ve faiz ortamı yakından takip edilmelidir.`;
 
-  return {
+  const finObj = {
     code: t,
     name: name,
     symbol: `${t}.IS`,
@@ -2846,6 +2846,7 @@ async function loadStockDetails(ticker) {
   }
 
   if (typeof fillStockDetailAbout === 'function') fillStockDetailAbout(fin.code);
+  if (window.LiveData) LiveData.syncStockHeader(fin);
 
   // Dynamic Stock Logo & Visual Avatar
   const logoContainer = document.getElementById('stockDetailLogoContainer') || (headerIcon ? headerIcon.parentElement : null);
@@ -5692,11 +5693,8 @@ window.openHomeSearch = openHomeSearch;
 function initClock() {
   const clockEls = document.querySelectorAll('.live-market-clock');
   function updateTime() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    clockEls.forEach(el => el.textContent = `${h}:${m}:${s} TSİ`);
+    const t = new Date().toLocaleTimeString('tr-TR', { hour12: false, timeZone: 'Europe/Istanbul' });
+    clockEls.forEach(el => el.textContent = `${t} TSİ`);
   }
   updateTime();
   setInterval(updateTime, 1000);
@@ -6369,7 +6367,7 @@ function renderOverviewStockTable() {
               </div>
             </div>
           </td>
-          <td class="text-right font-mono font-bold text-white font-tradingview-nums">${priceDisplay} TL</td>
+          <td class="text-right font-mono font-bold text-white font-tradingview-nums">${priceDisplay} TL${fin.liveTime ? '' : '<br><i class="data-badge sample" title="Canlı fiyat alınamadı veya yükleniyor; gösterilen değer örnektir">ÖRNEK</i>'}</td>
           <td class="text-right">
             <span class="inline-flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded font-tradingview-nums ${isUp ? 'tv-pill-up' : 'tv-pill-down'}">
               ${isUp ? '▲ +' : '▼ -'}${chgStr}%
@@ -6392,6 +6390,8 @@ function renderOverviewStockTable() {
         </tr>
       `;
     }).join('');
+
+    if (window.LiveData) LiveData.syncTable(visibleItems.map(s => s.code));
 
     const t1 = performance.now();
     const renderTime = (t1 - t0).toFixed(1);
