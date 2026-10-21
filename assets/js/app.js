@@ -6373,10 +6373,10 @@ function renderOverviewStockTable() {
               ${isUp ? '▲ +' : '▼ -'}${chgStr}%
             </span>
           </td>
-          <td class="text-right font-mono text-slate-300 font-tradingview-nums">${fin.fk}</td>
-          <td class="text-right font-mono text-slate-300 font-tradingview-nums">${fin.pddd}</td>
-          <td class="text-right font-mono text-slate-300 font-tradingview-nums">${fin.fdFavok}</td>
-          <td class="text-right font-mono text-emerald-300 font-semibold font-tradingview-nums">${fin.roe}</td>
+          <td class="text-right font-mono text-slate-300 font-tradingview-nums${fin.fundamentalsLive ? ' is-real' : ''}">${fin.fk}</td>
+          <td class="text-right font-mono text-slate-300 font-tradingview-nums${fin.fundamentalsLive ? ' is-real' : ''}">${fin.pddd}</td>
+          <td class="text-right font-mono text-slate-300 font-tradingview-nums${fin.fundamentalsLive ? ' is-real' : ''}">${fin.fdFavok}</td>
+          <td class="text-right font-mono text-emerald-300 font-semibold font-tradingview-nums${fin.fundamentalsLive ? ' is-real' : ''}">${fin.roe}</td>
           <td class="text-center">
             <span class="px-2 py-0.5 rounded font-mono font-bold text-xs border font-tradingview-nums ${scoreClass}">
               ${fin.score}

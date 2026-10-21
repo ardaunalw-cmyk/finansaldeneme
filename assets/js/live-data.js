@@ -178,14 +178,73 @@ const LiveData = (() => {
       if (dayInd && q.dayLow != null) dayInd.style.left = `${position(q.price, q.dayLow, q.dayHigh)}%`;
       if (yearInd && q.yearLow != null) yearInd.style.left = `${position(q.price, q.yearLow, q.yearHigh)}%`;
 
+      const priceBadge = `<i class="data-badge live">GECİKMELİ FİYAT</i> Yahoo Finance · ${clock(q.time)} `;
       if (note) {
-        note.innerHTML = `<i class="data-badge live">GECİKMELİ FİYAT</i> Yahoo Finance · ${clock(q.time)} ` +
+        note.innerHTML = priceBadge +
           '<i class="data-badge sample">ÖRNEK</i> F/K, PD/DD, ROE, skor ve hedef fiyat örnek veridir; resmi KAP bilançosu değildir.';
       }
+      syncFundamentals(fin, note, priceBadge);
     } catch {
       if (note) {
         note.innerHTML = '<i class="data-badge sample">ÖRNEK VERİ</i> Canlı fiyat alınamadı; gösterilen fiyat ve rasyolar örnek veridir.';
       }
+    }
+  }
+
+  /* ---------- Real balance-sheet ratios (stock detail only) ---------- */
+  const mlr = v => `₺${fmt.format(v / 1e9)} Mlr`;
+  const ratio = (v, digits = 2) => (Number.isFinite(v) ? v.toFixed(digits) : 'N/A');
+
+  async function syncFundamentals(fin, note, priceBadge) {
+    const code = fin.code;
+    try {
+      const res = await fetch(`/api/financials?symbol=${encodeURIComponent(code)}`);
+      const f = res.ok ? await res.json() : null;
+      if (appState.currentStock !== code) return;
+      if (!f || !f.available) {
+        if (note) {
+          const why = f && f.reason === 'financial-company'
+            ? 'Banka ve finans şirketlerinin bilanço verisi henüz bağlanmadı'
+            : 'Bu şirket için bilanço verisi bulunamadı';
+          note.innerHTML = priceBadge + `<i class="data-badge sample">ÖRNEK</i> ${why}; rasyolar, skor ve hedef fiyat örnek veridir.`;
+        }
+        return;
+      }
+
+      const mcap = fin.priceNum * f.shares;          // BIST par value is 1 TL, so capital = share count
+      const t = f.ttm;
+      const fk = t.netIncome > 0 ? mcap / t.netIncome : NaN;
+      const pddd = f.equity > 0 ? mcap / f.equity : NaN;
+      const fdFavok = t.ebitda > 0 ? (mcap + f.netDebt) / t.ebitda : NaN;
+      const netDebtFavok = t.ebitda > 0 ? f.netDebt / t.ebitda : NaN;
+      const roe = f.equity > 0 ? t.netIncome / f.equity * 100 : NaN;
+      const roa = f.totalAssets > 0 ? t.netIncome / f.totalAssets * 100 : NaN;
+
+      Object.assign(fin, {
+        fk: ratio(fk), pddd: ratio(pddd), fdFavok: ratio(fdFavok),
+        netDebt: Number.isFinite(netDebtFavok) ? `${ratio(netDebtFavok)}x` : 'N/A',
+        roe: Number.isFinite(roe) ? `%${ratio(roe, 1)}` : 'N/A',
+        roa: Number.isFinite(roa) ? `%${ratio(roa, 1)}` : 'N/A',
+        fkNum: fk, pdddNum: pddd, fdFavokNum: fdFavok, netDebtNum: netDebtFavok, roeNum: roe, roaNum: roa,
+        annualRevenue: mlr(t.revenue), annualFavok: mlr(t.ebitda), netIncome: mlr(t.netIncome),
+        fundamentalsLive: true
+      });
+
+      const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+      set('stockDetailFK', fin.fk);
+      set('stockDetailPDDD', fin.pddd);
+      set('stockDetailFDFavok', fin.fdFavok);
+      set('stockDetailNetDebt', fin.netDebt);
+      set('stockDetailROE', fin.roe);
+      set('stockDetailROA', fin.roa);
+
+      if (note) {
+        note.innerHTML = priceBadge +
+          `<i class="data-badge live">GERÇEK BİLANÇO</i> ${f.source} · ${f.period} · ${f.basis}; son 12 ay toplamı. ` +
+          '<i class="data-badge sample">ÖRNEK</i> Skor, hedef fiyat, analist sayıları ve "sektör ort." değerleri örnektir.';
+      }
+    } catch (e) {
+      console.warn('[LiveData] fundamentals unavailable:', e.message);
     }
   }
 
