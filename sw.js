@@ -1,20 +1,18 @@
 /* ==========================================================================
-   Once and Always - PWA Service Worker (Cache-First / Stale-While-Revalidate)
+   Once and Always - PWA Service Worker
+   - API calls (/api/*) are never touched: prices, history, statements and KAP data must be fresh.
+   - App files and data (HTML, JS, CSS, JSON): network first, cached copy only when offline,
+     so a new deploy is never mixed with stale scripts.
+   - Libraries and icons (versioned, immutable): cache first.
    ========================================================================== */
 
-const CACHE_NAME = 'oa-terminal-cache-v5';
+const CACHE_NAME = 'oa-terminal-cache-v6';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './assets/css/styles.css',
-  './assets/css/tailwind.css',
   './assets/lib/chart.min.js',
   './assets/lib/fa/all.min.css?v=2',
-  './assets/js/kap-database.js',
-  './assets/js/stocks-data.js',
-  './assets/js/api.js',
-  './assets/js/app.js',
   './assets/icons/icon-192.svg?v=2',
   './assets/icons/icon-512.svg?v=2'
 ];
@@ -31,52 +29,46 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then((keys) => Promise.all(
+      keys.map((key) => (key !== CACHE_NAME ? caches.delete(key) : undefined))
+    )).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;     // third-party requests go straight to the network
+  if (url.pathname.startsWith('/api/')) return;        // live data: always the network
 
-  // Network-first for live streaming data APIs if any, stale-while-revalidate for local assets
+  const immutable = url.pathname.startsWith('/assets/lib/') || url.pathname.startsWith('/assets/icons/');
+
+  if (immutable) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => cached || fetch(event.request).then((res) => {
+        if (res && res.status === 200 && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return res;
+      }))
+    );
+    return;
+  }
+
+  // Network first; fall back to the cache when offline
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Fetch in background to update cache
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
-          }
-        }).catch(() => {});
-        return cachedResponse;
+    fetch(event.request).then((res) => {
+      if (res && res.status === 200 && res.type === 'basic') {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
       }
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
-        }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return networkResponse;
-      }).catch(() => {
-        // Fallback to offline index if navigation request
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
+      return res;
+    }).catch(() => caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      if (event.request.mode === 'navigate') return caches.match('./index.html');
+      return undefined;
+    }))
   );
 });
-
