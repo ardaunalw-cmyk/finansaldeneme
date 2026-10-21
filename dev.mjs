@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { networkInterfaces } from 'node:os';
 import { extname, join, normalize, resolve } from 'node:path';
+import chatHandler from './api/chat.mjs';
 
 const PORT = Number(process.env.PORT) || 8080;
 const ROOT = resolve('.');
@@ -37,6 +38,11 @@ spawn(`npx tailwindcss ${TW_ARGS} --watch`, { stdio: 'inherit', shell: true });
 createServer(async (req, res) => {
   try {
     let path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    // Same serverless function Vercel runs; needs ANTHROPIC_API_KEY in this shell
+    if (path === '/api/chat') {
+      await chatHandler(req, res);
+      return;
+    }
     if (path.endsWith('/')) path += 'index.html';
     const file = normalize(join(ROOT, path));
     if (!file.startsWith(ROOT)) {

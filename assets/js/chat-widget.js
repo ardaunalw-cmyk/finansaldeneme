@@ -1,15 +1,15 @@
 /* ==========================================================================
    Onc&Al Asistan - floating chat widget (bottom-right)
 
-   LLM hook: set window.OA_CHAT_CONFIG.endpoint to a URL that accepts
+   Talks to the /api/chat serverless function (api/chat.mjs), which calls
+   Claude with the API key from a server-side environment variable:
      POST { messages: [{ role: 'user'|'assistant', content }], context: { view, stock } }
-   and returns JSON { reply: "..." }. Keep API keys on the server side
-   (e.g. a Vercel serverless function at /api/chat), never in this file.
-   Until an endpoint is configured the widget answers with a placeholder.
+     -> JSON { reply: "..." }
+   Never put an API key in this file: everything here is public.
    ========================================================================== */
 (function () {
   const config = Object.assign({
-    endpoint: null,
+    endpoint: '/api/chat',
     title: 'Onc&Al Asistan',
     avatar: 'assets/images/chat-assistant-96.jpg',
     avatarLarge: 'assets/images/chat-assistant-256.jpg',
@@ -113,9 +113,10 @@
           context: { view: state.activeView || null, stock: state.currentStock || null }
         })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return data.reply || '';
+      const data = await res.json().catch(() => ({}));
+      // The server sends a user-facing `reply` even for errors (busy, not configured)
+      if (data.reply) return data.reply;
+      throw new Error(`HTTP ${res.status}`);
     }
 
     async function send(text) {
