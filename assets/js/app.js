@@ -2280,6 +2280,7 @@ async function initStockIncomeChart() {
   if (!canvas) return;
 
   const fin = await MockFinancialApi.fetchFinancials(appState.currentStock);
+  if (window.Statements && !Statements.chartReady(fin)) { Statements.placeholder('stockIncomeChart'); return; }
   const q = fin.quarterly;
 
   if (appState.charts.stockIncome) {
@@ -2548,6 +2549,7 @@ async function initProjectionChart() {
   if (!canvas) return;
 
   const fin = await MockFinancialApi.fetchFinancials(appState.currentStock);
+  if (window.Statements && !Statements.chartReady(fin)) { Statements.placeholder('stockProjectionChart'); return; }
   const proj = fin.projections;
 
   if (appState.charts.projection) {
@@ -3016,9 +3018,10 @@ async function loadStockDetails(ticker) {
   const annRev = document.getElementById('stockAnnualRevenue');
   const annFav = document.getElementById('stockAnnualFavok');
   const netInc = document.getElementById('stockNetIncome');
-  if (annRev) annRev.textContent = fin.annualRevenue;
-  if (annFav) annFav.textContent = fin.annualFavok;
-  if (netInc) netInc.textContent = fin.netIncome;
+  const annLive = !!fin.quarterlyLive;
+  if (annRev) annRev.textContent = annLive ? fin.annualRevenue : '—';
+  if (annFav) annFav.textContent = annLive ? fin.annualFavok : '—';
+  if (netInc) netInc.textContent = annLive ? fin.netIncome : '—';
 
   // 7. Analyst Research Note
   const anaSummary = document.getElementById('analystNoteSummary');
@@ -3383,79 +3386,11 @@ function computeMonetaryGain(fin) {
  * - 'tms29': TMS 29 (IAS 29) High-Inflation Adjusted Purchasing Power TL
  */
 function setBalanceCurrency(currency) {
-  currentBalanceCurrency = currency;
-
-  const btnNominal = document.getElementById('btnCurNominal');
-  const btnUSD = document.getElementById('btnCurUSD');
-  const btnTMS29 = document.getElementById('btnCurTMS29');
-
-  [
-    { el: btnNominal, id: 'nominal' },
-    { el: btnUSD, id: 'usd' },
-    { el: btnTMS29, id: 'tms29' }
-  ].forEach(b => {
-    if (!b.el) return;
-    if (b.id === currency) {
-      b.el.className = 'balance-cur-btn px-2.5 py-1 rounded-lg font-bold bg-[#2F6BFF] text-white shadow-sm transition-all';
-    } else {
-      b.el.className = 'balance-cur-btn px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white transition-all';
-    }
-  });
-
-  // Update Table Column Headers
-  const th1 = document.getElementById('bsThCol1');
-  const th2 = document.getElementById('bsThCol2');
-  const th3 = document.getElementById('bsThCol3');
-  const th4 = document.getElementById('bsThCol4');
-  const footerNote = document.getElementById('bsCurrencyFooterNote');
-
-  if (currency === 'usd') {
-    if (th1) th1.textContent = '2024/09 (CARİ $)';
-    if (th2) th2.textContent = '2023/12 ($ BAZLI)';
-    if (th3) th3.textContent = '2023/09 ($ BAZLI)';
-    if (th4) th4.textContent = 'USD DEĞİŞİMİ';
-    if (footerNote) footerNote.innerHTML = 'Para Birimi: <strong>ABD Doları ($)</strong> &bull; TCMB Çeyreklik Gösterge Kurları ile Dönüştürülmüştür';
-  } else if (currency === 'tms29') {
-    if (th1) th1.textContent = '2024/09 (REEL ₺)';
-    if (th2) th2.textContent = '2023/12 (TMS 29)';
-    if (th3) th3.textContent = '2023/09 (TMS 29)';
-    if (th4) th4.textContent = 'REEL DEĞİŞİM (TMS 29)';
-    if (footerNote) footerNote.innerHTML = 'Muhasebe Standardı: <strong>TMS 29 Yüksek Enflasyon Düzeltmesi (IAS 29)</strong> &bull; 2024/09 Satın Alma Gücü';
-  } else {
-    if (th1) th1.textContent = '2024/09 (CARİ ₺)';
-    if (th2) th2.textContent = '2023/12 (ÖNCEKİ YIL)';
-    if (th3) th3.textContent = '2023/09 (ÖNCEKİ ÇEYREK)';
-    if (th4) th4.textContent = 'YILLIK DEĞİŞİM (YoY)';
-    if (footerNote) footerNote.innerHTML = 'Para Birimi: <strong>Türk Lirası (₺)</strong> &bull; Raporlanan Tarihi Değerler (Nominal)';
-  }
-
-  if (appState.currentCompanyData) {
-    renderTop5IncomeItems(appState.currentCompanyData);
-    renderBalanceSheetTable(appState.currentCompanyData);
-  }
+  if (window.Statements) Statements.setCurrency(currency);
 }
 
 function setBalancePeriod(period) {
-  currentBalancePeriod = period;
-
-  document.querySelectorAll('.balance-period-btn').forEach(b => {
-    if (b.textContent.includes(period) || b.id.includes(period.replace('/', ''))) {
-      b.className = 'balance-period-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-[#2F6BFF] text-white shadow-sm';
-    } else {
-      b.className = 'balance-period-btn px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white';
-    }
-  });
-
-  const badge = document.getElementById('bsPeriodBadge');
-  if (badge) {
-    const label = period === '2024/09' ? 'Son Çeyrek' : (period === '2023/12' ? 'Yıllık' : 'Önceki Çeyrek');
-    badge.textContent = `${period} (${label})`;
-  }
-
-  if (appState.currentCompanyData) {
-    renderTop5IncomeItems(appState.currentCompanyData);
-    renderBalanceSheetTable(appState.currentCompanyData);
-  }
+  if (window.Statements) Statements.setPeriod(period);
 }
 
 function filterBalanceTable(category) {
@@ -3473,220 +3408,17 @@ function filterBalanceTable(category) {
     renderBalanceSheetTable(appState.currentCompanyData);
   }
 }
-
 /**
- * Renders the 5 most critical Income Statement items (Hasılat, SMM, Brüt Kâr, FAVÖK, Net Kâr)
- * dynamically converting to the active currency / TMS 29 mode.
+ * Income statement highlights and the full balance sheet table come from real KAP-based
+ * statements (see assets/js/statements.js).
  */
 function renderTop5IncomeItems(fin) {
-  if (!fin || !fin.balanceSheet) return;
-  const items = fin.balanceSheet.items || [];
-
-  // Find the items by name pattern
-  const revItem = items.find(i => i.name.includes('Satış Hasılatı') || i.name.includes('Net Gelirler')) || { q3_24: fin.annualRevenue || '₺120.0 Mlr', q4_23: '₺98.0 Mlr', q3_23: '₺84.0 Mlr', yoy: '+%38,5' };
-  const costItem = items.find(i => i.name.includes('Satışların Maliyeti')) || { q3_24: '-₺88.0 Mlr', q4_23: '-₺72.0 Mlr', q3_23: '-₺62.0 Mlr', yoy: '+%36,2' };
-  const grossItem = items.find(i => i.name.includes('Brüt Kâr')) || { q3_24: '₺32.0 Mlr', q4_23: '₺26.0 Mlr', q3_23: '₺22.0 Mlr', yoy: '+%44,0' };
-  const favokItem = items.find(i => i.name.includes('FAVÖK') || i.name.includes('Esas Faaliyet Kârı')) || { q3_24: fin.annualFavok || '₺22.0 Mlr', q4_23: '₺18.0 Mlr', q3_23: '₺15.0 Mlr', yoy: '+%42,1' };
-  const netItem = items.find(i => i.name.includes('DÖNEM NET KÂRI') || i.name.includes('Net Dönem Kârı')) || { q3_24: fin.netIncome || '₺14.0 Mlr', q4_23: '₺11.0 Mlr', q3_23: '₺9.5 Mlr', yoy: '+%28,4' };
-
-  // Period column selector
-  const is2023Q4 = (currentBalancePeriod === '2023/12');
-  const is2023Q3 = (currentBalancePeriod === '2023/09');
-  const activePeriod = is2023Q4 ? '2023/12' : is2023Q3 ? '2023/09' : '2024/09';
-
-  const getConvertedVal = item => {
-    const rawTRY = is2023Q4 ? parseKapItemTRY(item.q4_23) : is2023Q3 ? parseKapItemTRY(item.q3_23) : parseKapItemTRY(item.q3_24);
-    return formatFinancialCurrency(rawTRY, activePeriod, currentBalanceCurrency);
-  };
-
-  // DOM Elements
-  const elRev = document.getElementById('inc5Revenue');
-  const elRevYoY = document.getElementById('inc5RevYoY');
-  const elCost = document.getElementById('inc5Cost');
-  const elCostRatio = document.getElementById('inc5CostRatio');
-  const elGross = document.getElementById('inc5Gross');
-  const elGrossMargin = document.getElementById('inc5GrossMargin');
-  const elFavok = document.getElementById('inc5Favok');
-  const elFavokMargin = document.getElementById('inc5FavokMargin');
-  const elNet = document.getElementById('inc5NetProfit');
-  const elNetMargin = document.getElementById('inc5NetMargin');
-  const elAuditNote = document.getElementById('inc5AuditNote');
-  const elPeriod = document.getElementById('income5PeriodBadge');
-
-  if (elPeriod) {
-    const curLabel = currentBalanceCurrency === 'usd' ? 'USD Bazlı' : currentBalanceCurrency === 'tms29' ? 'TMS 29 Reel' : 'Nominal';
-    elPeriod.textContent = `${currentBalancePeriod || '2024/09'} (${curLabel})`;
-  }
-
-  if (elRev) elRev.textContent = getConvertedVal(revItem);
-  if (elRevYoY) {
-    const raw24 = parseKapItemTRY(revItem.q3_24);
-    const raw23 = parseKapItemTRY(revItem.q3_23);
-    const yoyFormatted = computeFinancialYoY(raw24, raw23, currentBalanceCurrency);
-    elRevYoY.textContent = yoyFormatted;
-    elRevYoY.className = yoyFormatted.startsWith('-') ? 'font-mono font-bold text-rose-400' : 'font-mono font-bold text-emerald-400';
-  }
-
-  if (elCost) elCost.textContent = getConvertedVal(costItem);
-  if (elCostRatio) elCostRatio.textContent = '%72,4';
-
-  if (elGross) elGross.textContent = getConvertedVal(grossItem);
-  if (elGrossMargin) {
-    const netM = parseFloat((fin.dupont ? fin.dupont.netMargin : '12').replace(/[^\d.-]/g, '')) || 12;
-    elGrossMargin.textContent = `%${(netM * 1.9).toFixed(1)}`;
-  }
-
-  if (elFavok) elFavok.textContent = getConvertedVal(favokItem);
-  if (elFavokMargin) {
-    const netM = parseFloat((fin.dupont ? fin.dupont.netMargin : '12').replace(/[^\d.-]/g, '')) || 12;
-    elFavokMargin.textContent = `%${(netM * 1.45).toFixed(1)}`;
-  }
-
-  if (elNet) elNet.textContent = getConvertedVal(netItem);
-  if (elNetMargin) {
-    elNetMargin.textContent = fin.dupont ? fin.dupont.netMargin : (fin.balanceSheet.summary.netMargin || '%12,6');
-  }
-
-  if (elAuditNote) {
-    const isBank = (fin.sector || '').includes('Bankacılık') || (fin.sector || '').includes('Finans');
-    elAuditNote.textContent = isBank
-      ? `${fin.name}, ${fin.sector} sektöründe güçlü faiz marjı, ${fin.balanceSheet.summary.totalAssets} aktif büyüklüğü ve %${fin.roe} özsermaye kârlılığı (ROE) ile operasyonel kâr yaratma gücünü sürdürmektedir.`
-      : `${fin.name}, ${fin.sector} sektöründe ${revItem.q3_24} hasılat ve ${netItem.q3_24} net kâr ile ${fin.annualFavok ? fin.annualFavok : 'güçlü FAVÖK'} üreterek sektör ortalamasının üzerinde kârlılık disiplini sergilemektedir.`;
-  }
+  if (window.Statements && fin) Statements.show(fin);
 }
 
-/**
- * Renders the Official KAP Consolidated Balance Sheet Table, converts all figures
- * across Nominal TL, USD ($), and TMS 29 Reel TL, and updates the 5 KPI highlight cards.
- */
 function renderBalanceSheetTable(fin) {
-  if (!fin || !fin.balanceSheet) return;
-
-  const bs = fin.balanceSheet;
-
-  // 1. Update Top 5 KPI Highlight Cards
-  const elAssets = document.getElementById('bsCardTotalAssets');
-  const elAssetsYoY = document.getElementById('bsCardAssetsYoY');
-  const elEquity = document.getElementById('bsCardTotalEquity');
-  const elRoe = document.getElementById('bsCardEquityRoe');
-  const elNetDebt = document.getElementById('bsCardNetDebt');
-  const elDebtRatio = document.getElementById('bsCardNetDebtRatio');
-  const elNetInc = document.getElementById('bsCardNetIncome');
-  const elNetMargin = document.getElementById('bsCardNetMargin');
-
-  // Monetary Position KPI elements
-  const elMonGain = document.getElementById('bsCardMonetaryGain');
-  const elMonRatio = document.getElementById('bsCardMonetaryRatio');
-  const elMonNote = document.getElementById('bsCardMonetaryNote');
-
-  if (bs.summary) {
-    const rawAssets = parseKapItemTRY(bs.summary.totalAssets);
-    const rawEquity = parseKapItemTRY(bs.summary.totalEquity);
-    const rawDebt = parseKapItemTRY(bs.summary.netDebt);
-    const rawNetInc = parseKapItemTRY(bs.summary.netIncome);
-
-    if (elAssets) elAssets.textContent = formatFinancialCurrency(rawAssets, '2024/09', currentBalanceCurrency);
-    if (elAssetsYoY) {
-      const yoy = computeFinancialYoY(rawAssets, rawAssets * 0.70, currentBalanceCurrency);
-      elAssetsYoY.textContent = yoy;
-      elAssetsYoY.className = yoy.startsWith('-') ? 'font-mono font-bold text-rose-400' : 'font-mono font-bold text-emerald-400';
-    }
-
-    if (elEquity) elEquity.textContent = formatFinancialCurrency(rawEquity, '2024/09', currentBalanceCurrency);
-    if (elRoe) elRoe.textContent = bs.summary.roe || '%28,4';
-    if (elNetDebt) elNetDebt.textContent = formatFinancialCurrency(rawDebt, '2024/09', currentBalanceCurrency);
-    if (elDebtRatio) elDebtRatio.textContent = bs.summary.netDebtRatio || '1.12x';
-    if (elNetInc) elNetInc.textContent = formatFinancialCurrency(rawNetInc, '2024/09', currentBalanceCurrency);
-    if (elNetMargin) elNetMargin.textContent = bs.summary.netMargin || '%12,66';
-  }
-
-  // Calculate & Update Net Monetary Position Gain / (Loss)
-  const monetary = computeMonetaryGain(fin);
-  if (elMonGain) {
-    const formattedMon = formatFinancialCurrency(monetary.amountTRY, '2024/09', currentBalanceCurrency);
-    elMonGain.textContent = monetary.isGain ? `+${formattedMon}` : formattedMon;
-    elMonGain.className = monetary.isGain
-      ? 'text-2xl font-mono font-bold text-amber-300 tracking-tight'
-      : 'text-2xl font-mono font-bold text-rose-400 tracking-tight';
-  }
-  if (elMonRatio) {
-    const sign = monetary.isGain ? '+' : '-';
-    elMonRatio.textContent = `${sign}%${monetary.ratio}`;
-    elMonRatio.className = monetary.isGain
-      ? 'font-mono font-bold text-amber-400'
-      : 'font-mono font-bold text-rose-400';
-  }
-  if (elMonNote) {
-    elMonNote.textContent = monetary.note;
-  }
-
-  // 2. Render table rows based on active category & currency
-  const tbody = document.getElementById('stockBalanceSheetTbody');
-  if (!tbody) return;
-
-  const items = bs.items || [];
-  const filtered = items.filter(it => {
-    if (currentBalanceCategory === 'all') return true;
-    return it.category === currentBalanceCategory || it.category === 'all';
-  });
-
-  tbody.innerHTML = filtered.map(it => {
-    if (it.isHeader) {
-      return `
-        <tr class="bg-[#090D18]/90 border-t-2 border-b border-[#1E2B45]">
-          <td colspan="6" class="py-2.5 px-4 font-mono font-bold text-xs uppercase tracking-wider text-red-400 flex items-center gap-2">
-            <i class="fa-solid fa-folder-open text-[10px]"></i>
-            <span>${it.name}</span>
-          </td>
-        </tr>
-      `;
-    }
-
-    const raw24 = parseKapItemTRY(it.q3_24);
-    const raw23Q4 = parseKapItemTRY(it.q4_23);
-    const raw23Q3 = parseKapItemTRY(it.q3_23);
-
-    const val24 = formatFinancialCurrency(raw24, '2024/09', currentBalanceCurrency);
-    const val23Q4 = formatFinancialCurrency(raw23Q4, '2023/12', currentBalanceCurrency);
-    const val23Q3 = formatFinancialCurrency(raw23Q3, '2023/09', currentBalanceCurrency);
-
-    // Compute YoY for active currency
-    const yoyFormatted = computeFinancialYoY(raw24, raw23Q3, currentBalanceCurrency);
-    const isPositiveYoY = !yoyFormatted.startsWith('-');
-
-    if (it.isSubtotal) {
-      return `
-        <tr class="bg-[#121C30]/80 font-bold border-t border-b border-[#1E2B45] text-white">
-          <td class="py-3 px-4 font-bold text-slate-100 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#2F6BFF]"></span>
-            <span>${it.name}</span>
-          </td>
-          <td class="py-3 px-4 text-right font-mono text-red-400 font-bold">${val24}</td>
-          <td class="py-3 px-4 text-right font-mono text-slate-300">${val23Q4}</td>
-          <td class="py-3 px-4 text-right font-mono text-slate-400">${val23Q3}</td>
-          <td class="py-3 px-4 text-right font-mono font-bold ${isPositiveYoY ? 'text-emerald-400' : 'text-rose-400'}">${yoyFormatted}</td>
-          <td class="py-3 px-4 text-center">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono ${it.statusClass}">${it.status}</span>
-          </td>
-        </tr>
-      `;
-    }
-
-    return `
-      <tr class="hover:bg-[#121C30]/40 transition-colors border-b border-[#162238]/60 text-slate-300">
-        <td class="py-2.5 px-4 pl-7 text-xs font-normal text-slate-300">${it.name}</td>
-        <td class="py-2.5 px-4 text-right font-mono text-white font-medium">${val24}</td>
-        <td class="py-2.5 px-4 text-right font-mono text-slate-400">${val23Q4}</td>
-        <td class="py-2.5 px-4 text-right font-mono text-slate-500">${val23Q3}</td>
-        <td class="py-2.5 px-4 text-right font-mono text-xs font-medium ${isPositiveYoY ? 'text-emerald-400' : 'text-rose-400'}">${yoyFormatted}</td>
-        <td class="py-2.5 px-4 text-center">
-          <span class="px-2 py-0.5 rounded text-[9px] font-bold font-mono ${it.statusClass}">${it.status}</span>
-        </td>
-      </tr>
-    `;
-  }).join('');
+  if (window.Statements && fin) Statements.show(fin);
 }
-
 /* ==============================================================================
    6. Interactive DCF Sensitivity Matrix Engine (5x5 WACC & Terminal Growth)
    ============================================================================== */

@@ -10,6 +10,7 @@ import chatHandler from './api/chat.mjs';
 import quoteHandler from './api/quote.mjs';
 import historyHandler from './api/history.mjs';
 import financialsHandler from './api/financials.mjs';
+import statementsHandler from './api/statements.mjs';
 
 const PORT = Number(process.env.PORT) || 8080;
 const ROOT = resolve('.');
@@ -44,6 +45,10 @@ createServer(async (req, res) => {
     // Same serverless function Vercel runs; needs ANTHROPIC_API_KEY in this shell
     if (path === '/api/chat') {
       await chatHandler(req, res);
+      return;
+    }
+    if (path === '/api/statements') {
+      await statementsHandler(req, res);
       return;
     }
     if (path === '/api/financials') {

@@ -1261,7 +1261,7 @@
                 <div>
                   <div class="flex items-center gap-2">
                     <h3 class="font-serif font-bold text-white text-lg tracking-tight">Gelir-Gider Tablosu: En Önemli 5 Temel Kalem</h3>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-800/50 text-emerald-300">Resmi KAP Verisi</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-800/50 text-emerald-300">KAP Kaynaklı Gerçek Veri</span>
                   </div>
                   <p class="text-xs text-slate-400 font-light mt-0.5">Şirketin operasyonel kârlılık omurgasını oluşturan 5 ana muhasebe kalemi ve çeyreklik gelişimleri</p>
                 </div>
@@ -1352,8 +1352,8 @@
                 <span><strong class="text-slate-200">Kârlılık Değerlendirmesi:</strong> <span id="inc5AuditNote">Şirket güçlü hasılat büyümesi ve istikrarlı brüt kâr marjı ile sektör ortalamasının üzerinde performans sergilemektedir.</span></span>
               </div>
               <div class="flex items-center gap-3 text-[11px] font-mono flex-shrink-0">
-                <span class="text-slate-500">KAYNAK: KAP KONSOLİDE GELİR TABLOSU</span>
-                <span class="px-2 py-0.5 rounded bg-red-950/40 text-red-300 border border-red-800/40">AUDITED / DENETLENMİŞ</span>
+                <span class="text-slate-500">KAYNAK: İŞ YATIRIM (KAP RAPORLARI)</span>
+                <span class="px-2 py-0.5 rounded bg-red-950/40 text-red-300 border border-red-800/40">KONSOLİDE · TMS 29</span>
               </div>
             </div>
           </div>
@@ -1365,7 +1365,7 @@
               <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
                 <div>
                   <h4 class="font-serif font-bold text-white text-base">Çeyreklik Satış ve FAVÖK Gelişimi</h4>
-                  <p class="text-xs text-slate-400">Son 5 çeyreklik finansal hasılat ve marj trendi</p>
+                  <p class="text-xs text-slate-400">Son 5 çeyrek: birikimli (YTD) raporların farkı; TMS 29 düzeltmesi nedeniyle yaklaşık değerlerdir</p>
                 </div>
                 <span class="text-xs font-mono font-bold text-red-400 bg-red-950/40 border border-red-800/40 px-2 py-0.5 rounded">MİLYAR TL</span>
               </div>
@@ -1376,8 +1376,8 @@
               </div>
 
               <div class="flex items-center justify-between text-xs pt-3 border-t border-[#1A2540] text-slate-400 font-mono">
-                <span>Yıllık Satış: <strong id="stockAnnualRevenue" class="text-white">₺325.4 Mlr</strong></span>
-                <span>Yıllık FAVÖK: <strong id="stockAnnualFavok" class="text-white">₺58.2 Mlr</strong></span>
+                <span>Son 12 Ay Satış: <strong id="stockAnnualRevenue" class="text-white">₺325.4 Mlr</strong></span>
+                <span>Son 12 Ay FAVÖK: <strong id="stockAnnualFavok" class="text-white">₺58.2 Mlr</strong></span>
               </div>
             </div>
 
@@ -1385,10 +1385,10 @@
             <div class="utl-card p-6 space-y-4">
               <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
                 <div>
-                  <h4 class="font-serif font-bold text-white text-base">3 Yıllık İndirgenmiş Nakit (DCF) Projeksiyonu</h4>
-                  <p class="text-xs text-slate-400">Gerçekleşen hasılat vs Once ve Always tahmin eğrisi</p>
+                  <h4 class="font-serif font-bold text-white text-base">Gerçekleşen Hasılat ve Basit Trend Projeksiyonu</h4>
+                  <p class="text-xs text-slate-400">Gerçek çeyreklik hasılat; öngörü, geçen yılın aynı çeyreği × son çeyrek büyümesi (basit model)</p>
                 </div>
-                <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 border border-emerald-800/40 px-2 py-0.5 rounded">+%24 CAGR</span>
+                <span id="projGrowthBadge" class="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 border border-emerald-800/40 px-2 py-0.5 rounded">Hesaplanıyor</span>
               </div>
 
               <!-- Canvas -->
@@ -1397,8 +1397,8 @@
               </div>
 
               <div class="flex items-center justify-between text-xs pt-3 border-t border-[#1A2540] text-slate-400">
-                <span class="text-slate-300">Model Öngörüsü: İstikrarlı pazar payı genişlemesi</span>
-                <span class="text-red-400 font-mono font-bold">A+ Projeksiyon</span>
+                <span class="text-slate-300">Kesikli çizgi bir tahmindir, gerçekleşme değildir</span>
+                <span class="text-amber-400 font-mono font-bold">BASİT MODEL</span>
               </div>
             </div>
             </div>
@@ -1530,10 +1530,10 @@
                 </div>
                 <div>
                   <div class="flex items-center gap-2">
-                    <h3 class="font-serif font-bold text-white text-lg">Resmi KAP Konsolide Bilanço ve Finansal Tablolar</h3>
+                    <h3 class="font-serif font-bold text-white text-lg">KAP Kaynaklı Konsolide Bilanço ve Finansal Tablolar</h3>
                     <span id="bsPeriodBadge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950/40 border border-red-800/40 text-red-300">2024/09 (Son)</span>
                   </div>
-                  <p class="text-xs text-slate-400 font-light mt-0.5">Kamuyu Aydınlatma Platformu denetlenmiş kurumsal bilanço ve gelir tablosu verileri</p>
+                  <p class="text-xs text-slate-400 font-light mt-0.5">KAP finansal raporlarından derlenen gerçek bilanço, gelir tablosu ve nakit akışı kalemleri</p>
                 </div>
               </div>
 
@@ -1620,12 +1620,12 @@
               <!-- Item 5: Net Parasal Pozisyon Kazancı/Kaybı (TMS 29) -->
               <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-1 hover:border-amber-500/40 transition-colors">
                 <div class="flex items-center justify-between text-xs text-slate-400">
-                  <span class="font-mono text-[10px] uppercase font-bold tracking-wider text-amber-400">NET PARASAL POZİSYON K/Z</span>
-                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-950/80 border border-amber-800/50 text-amber-300">TMS 29</span>
+                  <span id="bsCardMonetaryTitle" class="font-mono text-[10px] uppercase font-bold tracking-wider text-amber-400">CARİ ORAN (LİKİDİTE)</span>
+                  <span id="bsCardMonetaryBadge" class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-950/80 border border-amber-800/50 text-amber-300">HESAPLANDI</span>
                 </div>
                 <div id="bsCardMonetaryGain" class="text-2xl font-mono font-bold text-amber-300 tracking-tight">+₺14,8 Mlr</div>
                 <div class="flex items-center justify-between text-[11px] pt-1 border-t border-[#1A2540]">
-                  <span class="text-slate-500 font-sans">Net Kâra Oranı</span>
+                  <span id="bsCardMonetaryLabel" class="text-slate-500 font-sans">Nakit / Kısa Vadeli Yük.</span>
                   <span id="bsCardMonetaryRatio" class="font-mono font-bold text-amber-400">%21,6</span>
                 </div>
                 <p id="bsCardMonetaryNote" class="text-[10px] text-slate-400 font-sans leading-tight mt-0.5 truncate" title="Net parasal borçlanma enflasyon kârı">Net parasal borçlanma enflasyon kârı</p>
@@ -1642,7 +1642,7 @@
                     <th id="bsThCol2" class="py-3 px-4 font-bold text-right">2023/12 (ÖNCEKİ YIL)</th>
                     <th id="bsThCol3" class="py-3 px-4 font-bold text-right">2023/09 (ÖNCEKİ ÇEYREK)</th>
                     <th id="bsThCol4" class="py-3 px-4 font-bold text-right">YILLIK DEĞİŞİM (YoY)</th>
-                    <th class="py-3 px-4 text-center">DURUM</th>
+                    <th id="bsThCol5" class="py-3 px-4 text-center" title="Bilanço kalemleri toplam varlığa, gelir kalemleri hasılata oranı">PAY (%)</th>
                   </tr>
                 </thead>
                 <tbody id="stockBalanceSheetTbody" class="divide-y divide-[#141E33]">
@@ -1653,7 +1653,7 @@
 
             <!-- Footer Note -->
             <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 pt-2 gap-2">
-              <span class="font-light"><i class="fa-solid fa-circle-info text-red-400 mr-1"></i> Tüm bilanço kalemleri SPK standartları ve KAP (Kamuyu Aydınlatma Platformu) bildirim formatına uygundur.</span>
+              <span id="bsSourceNote" class="font-light"><i class="fa-solid fa-circle-info text-red-400 mr-1"></i> Kaynak: İş Yatırım (KAP finansal raporları).</span>
               <span id="bsCurrencyFooterNote" class="text-[11px] font-mono text-slate-500">Para Birimi: Türk Lirası (₺) &bull; Nominal</span>
             </div>
           </div>
@@ -3717,6 +3717,7 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/technicals.js"></script>
+  <script src="assets/js/statements.js"></script>
   <script src="assets/js/live-data.js"></script>
   <script src="assets/js/chat-widget.js" defer></script>
 

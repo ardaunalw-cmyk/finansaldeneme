@@ -4,7 +4,8 @@
   "scripts": {
     "build": "node build.mjs",
     "dev": "node dev.mjs",
-    "data": "node scripts/fetch-fundamentals.mjs"
+    "data": "node scripts/fetch-fundamentals.mjs",
+    "data:statements": "node scripts/fetch-statements.mjs"
   },
   "devDependencies": {
     "tailwindcss": "3.4.17"

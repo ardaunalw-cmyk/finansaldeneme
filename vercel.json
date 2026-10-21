@@ -5,7 +5,8 @@
   "installCommand": "npm install",
   "outputDirectory": "dist",
   "functions": {
-    "api/financials.mjs": { "maxDuration": 30 }
+    "api/financials.mjs": { "maxDuration": 30 },
+    "api/statements.mjs": { "maxDuration": 30 }
   },
   "cleanUrls": true,
   "trailingSlash": false,

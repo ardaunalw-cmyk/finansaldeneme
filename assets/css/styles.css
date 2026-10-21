@@ -1476,3 +1476,5 @@ body.is-home #headerSearch { display: none; }
 .data-badge.live { background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.35); }
 .data-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 11px; line-height: 1.5; color: #7C8BA6; }
 .is-real { text-decoration: underline dotted #34D399; text-underline-offset: 4px; }
+
+.stmt-msg { display:flex; align-items:center; justify-content:center; height:100%; min-height:12rem; padding:1rem; text-align:center; font-size:12px; font-family:'JetBrains Mono',monospace; color:#7C8BA6; }
