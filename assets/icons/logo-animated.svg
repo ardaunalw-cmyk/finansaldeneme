@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Onc&amp;Al Analyst">
+  <defs>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2468FF"/>
+      <stop offset="1" stop-color="#0A2FD0"/>
+    </linearGradient>
+
+    <!-- Light that keeps sweeping across the whole mark -->
+    <linearGradient id="sheen" gradientUnits="userSpaceOnUse" x1="-34" y1="0" x2="-8" y2="0" gradientTransform="rotate(24 50 50)">
+      <stop offset="0" stop-color="#9FC0FF" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#EAF2FF" stop-opacity="1"/>
+      <stop offset="1" stop-color="#9FC0FF" stop-opacity="0"/>
+      <animateTransform attributeName="gradientTransform" type="translate" additive="sum" values="0 0; 150 0" dur="2.8s" repeatCount="indefinite"/>
+    </linearGradient>
+
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.1" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Shapes, defined once and drawn twice (blue base + moving light) -->
+    <g id="bars" fill="none" stroke-width="2.1" stroke-linejoin="round">
+      <rect x="23.6" y="61.8" width="11.4" height="18.3" rx="1.3"/>
+      <rect x="38.3" y="56.4" width="11.6" height="23.7" rx="1.3"/>
+      <rect x="53.1" y="48.3" width="11.5" height="31.8" rx="1.3"/>
+      <rect x="67.4" y="38.2" width="11.8" height="41.9" rx="1.3"/>
+    </g>
+    <g id="arrow" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 55.6 C 42 50.4, 62 40.4, 72.4 27.6" stroke-width="2.8"/>
+      <path d="M32.2 57.6 C 52 49.6, 67 40.6, 73.6 31.4" stroke-width="1.5"/>
+      <path d="M78.2 19.8 L65.2 25.2 L69.4 28.1 L76.6 33.6 Z" stroke-width="1.4" fill-opacity="1"/>
+    </g>
+  </defs>
+
+  <!-- Blue mark with a soft glow -->
+  <g filter="url(#glow)">
+    <use href="#bars" stroke="url(#blue)"/>
+    <use href="#arrow" stroke="url(#blue)" fill="url(#blue)"/>
+  </g>
+
+  <!-- Bars fill and drain like live volume -->
+  <g fill="url(#blue)" fill-opacity="0.38">
+    <rect x="25" width="8.6" rx="0.8">
+      <animate attributeName="height" values="3;16;8;14;3" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1"/>
+      <animate attributeName="y" values="77;64;70;64;77" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1"/>
+    </rect>
+    <rect x="39.6" width="8.6" rx="0.8">
+      <animate attributeName="height" values="6;21;12;19;6" dur="3.4s" begin="0.35s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1"/>
+      <animate attributeName="y" values="74;59;68;61;74" dur="3.4s" begin="0.35s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1"/>
+    </rect>
+    <rect x="54.4" width="8.6" rx="0.8">
+      <animate attributeName="height" values="10;29;18;27;10" dur="3.4s" begin="0.7s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1"/>
+      <animate attributeName="y" values="70;51;62;53;70" dur="3.4s" begin="0.7s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1"/>
+    </rect>
+    <rect x="68.7" width="9.2" rx="0.8">
+      <animate attributeName="height" values="14;39;24;37;14" dur="3.4s" begin="1.05s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1"/>
+      <animate attributeName="y" values="66;41;56;43;66" dur="3.4s" begin="1.05s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1"/>
+    </rect>
+  </g>
+
+  <!-- Light running along the arrow -->
+  <path d="M22 55.6 C 42 50.4, 62 40.4, 72.4 27.6" pathLength="100" fill="none" stroke="#EAF2FF" stroke-width="1.7" stroke-linecap="round" stroke-dasharray="9 91" filter="url(#glow)">
+    <animate attributeName="stroke-dashoffset" values="0;-100" dur="2.2s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Sweeping sheen over everything -->
+  <use href="#bars" stroke="url(#sheen)"/>
+  <use href="#arrow" stroke="url(#sheen)" fill="url(#sheen)"/>
+
+  <!-- Pulse on the arrow tip -->
+  <circle cx="77.6" cy="21" r="1" fill="#EAF2FF">
+    <animate attributeName="r" values="0.8;3.2;0.8" dur="2.2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.9;0;0.9" dur="2.2s" repeatCount="indefinite"/>
+  </circle>
+</svg>
