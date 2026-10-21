@@ -51,3 +51,7 @@ finansaldeneme/
 
 .vercel
 .env*
+
+# Node build (Vercel generates these)
+node_modules/
+assets/css/tailwind.css

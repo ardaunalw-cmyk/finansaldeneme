@@ -397,7 +397,7 @@ function updateIntroStepDots(activeDotIndex) {
     if (idx < activeDotIndex) {
       dot.className = 'intro-dot w-2 h-2 rounded-full bg-emerald-400 transition-all duration-300 shadow-[0_0_8px_rgba(52,211,153,0.8)]';
     } else if (idx === activeDotIndex) {
-      dot.className = 'intro-dot w-2 h-2 rounded-full bg-[#2F6BFF] scale-125 transition-all duration-300 shadow-[0_0_10px_rgba(47, 107, 255,1)]';
+      dot.className = 'intro-dot w-2 h-2 rounded-full bg-[#2F6BFF] scale-125 transition-all duration-300 shadow-[0_0_10px_rgba(47,107,255,1)]';
     } else {
       dot.className = 'intro-dot w-2 h-2 rounded-full bg-slate-800 transition-all duration-300';
     }
@@ -604,12 +604,11 @@ async function initApp() {
     // Initialize Macroeconomic & Earnings Calendar
     if (typeof initMacroEarningsCalendar === 'function') initMacroEarningsCalendar();
 
-    // Defer heavy chart rendering slightly to ensure buttery smooth 60fps UI
-    setTimeout(async () => {
+    // Only the overview chart is built up front; every other view builds its
+    // charts and tables the first time it is opened (see switchView).
+    setTimeout(() => {
       try {
-        await loadStockDetails(appState.currentStock);
-        initAllMasterCharts();
-        if (typeof initQuantPortfolioDesk === 'function') initQuantPortfolioDesk();
+        initBistChart();
       } catch(e) {
         console.warn('Deferred init error:', e);
       }
@@ -2527,7 +2526,6 @@ function switchView(viewName, stockCode = null) {
 
   if (stockCode) {
     appState.currentStock = stockCode.toUpperCase();
-    loadStockDetails(appState.currentStock);
   }
 
   appState.activeView = viewName;
@@ -2583,7 +2581,10 @@ function switchView(viewName, stockCode = null) {
       if (typeof renderNewsCenter === 'function') renderNewsCenter();
       if (typeof renderMacroEarningsCalendar === 'function') renderMacroEarningsCalendar();
     } else if (viewName === 'stock-detail') {
-      if (typeof switchStockSubTab === 'function') {
+      if (appState.loadedStock !== appState.currentStock) {
+        // First visit (or a different stock): loadStockDetails renders the view and its charts
+        loadStockDetails(appState.currentStock);
+      } else if (typeof switchStockSubTab === 'function') {
         switchStockSubTab(appState.currentStockSubTab || 'summary');
       } else {
         if (appState.charts.techPrice) appState.charts.techPrice.resize();
@@ -2649,6 +2650,7 @@ window.copySupportEmail = copySupportEmail;
    ============================================================================== */
 async function loadStockDetails(ticker) {
   appState.currentStock = ticker.toUpperCase();
+  appState.loadedStock = appState.currentStock;
   const fin = await MockFinancialApi.fetchFinancials(appState.currentStock);
   appState.currentCompanyData = fin;
 
@@ -2918,6 +2920,11 @@ async function loadStockDetails(ticker) {
   // 17. Synchronize Active Sub-Tab and Protected Canvas Sizing
   if (typeof switchStockSubTab === 'function') {
     switchStockSubTab(appState.currentStockSubTab || 'summary');
+  }
+
+  // Charts are built lazily now, so (re)start the live tick engine once they exist
+  if (typeof window.startLiveStockSimulation === 'function') {
+    window.startLiveStockSimulation(appState.currentStock);
   }
 }
 
@@ -3586,7 +3593,7 @@ function updateDcfMatrix() {
           }
 
           if (isBaseCell) {
-            cellBg = 'bg-red-900/60 text-white ring-2 ring-red-500 shadow-[0_0_15px_rgba(47, 107, 255,0.55)] relative font-black';
+            cellBg = 'bg-red-900/60 text-white ring-2 ring-red-500 shadow-[0_0_15px_rgba(47,107,255,0.55)] relative font-black';
           }
 
           return `
@@ -5510,6 +5517,7 @@ function initClock() {
 
 function initTickerAnimation() {
   setInterval(() => {
+    if (document.hidden) return;
     const tickerItems = document.querySelectorAll('.ticker-price-jiggle');
     if (!tickerItems.length) return;
     const item = tickerItems[Math.floor(Math.random() * tickerItems.length)];
@@ -5517,7 +5525,7 @@ function initTickerAnimation() {
     const animClass = isUp ? 'jiggle-up' : 'jiggle-down';
     item.classList.add(animClass);
     setTimeout(() => item.classList.remove(animClass), 600);
-  }, 2800);
+  }, 5000);
 }
 
 function showToast(message) {
@@ -8524,6 +8532,9 @@ function initMacroEarningsCalendar() {
   // Start live 1-second countdown interval
   if (calendarCountdownInterval) clearInterval(calendarCountdownInterval);
   calendarCountdownInterval = setInterval(() => {
+    // The calendar only lives in the news view; skip work while it is not on screen
+    if (document.hidden || appState.activeView !== 'news') return;
+
     // Update all live countdown cells in view
     const cells = document.querySelectorAll('.cal-live-countdown');
     cells.forEach(c => {

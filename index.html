@@ -22,83 +22,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            oa: {
-              base: '#04060B',
-              subtle: '#070B14',
-              surface: '#0A101D',
-              card: '#0C1322',
-              hover: '#111A2E',
-              border: '#1A2540',
-              borderLight: '#24325A'
-            },
-            // The brand accent was historically written as `red-*` / `economist`
-            // throughout the markup and app.js; both now resolve to the cobalt scale.
-            red: {
-              50: '#EEF5FF',
-              100: '#D9E8FF',
-              200: '#BCD6FF',
-              300: '#8EBBFF',
-              400: '#5B9BFF',
-              500: '#3B7BFF',
-              600: '#2F6BFF',
-              700: '#2457E6',
-              800: '#1C44B8',
-              900: '#183A8F',
-              950: '#0B1A45'
-            },
-            economist: {
-              DEFAULT: '#2F6BFF',
-              red: '#2F6BFF',
-              dark: '#1D4ED8',
-              glow: 'rgba(47, 107, 255, 0.4)'
-            },
-            tv: {
-              green: '#089981',
-              red: '#F23645',
-              blue: '#2962FF',
-              dark: '#131722',
-              card: '#1E222D',
-              border: '#2A2E39'
-            },
-            brand: {
-              50: '#EFF6FF',
-              100: '#DBEAFE',
-              200: '#BFDBFE',
-              300: '#93C5FD',
-              400: '#60A5FA',
-              500: '#3B82F6',
-              600: '#2563EB',
-              700: '#1D4ED8',
-              800: '#1E40AF',
-              900: '#1E3A8A'
-            },
-            slate: {
-              850: '#0C1322',
-              900: '#0A101D',
-              950: '#04060B'
-            }
-          },
-          fontFamily: {
-            masthead: ['Space Grotesk', 'Inter', 'sans-serif'],
-            serif: ['Space Grotesk', 'Inter', 'sans-serif'],
-            sans: ['Inter', '-apple-system', 'sans-serif'],
-            tv: ['Inter', '-apple-system', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-            tabular: ['JetBrains Mono', 'monospace']
-          }
-        }
-      }
-    }
-  </script>
-
   <!-- Font Awesome Icons (Local High-Speed Bundle with CDN Fallback) -->
   <link rel="stylesheet" href="assets/lib/fa/all.min.css?v=2">
 
@@ -112,55 +35,31 @@
 
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="assets/css/styles.css">
+
+  <!-- Tailwind CSS: precompiled at deploy time (npm run build). It comes after styles.css
+       so utilities keep winning ties, as they did with the old runtime CDN. When the file
+       is missing (local preview without a build) fall back to the in-browser CDN. -->
+  <script>
+    function loadTailwindCdnFallback() {
+      var theme = document.createElement('script');
+      theme.src = 'assets/js/tailwind-theme.js';
+      theme.onload = function () {
+        var cdn = document.createElement('script');
+        cdn.src = 'https://cdn.tailwindcss.com/3.4.17';
+        cdn.onload = function () {
+          tailwind.config = { darkMode: 'class', theme: window.__TW_THEME__ };
+        };
+        document.head.appendChild(cdn);
+      };
+      document.head.appendChild(theme);
+    }
+  </script>
+  <link rel="stylesheet" href="assets/css/tailwind.css" onerror="loadTailwindCdnFallback()">
 </head>
 <body class="bg-oa-base text-slate-100 antialiased">
   <noscript><div style="padding:16px;background:#0A101D;color:#E6EDF8;font-family:sans-serif">Bu uygulama JavaScript gerektirir.</div></noscript>
 
-  <!-- ======================================================================
-       CINEMATIC ONC&AL LIGHT BURST INTRO (Pure GPU Hardware-Accelerated Engine)
-       ====================================================================== -->
-  <div id="introSplashScreen" onclick="dismissIntroSplash()" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center select-none cursor-pointer overflow-hidden" style="opacity: 1;" title="Girişi Geçmek İçin Tıklayın">
-    <!-- Radiant Light Flare and Beams (Triggered Behind the Logo) -->
-    <div class="intro-light-core"></div>
-    <div class="intro-light-beam"></div>
 
-    <!-- Centerpiece: The Economist Signature Box with Onc&Al -->
-    <div class="intro-logo-reveal relative z-10 flex flex-col items-center text-center px-4">
-      <!-- The Economist Hallmark Red Box: Onc&Al -->
-      <div class="relative shadow-[0_12px_45px_rgba(47, 107, 255,0.60)] rounded-xl bg-gradient-to-br from-[#4C86FF] via-[#2F6BFF] to-[#1A3FB0] px-9 py-4 sm:px-14 sm:py-5 border border-white/25">
-        <div class="font-serif font-black text-white text-3xl sm:text-5xl md:text-6xl tracking-tight leading-none">
-          Onc&amp;Al
-        </div>
-      </div>
-      <!-- Sub-caption Slogan -->
-      <div class="mt-4 text-xs sm:text-sm font-serif text-white/90 font-medium tracking-wide">
-        “It does not matter the color of the cat, what matter is to catch the rat”
-      </div>
-      <div class="mt-2 text-[9px] font-mono uppercase tracking-[0.25em] text-red-400 font-bold">
-        KANTİTATİF FİNANSAL TERMİNAL
-      </div>
-    </div>
-  </div>
-
-  <!-- Immediate Inline Auto-Dismiss: Clears intro in 650ms flat (Zero Waiting) -->
-  <script>
-    (function() {
-      var dismissed = false;
-      window.dismissIntroSplash = function() {
-        if (dismissed) return;
-        dismissed = true;
-        var sp = document.getElementById('introSplashScreen');
-        if (!sp) return;
-        sp.classList.add('splash-exit');
-        sp.style.pointerEvents = 'none';
-        setTimeout(function() {
-          sp.style.display = 'none';
-        }, 260);
-      };
-      // Auto-trigger at 650ms (peak light burst)
-      setTimeout(window.dismissIntroSplash, 650);
-    })();
-  </script>
 
   <!-- ======================================================================
        1. TOP LIVE MARKET TICKER BAR (BIST 100, Currencies, Commodities)
@@ -4088,7 +3987,7 @@
             }
             checkActivePriceAlerts(symbol, currentPrice, currentRsi);
           }
-        }, 1650); // 1.65s optimum borsa hızı
+        }, 5000); // 5s: canlı his korunur, ana iş parçacığı rahatlar
       };
 
       /**
@@ -4116,7 +4015,7 @@
           const delta = (Math.random() - 0.48) * 5.8; // +- 2.9 puan mikro endeks hareketi
           ds[lastIdx] = +(lastVal + delta).toFixed(2);
           bistChart.update('none');
-        }, 2000);
+        }, 5000);
       }
 
       /**
@@ -4178,7 +4077,7 @@
               pill.className = `inline-flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded font-tradingview-nums ${isChgUp ? 'tv-pill-up' : 'tv-pill-down'}`;
             }
           });
-        }, 1900); // Her 1.9s'de yeni işlem eşleşmeleri
+        }, 5000); // Her 5s'de yeni işlem eşleşmeleri
       }
 
       /**

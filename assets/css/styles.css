@@ -85,7 +85,7 @@ body {
   background-image:
     radial-gradient(1200px 600px at 85% -10%, rgba(47, 107, 255, 0.10), transparent 60%),
     radial-gradient(900px 500px at -10% 20%, rgba(56, 189, 248, 0.05), transparent 60%);
-  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--color-text);
   margin: 0;
   padding: 0;
@@ -875,12 +875,19 @@ input[type="range"]::-moz-range-thumb {
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
   }
+
+  /* Frosted-glass blur repaints on every scroll frame on phones: use solid bars */
+  header,
+  #mobileBottomNav,
+  #searchDropdown {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: #070B14 !important;
+  }
 }
 
 #mobileBottomNav {
   padding-bottom: max(0.4rem, env(safe-area-inset-bottom, 0px));
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
 }
 
 .bottom-nav-item {
