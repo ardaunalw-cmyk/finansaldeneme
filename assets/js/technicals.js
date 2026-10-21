@@ -240,6 +240,162 @@ const TechData = (() => {
     };
   }
 
+  /* ---------- public: indicator scorecard (computed from the same real bars) ---------- */
+  function atr(h, l, c, n = 14) {
+    const tr = c.map((_, i) => (i === 0 ? h[0] - l[0] : Math.max(h[i] - l[i], Math.abs(h[i] - c[i - 1]), Math.abs(l[i] - c[i - 1]))));
+    if (tr.length < n) return null;
+    let v = tr.slice(1, n + 1).reduce((s, x) => s + x, 0) / n;
+    for (let i = n + 1; i < tr.length; i++) v = (v * (n - 1) + tr[i]) / n;
+    return v;
+  }
+
+  function cci(h, l, c, n = 20) {
+    const tp = c.map((_, i) => (h[i] + l[i] + c[i]) / 3);
+    const win = tp.slice(-n);
+    const mean = win.reduce((s, x) => s + x, 0) / n;
+    const dev = win.reduce((s, x) => s + Math.abs(x - mean), 0) / n;
+    return dev === 0 ? 0 : (tp[tp.length - 1] - mean) / (0.015 * dev);
+  }
+
+  function williamsR(h, l, c, n = 14) {
+    const hh = Math.max(...h.slice(-n)), ll = Math.min(...l.slice(-n));
+    return hh === ll ? -50 : (hh - c[c.length - 1]) / (hh - ll) * -100;
+  }
+
+  const SIG = {
+    BUY2: { label: 'GÜÇLÜ AL', cls: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60', score: 2 },
+    BUY: { label: 'AL', cls: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50', score: 1 },
+    NEUTRAL: { label: 'NÖTR', cls: 'bg-slate-800 text-slate-300 border border-slate-700', score: 0 },
+    SELL: { label: 'SAT', cls: 'bg-rose-950/60 text-rose-400 border border-rose-800/50', score: -1 },
+    SELL2: { label: 'GÜÇLÜ SAT', cls: 'bg-rose-950/80 text-rose-300 border border-rose-700/60', score: -2 }
+  };
+
+  async function scorecard(ticker) {
+    const bars = await history(ticker, '2y', '1d');
+    const { h, l, c } = bars;
+    const last = c.length - 1;
+    const px = c[last];
+    const money = v => `₺${pctFmt.format(v)}`;
+    const num = v => pctFmt.format(v);
+    const rows = [];
+
+    // RSI
+    const r = rsi(c)[last];
+    const r5 = rsi(c)[last - 5];
+    rows.push({
+      name: 'RSI (Göreceli Güç Endeksi)', period: '14 Gün', val: num(r),
+      sig: r <= 30 ? SIG.BUY : r >= 70 ? SIG.SELL : SIG.NEUTRAL,
+      note: r <= 30 ? 'Aşırı satım bölgesinde.' : r >= 70 ? 'Aşırı alım bölgesinde.'
+        : `Nötr bölgede; 5 gün önceye göre ${r >= r5 ? 'yükseliyor' : 'düşüyor'}.`
+    });
+
+    // MACD
+    const m = macd(c);
+    const mLine = m.line[last], mSig = m.signal[last];
+    let crossBars = null;
+    for (let i = last; i > last - 4 && i > 0; i--) {
+      if (m.line[i] == null || m.signal[i] == null || m.line[i - 1] == null || m.signal[i - 1] == null) break;
+      if ((m.line[i - 1] - m.signal[i - 1]) * (m.line[i] - m.signal[i]) < 0) { crossBars = last - i; break; }
+    }
+    const macdUp = mLine > mSig;
+    rows.push({
+      name: 'MACD (12, 26, 9)', period: 'Standart', val: num(mLine),
+      sig: macdUp ? (crossBars != null ? SIG.BUY2 : SIG.BUY) : (crossBars != null ? SIG.SELL2 : SIG.SELL),
+      note: crossBars != null
+        ? `Son ${crossBars + 1} işlem gününde MACD çizgisi sinyal çizgisini ${macdUp ? 'yukarı' : 'aşağı'} kesti.`
+        : `MACD çizgisi sinyal çizgisinin ${macdUp ? 'üzerinde' : 'altında'}.`
+    });
+
+    // Bollinger %B
+    const bb = bollinger(c);
+    const bU = bb.upper[last], bL = bb.lower[last];
+    const pctB = (px - bL) / (bU - bL);
+    rows.push({
+      name: 'Bollinger Bantları', period: '20, 2', val: `%B ${num(pctB * 100)}`,
+      sig: px < bL ? SIG.BUY : px > bU ? SIG.SELL : SIG.NEUTRAL,
+      note: px < bL ? 'Fiyat alt bandın altında.' : px > bU ? 'Fiyat üst bandın üzerinde.'
+        : `Fiyat bantların ${pctB >= 0.5 ? 'üst' : 'alt'} yarısında.`
+    });
+
+    // Moving averages
+    [[20, 'SMA 20 (Kısa Vade)'], [50, 'SMA 50 (Orta Vade)'], [200, 'SMA 200 (Ana Trend)']].forEach(([n, name]) => {
+      const v = sma(c, n)[last];
+      if (v == null) { rows.push({ name, period: `${n} Gün`, val: 'N/A', sig: SIG.NEUTRAL, note: 'Yeterli geçmiş veri yok.' }); return; }
+      const gap = (px / v - 1) * 100;
+      rows.push({
+        name, period: `${n} Gün`, val: money(v),
+        sig: px > v ? SIG.BUY : SIG.SELL,
+        note: `Fiyat ortalamanın %${num(Math.abs(gap))} ${px > v ? 'üzerinde' : 'altında'}.`
+      });
+    });
+
+    // Stochastic
+    const st = stochastic(h, l, c);
+    const k = st.k[last], d = st.d[last];
+    rows.push({
+      name: 'Stokastik Osilatör', period: '14, 3', val: `%K ${num(k)}`,
+      sig: k <= 20 ? SIG.BUY : k >= 80 ? SIG.SELL : SIG.NEUTRAL,
+      note: `%K, %D (${num(d)}) çizgisinin ${k >= d ? 'üzerinde' : 'altında'}${k <= 20 ? '; aşırı satım bölgesi' : k >= 80 ? '; aşırı alım bölgesi' : ''}.`
+    });
+
+    // ATR (volatility only, not part of the consensus)
+    const a = atr(h, l, c);
+    const aPct = a / px * 100;
+    rows.push({
+      name: 'ATR (Ortalama Gerçek Aralık)', period: '14 Gün', val: money(a),
+      sig: { label: aPct < 2 ? 'DÜŞÜK OYNAKLIK' : aPct < 4 ? 'ORTA OYNAKLIK' : 'YÜKSEK OYNAKLIK', cls: 'bg-sky-950/60 text-sky-300 border border-sky-800/50', score: 0 },
+      note: `Günlük ortalama hareket fiyatın yaklaşık %${num(aPct)} kadarı.`,
+      directional: false
+    });
+
+    // CCI
+    const cc = cci(h, l, c);
+    rows.push({
+      name: 'Emtia Kanal Endeksi (CCI)', period: '20 Gün', val: num(cc),
+      sig: cc <= -100 ? SIG.BUY : cc >= 100 ? SIG.SELL : SIG.NEUTRAL,
+      note: cc <= -100 ? 'Aşırı satım bölgesinde.' : cc >= 100 ? 'Aşırı alım bölgesinde.' : '±100 bandı içinde.'
+    });
+
+    // Williams %R
+    const w = williamsR(h, l, c);
+    rows.push({
+      name: 'Williams %R', period: '14 Gün', val: num(w),
+      sig: w <= -80 ? SIG.BUY : w >= -20 ? SIG.SELL : SIG.NEUTRAL,
+      note: w <= -80 ? 'Aşırı satım bölgesinde.' : w >= -20 ? 'Aşırı alım bölgesinde.' : 'Orta bölgede.'
+    });
+
+    // Consensus over the directional indicators
+    const dir = rows.filter(x => x.directional !== false);
+    const buy = dir.filter(x => x.sig.score > 0).length;
+    const sell = dir.filter(x => x.sig.score < 0).length;
+    const neutral = dir.length - buy - sell;
+    const ratio = dir.reduce((s, x) => s + x.sig.score, 0) / (dir.length * 2);
+    const verdict = ratio >= 0.4 ? SIG.BUY2 : ratio >= 0.12 ? SIG.BUY : ratio > -0.12 ? SIG.NEUTRAL : ratio > -0.4 ? SIG.SELL : SIG.SELL2;
+
+    // Plain-language reading built from the same numbers
+    const sma20 = sma(c, 20)[last], sma50 = sma(c, 50)[last], sma200 = sma(c, 200)[last];
+    const hi52 = Math.max(...h.slice(-252)), lo52 = Math.min(...l.slice(-252));
+    const rangePos = (px - lo52) / (hi52 - lo52) * 100;
+    const above = [[sma20, 'SMA 20'], [sma50, 'SMA 50'], [sma200, 'SMA 200']].filter(([v]) => v != null && px > v).map(([, n]) => n);
+    const below = [[sma20, 'SMA 20'], [sma50, 'SMA 50'], [sma200, 'SMA 200']].filter(([v]) => v != null && px <= v).map(([, n]) => n);
+    const commentary = [
+      `Son kapanış ${money(px)}; ${above.length ? `${above.join(', ')} üzerinde` : ''}${above.length && below.length ? ', ' : ''}${below.length ? `${below.join(', ')} altında` : ''}.`,
+      `52 haftalık aralıkta (${money(lo52)} – ${money(hi52)}) %${num(rangePos)} seviyesinde; RSI ${num(r)}, MACD ${macdUp ? 'pozitif' : 'negatif'} momentumda.`,
+      `${dir.length} yönlü göstergeden ${buy} tanesi alım, ${sell} tanesi satım, ${neutral} tanesi nötr sinyal veriyor.`
+    ];
+
+    return {
+      rows, verdict, buy, sell, neutral, commentary, rsi: r,
+      asOf: bars.t[bars.t.length - 1]
+    };
+  }
+
+  /** Latest RSI(14) from daily bars, used by RSI price alerts. */
+  async function rsiLast(ticker) {
+    const bars = await history(ticker, '1y', '1d');
+    const v = rsi(bars.c)[bars.c.length - 1];
+    return v == null ? null : v;
+  }
   /* ---------- public: BIST 100 index line ---------- */
   async function bist(tf = '1G') {
     const frame = BIST_FRAMES[tf] || BIST_FRAMES['1G'];
@@ -277,7 +433,7 @@ const TechData = (() => {
     };
   }
 
-  return { stock, bist, history };
+  return { stock, bist, history, scorecard, rsiLast };
 })();
 
 window.TechData = TechData;

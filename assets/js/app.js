@@ -2850,6 +2850,52 @@ function copySupportEmail() {
 window.copySupportEmail = copySupportEmail;
 
 
+/**
+ * Fills the indicator scorecard, the consensus badge and the written reading from real
+ * daily bars (see TechData.scorecard). Shows an explicit message when no data is available.
+ */
+async function renderTechScorecard(code) {
+  const tbody = document.getElementById('technicalIndicatorsTbody');
+  const badge = document.getElementById('techConsensusBadge');
+  const box = document.getElementById('techAnalysisCommentary');
+  if (!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="5" class="py-6 px-3 text-center text-slate-500 text-xs font-mono">Göstergeler gerçek fiyat geçmişinden hesaplanıyor...</td></tr>';
+  if (badge) { badge.className = 'text-xs font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg'; badge.textContent = 'HESAPLANIYOR'; }
+
+  try {
+    if (!window.TechData) throw new Error('technicals not loaded');
+    const sc = await TechData.scorecard(code);
+    if (appState.currentStock !== code) return;
+
+    tbody.innerHTML = sc.rows.map(ind => `
+      <tr class="hover:bg-[#121C30]/50 transition-colors border-b border-[#162238]/60">
+        <td class="py-2.5 px-3 font-medium text-slate-200">${ind.name}</td>
+        <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${ind.period}</td>
+        <td class="py-2.5 px-3 font-mono font-bold text-white">${ind.val}</td>
+        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono ${ind.sig.cls}">${ind.sig.label}</span></td>
+        <td class="py-2.5 px-3 text-slate-400 text-[11px]">${ind.note}</td>
+      </tr>
+    `).join('');
+
+    if (badge) {
+      badge.className = `text-xs font-mono font-bold px-2.5 py-1 rounded-lg ${sc.verdict.cls}`;
+      badge.textContent = `KONSENSÜS: ${sc.verdict.label} (${sc.buy} AL · ${sc.neutral} NÖTR · ${sc.sell} SAT)`;
+    }
+    if (box) {
+      box.innerHTML = `
+        <p class="font-medium text-slate-200 leading-relaxed"><strong class="text-white">Gösterge Okuması:</strong> ${sc.commentary[0]}</p>
+        <p class="text-slate-400 mt-2 leading-relaxed">${sc.commentary[1]} ${sc.commentary[2]}</p>
+        <p class="text-slate-500 mt-2 text-[11px]">Gerçek geçmiş fiyatlardan (Yahoo Finance, gecikmeli) kural tabanlı hesaplanmıştır; yatırım tavsiyesi değildir.</p>
+      `;
+    }
+  } catch (e) {
+    console.warn('[Technical] scorecard unavailable:', e.message);
+    tbody.innerHTML = '<tr><td colspan="5" class="py-6 px-3 text-center text-amber-400 text-xs font-mono">Fiyat geçmişi alınamadığı için göstergeler hesaplanamadı.</td></tr>';
+    if (badge) { badge.className = 'text-xs font-mono font-bold text-amber-400 bg-amber-950/40 border border-amber-800/40 px-2.5 py-1 rounded-lg'; badge.textContent = 'VERİ YOK'; }
+    if (box) box.innerHTML = '<p class="text-slate-400">Gerçek fiyat verisi alınamadı; yorum üretilmedi.</p>';
+  }
+}
 /* ==============================================================================
    5. Stock Detail Loading & Dashboard Hydration
    ============================================================================== */
@@ -3042,47 +3088,8 @@ async function loadStockDetails(ticker) {
     `).join('');
   }
 
-  // 10. Technical Indicators Table
-  const techTbody = document.getElementById('technicalIndicatorsTbody');
-  if (techTbody) {
-    const pVal = fin.priceNum;
-    const indicators = [
-      { name: 'RSI (Göreceli Güç Endeksi)', period: '14 Gün', val: `${(52 + (getStockHash(fin.code) % 24)).toFixed(1)}`, sig: 'AL', sigClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50', note: 'Momentum pozitif bölgede güçleniyor.' },
-      { name: 'MACD (12, 26, 9)', period: 'Standart', val: `+${(pVal * 0.012).toFixed(2)}`, sig: 'GÜÇLÜ AL', sigClass: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60', note: 'MACD çizgisi sinyal çizgisini yukarı yönlü kesti.' },
-      { name: 'Bollinger Bantları', period: '20, 2', val: `₺${pVal.toFixed(2)}`, sig: 'NÖTR', sigClass: 'bg-slate-800 text-slate-300 border border-slate-700', note: 'Fiyat orta bant üzerinde konsolide oluyor.' },
-      { name: 'SMA 20 (Kısa Vade)', period: '20 Gün', val: `₺${(pVal * 0.985).toFixed(2)}`, sig: 'AL', sigClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50', note: 'Fiyat 20 günlük ortalamanın üzerinde.' },
-      { name: 'SMA 50 (Orta Vade)', period: '50 Gün', val: `₺${(pVal * 0.965).toFixed(2)}`, sig: 'AL', sigClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50', note: 'Orta vadeli yükseliş trendi korunuyor.' },
-      { name: 'SMA 200 (Ana Trend)', period: '200 Gün', val: `₺${(pVal * 0.910).toFixed(2)}`, sig: 'GÜÇLÜ AL', sigClass: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60', note: 'Ana yükseliş kanalı teyitli.' },
-      { name: 'Stokastik Osilatör', period: '14, 3, 3', val: '64.50', sig: 'AL', sigClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50', note: 'Aşırı satım bölgesinden çıkış sonrası yükseliş.' },
-      { name: 'ATR (Ortalama Gerçek Aralık)', period: '14 Gün', val: `₺${(pVal * 0.032).toFixed(2)}`, sig: 'DÜŞÜK OYNAKLIK', sigClass: 'bg-red-950/40 text-red-400 border border-red-800/50', note: 'Sağlıklı konsolidasyon aralığı.' },
-      { name: 'Emtia Kanal Endeksi (CCI)', period: '20 Gün', val: '+112.4', sig: 'AL', sigClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50', note: 'Alım yönlü trend döngüsü teyitli.' },
-      { name: 'Williams %R', period: '14 Gün', val: '-32.1', sig: 'AL', sigClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50', note: 'Boğa piyasası üst diliminde hareket ediyor.' }
-    ];
-
-    techTbody.innerHTML = indicators.map(ind => `
-      <tr class="hover:bg-[#121C30]/50 transition-colors border-b border-[#162238]/60">
-        <td class="py-2.5 px-3 font-medium text-slate-200">${ind.name}</td>
-        <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${ind.period}</td>
-        <td class="py-2.5 px-3 font-mono font-bold text-white">${ind.val}</td>
-        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono ${ind.sigClass}">${ind.sig}</span></td>
-        <td class="py-2.5 px-3 text-slate-400 text-[11px]">${ind.note}</td>
-      </tr>
-    `).join('');
-  }
-
-  // 11. AI Commentary Box
-  const commentaryBox = document.getElementById('techAnalysisCommentary');
-  if (commentaryBox) {
-    commentaryBox.innerHTML = `
-      <p class="font-medium text-slate-200 leading-relaxed">
-        <strong class="text-white">Algoritmik Piyasa Değerlendirmesi:</strong> ${fin.name} (${fin.code}), güncel ₺${fin.price} fiyat seviyesinde kısa vadeli hareketli ortalamalarının (SMA 20: ₺${(fin.priceNum * 0.985).toFixed(2)}) üzerinde işlem görmektedir.
-      </p>
-      <p class="text-slate-400 mt-2 leading-relaxed">
-        Hissenin ${fin.sector} sektöründeki konumu ve ${fin.paidCapital} tutarındaki ödenmiş sermayesi, kurumsal fon girişlerini desteklemektedir. 12 aylık konsensüs hedef fiyatı olan <strong class="text-red-400">${fin.targetPrice}</strong> (${fin.potential}) teknik ve temel modellerimizle uyumludur.
-      </p>
-    `;
-  }
-
+  // 10-11. Technical indicator scorecard, consensus and commentary (computed from real bars)
+  renderTechScorecard(fin.code);
   // 12. Quant Projections & DCF Fair Value
   const projDcf = document.getElementById('projDcfValue');
   const projPot = document.getElementById('projModelPotential');
@@ -8090,6 +8097,8 @@ function renderWatchlistItems() {
     return;
   }
 
+  if (window.LiveData) LiveData.syncWatchlist(list);
+
   container.innerHTML = list.map(ticker => {
     const fin = getOrGenerateStockFinancials(ticker);
     const logoHtml = typeof getStockLogoHtml === 'function' ? getStockLogoHtml(ticker, 32) : '';
@@ -8133,28 +8142,7 @@ function getAlerts() {
     const raw = localStorage.getItem(ALERTS_STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {}
-  return [
-    {
-      id: 'alt_def_1',
-      ticker: 'THYAO',
-      type: 'price_above',
-      targetValue: 325.0,
-      note: 'Direnç kırılımı ve kâr alma hedefi',
-      createdAt: '18 Eki 15:30',
-      triggered: false,
-      triggeredAt: null
-    },
-    {
-      id: 'alt_def_2',
-      ticker: 'GARAN',
-      type: 'rsi_above',
-      targetValue: 70.0,
-      note: 'RSI 70 Aşırı Alım Uyarısı',
-      createdAt: '18 Eki 14:15',
-      triggered: false,
-      triggeredAt: null
-    }
-  ];
+  return [];
 }
 
 function saveAlert(alertObj) {
@@ -8165,6 +8153,7 @@ function saveAlert(alertObj) {
   } catch (e) {}
   renderAlertsItems();
   updateWatchlistHeaderBadges();
+  if (window.LiveData) LiveData.checkAlerts();
 }
 
 function deleteAlert(id) {

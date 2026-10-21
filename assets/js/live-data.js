@@ -280,11 +280,55 @@ const LiveData = (() => {
     }
   }
 
+  /* ---------- Price / RSI alerts and watchlist prices ---------- */
+  let alertsRunning = false;
+
+  /** Checks every untriggered alert against real prices (and real RSI for RSI alerts). */
+  async function checkAlerts() {
+    if (alertsRunning || typeof getAlerts !== 'function' || typeof checkActivePriceAlerts !== 'function') return;
+    const pending = getAlerts().filter(a => !a.triggered);
+    if (!pending.length) return;
+
+    alertsRunning = true;
+    try {
+      const tickers = [...new Set(pending.map(a => a.ticker))];
+      const quotes = await getQuotes(tickers);
+      for (const t of tickers) {
+        const q = quotes[t];
+        if (!q) continue;
+        let rsiNow = null;
+        if (pending.some(a => a.ticker === t && a.type.startsWith('rsi'))) {
+          try { rsiNow = await TechData.rsiLast(t); } catch { /* RSI alerts wait for data */ }
+        }
+        checkActivePriceAlerts(t, q.price, rsiNow);
+      }
+    } catch (e) {
+      console.warn('[LiveData] alert check failed:', e.message);
+    } finally {
+      alertsRunning = false;
+    }
+  }
+
+  /** Replaces sample prices in the watchlist drawer with real ones. */
+  async function syncWatchlist(codes) {
+    const stale = codes.filter(c => !fetchedAt.has(c) || Date.now() - fetchedAt.get(c) > TTL_MS);
+    if (!stale.length) return;
+    try {
+      const quotes = await getQuotes(stale);
+      let changed = false;
+      stale.forEach(c => { if (applyQuote(c, quotes[c])) changed = true; });
+      if (changed && typeof renderWatchlistItems === 'function') renderWatchlistItems();
+    } catch (e) {
+      console.warn('[LiveData] watchlist quotes unavailable:', e.message);
+    }
+  }
   function init() {
     refreshTicker();
+    setTimeout(checkAlerts, 4000);
     setInterval(() => {
       if (document.hidden) return;
       refreshTicker();
+      checkAlerts();
       misses.clear();
       // Re-rendering the overview table re-requests prices that have gone stale
       if (appState.activeView === 'overview' && typeof renderOverviewStockTable === 'function') renderOverviewStockTable();
@@ -292,7 +336,7 @@ const LiveData = (() => {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshTicker(); });
   }
 
-  return { init, syncTable, syncStockHeader };
+  return { init, syncTable, syncStockHeader, checkAlerts, syncWatchlist };
 })();
 
 window.LiveData = LiveData;
