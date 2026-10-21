@@ -266,8 +266,9 @@ const LiveData = (() => {
       }
 
       applyFundamentals(fin, f);
+      if (window.PlainSummary) PlainSummary.render(fin);
 
-      const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+      const set =(id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
       set('stockDetailFK', fin.fk);
       set('stockDetailPDDD', fin.pddd);
       set('stockDetailFDFavok', fin.fdFavok);

@@ -2943,6 +2943,7 @@ async function loadStockDetails(ticker) {
   }
 
   if (typeof fillStockDetailAbout === 'function') fillStockDetailAbout(fin.code);
+  if (window.PlainSummary) PlainSummary.render(fin);
   if (window.LiveData) LiveData.syncStockHeader(fin);
 
   // Dynamic Stock Logo & Visual Avatar

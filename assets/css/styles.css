@@ -1400,6 +1400,59 @@ body.is-home #headerSearch { display: none; }
 }
 .tv-stock-logo .tv-real-logo.is-loaded { opacity: 1; }
 
+/* Sade özet */
+.plain-summary { border-top: 1px solid #1A2540; padding-top: 20px; }
+.plain-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8FB3FF;
+}
+.plain-summary-text { font-size: 14px; line-height: 1.75; color: #CBD5E1; max-width: 75ch; }
+
+/* Terim sözlüğü: "?" işareti ve açıklama balonu */
+.gl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 5px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #3A4B6E;
+  background: transparent;
+  color: #7FA6FF;
+  font: 700 9px/1 'JetBrains Mono', monospace;
+  text-transform: none;
+  letter-spacing: 0;
+  vertical-align: middle;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.gl-btn:hover, .gl-btn:focus-visible { background: #2F6BFF; border-color: #2F6BFF; color: #fff; outline: none; }
+.gl-pop {
+  position: fixed;
+  z-index: 10000;
+  width: min(300px, calc(100vw - 16px));
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #0C1322;
+  border: 1px solid #2F6BFF;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  font-family: 'Inter', sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.gl-pop-title { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.gl-pop-text { font-size: 12px; line-height: 1.55; color: #CBD5E1; font-weight: 400; }
+
 /* Hakkında */
 .stock-about-block { border-top: 1px solid #1A2540; padding-top: 18px; }
 .stock-about-title {
