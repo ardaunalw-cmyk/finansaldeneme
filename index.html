@@ -1222,7 +1222,7 @@
                 <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
                   <div>
                     <h3 class="font-serif font-bold text-white text-base">Son KAP Bildirimleri</h3>
-                    <p class="text-xs text-slate-400">Kamuyu Aydınlatma Platformu anlık akışı</p>
+                    <p class="text-xs text-slate-400">Kamuyu Aydınlatma Platformu (KAP) gerçek bildirimleri</p>
                   </div>
                   <button id="kapRefreshBtn" onclick="refreshLiveKapDisclosures()" class="text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1 transition-colors">
                     <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
@@ -1236,9 +1236,8 @@
                 </div>
               </div>
 
-              <div class="pt-3 border-t border-[#1A2540] flex items-center justify-between text-xs text-slate-400">
-                <span class="text-[11px]">Doğrudan KAP Veri Akışı</span>
-                <span class="text-emerald-400 font-mono font-bold">24 Saat Canlı İzleniyor</span>
+              <div id="kapDisclosuresFooter" class="pt-3 border-t border-[#1A2540] flex items-center justify-between text-xs text-slate-400">
+                <span class="text-[11px]">Kaynak: KAP (kap.org.tr)</span>
               </div>
             </div>
 
@@ -3718,6 +3717,7 @@
   <script src="assets/js/app.js"></script>
   <script src="assets/js/technicals.js"></script>
   <script src="assets/js/statements.js"></script>
+  <script src="assets/js/disclosures.js"></script>
   <script src="assets/js/live-data.js"></script>
   <script src="assets/js/chat-widget.js" defer></script>
 

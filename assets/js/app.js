@@ -3029,7 +3029,7 @@ async function loadStockDetails(ticker) {
   const anaDate = document.getElementById('analystNoteDate');
   if (anaSummary) anaSummary.textContent = fin.analystSum;
   if (anaRisk) anaRisk.textContent = fin.riskOpp;
-  if (anaDate) anaDate.textContent = `KAP GÜNCEL VERİ • ${new Date().toLocaleDateString('tr-TR')} 17:40`;
+  if (anaDate) anaDate.textContent = 'ÖRNEK METİN • gerçek analist notu değildir';
 
   // 8. Official KAP Institutional Profile
   const kapTitle = document.getElementById('kapDetailTitle');
@@ -3050,46 +3050,8 @@ async function loadStockDetails(ticker) {
     kapLink.href = oid ? `https://www.kap.org.tr/tr/sirket-bilgileri/genel/${oid}` : `https://www.kap.org.tr/tr/bist-sirketler`;
   }
 
-  // 9. KAP Disclosures Container
-  const discContainer = document.getElementById('kapDisclosuresContainer');
-  if (discContainer) {
-    const disclosures = [
-      {
-        badge: 'FİNANSAL RAPOR',
-        badgeColor: 'bg-emerald-950/60 text-emerald-400 border-emerald-800/50',
-        date: 'Bugün 17:45',
-        title: '2024 Yılı 3. Çeyrek Konsolide Finansal Rapor ve Bağımsız Denetçi Raporu',
-        desc: `${fin.name} 2024/09 dönemi konsolide finansal tablolarını ve bağımsız denetim raporunu KAP üzerinden ilan etmiştir.`
-      },
-      {
-        badge: 'ÖZEL DURUM',
-        badgeColor: 'bg-red-950/40 text-red-400 border-red-800/50',
-        date: 'Dün 15:20',
-        title: 'Yeni İş İlişkisi, Kapasite ve Sözleşme İmzalanması Hk.',
-        desc: `Şirketimiz ${fin.sector} operasyonları kapsamında yurt içi ve yurt dışı müşterilerle yeni ticari sözleşme akdetmiştir.`
-      },
-      {
-        badge: 'GENEL KURUL',
-        badgeColor: 'bg-indigo-950/60 text-indigo-400 border-indigo-800/50',
-        date: '08 Ocak 2025',
-        title: 'Olağan Genel Kurul Toplantısı ve Kâr Payı Dağıtım Kararı',
-        desc: `Yönetim kurulu, ödenmiş sermayenin (${fin.paidCapital}) güçlendirilmesi ve temettü dağıtım politikasını onaya sunmuştur.`
-      }
-    ];
-
-    discContainer.innerHTML = disclosures.map(d => `
-      <div class="p-3 bg-[#090D18] hover:bg-[#121C30] rounded-xl border border-[#162238] transition-colors">
-        <div class="flex items-center justify-between gap-2">
-          <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold border ${d.badgeColor}">
-            ${d.badge}
-          </span>
-          <span class="text-[10px] text-slate-400 font-mono">${d.date}</span>
-        </div>
-        <div class="font-bold text-slate-200 text-xs mt-1.5 leading-snug">${d.title}</div>
-        <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">${d.desc}</p>
-      </div>
-    `).join('');
-  }
+  // 9. Real KAP disclosures (assets/js/disclosures.js)
+  if (window.Disclosures) Disclosures.show(fin);
 
   // 10-11. Technical indicator scorecard, consensus and commentary (computed from real bars)
   renderTechScorecard(fin.code);
@@ -5636,27 +5598,13 @@ function openReportModal(reportId) {
 }
 
 async function refreshLiveKapDisclosures() {
+  const fin = appState.currentCompanyData;
+  if (!fin || !window.Disclosures) return;
   const btn = document.getElementById('kapRefreshBtn');
-  if (btn) {
-    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-[11px]"></i> <span>Sorgulanıyor...</span>`;
-    btn.disabled = true;
-  }
-
-  try {
-    if (typeof utlApi !== 'undefined' && utlApi.isOnline) {
-      await utlApi.getDisclosures(appState.currentStock, null, 10);
-    }
-  } catch (e) {}
-
-  setTimeout(() => {
-    if (btn) {
-      btn.innerHTML = `<i class="fa-solid fa-arrows-rotate text-[11px]"></i> <span>KAP'tan Canlı Sorgula</span>`;
-      btn.disabled = false;
-    }
-    showToast(`${appState.currentStock} için son 45 günlük KAP bildirimleri güncellendi.`);
-  }, 600);
+  if (btn) btn.disabled = true;
+  await Disclosures.show(fin, true);
+  if (btn) btn.disabled = false;
 }
-
 /* ==============================================================================
    9. Overview Market Table Controller & Multi-Factor Quantitative Screener
    ============================================================================== */
