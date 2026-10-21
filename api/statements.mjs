@@ -108,6 +108,10 @@ async function tryGroup(symbol, exchange, group, totalCode, kind) {
   }
   if (!latestGuess || latest[0] * 100 + latest[1] > latestGuess[0] * 100 + latestGuess[1]) latestGuess = latest;
 
+  // Share classes (for example ISATR next to ISCTR) can return a stub with a few thousand TL of 'assets'
+  const total = rows.find(r => r.c === totalCode)?.v[0] ?? 0;
+  if (Math.abs(total) < 5e6) return { data: null, sawRows: true };
+
   return {
     sawRows: true,
     data: {
