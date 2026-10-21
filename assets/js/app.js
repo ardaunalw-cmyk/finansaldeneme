@@ -696,13 +696,18 @@ function pseudoRandom(seed, offset = 0) {
 /**
  * Formats financial monetary figures (Millions / Billions TL)
  */
+// toLocaleString(locale, options) builds a new formatter on every call; reuse two instead
+const _trFmt1 = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const _trFmt0 = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const _trFmt2 = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 });
+
 function formatKapMoney(val) {
   if (Math.abs(val) >= 1000000000) {
-    return `₺${(val / 1000000000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Mlr`;
+    return `₺${_trFmt1.format(val / 1000000000)} Mlr`;
   } else if (Math.abs(val) >= 1000000) {
-    return `₺${(val / 1000000).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Mn`;
+    return `₺${_trFmt0.format(val / 1000000)} Mn`;
   } else {
-    return `₺${val.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    return `₺${_trFmt0.format(val)}`;
   }
 }
 
@@ -1012,9 +1017,9 @@ function getOrGenerateStockFinancials(ticker = 'THYAO') {
   const isUp = r3 > 0.40;
   const chgVal = parseFloat(((r4 * 4.2) + 0.15).toFixed(2));
   const chgSign = isUp ? '+' : '-';
-  const chgPercentStr = `${chgSign}%${chgVal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+  const chgPercentStr = `${chgSign}%${_trFmt2.format(chgVal)}`;
   const chgAmt = parseFloat((p * (chgVal / 100)).toFixed(2));
-  const chgAmtStr = `${chgSign}₺${chgAmt.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+  const chgAmtStr = `${chgSign}₺${_trFmt2.format(chgAmt)}`;
 
   const volVal = (paidCapRaw > 1000000000) ? (1.2 + r5 * 3.8) : (0.12 + r5 * 1.1);
   const volStr = `₺${volVal.toFixed(2)} Mlr`;
@@ -1059,17 +1064,17 @@ function getOrGenerateStockFinancials(ticker = 'THYAO') {
 
   const targetUpside = 0.25 + (r3 * 0.25);
   const targetPriceNum = parseFloat((p * (1 + targetUpside)).toFixed(2));
-  const targetPrice = `₺${targetPriceNum.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+  const targetPrice = `₺${_trFmt2.format(targetPriceNum)}`;
   const potential = `+${Math.round(targetUpside * 1000) / 10}% Potansiyel`;
   const totalAnalysts = 8 + Math.floor(r4 * 12);
   const buyAnalysts = Math.floor(totalAnalysts * (0.7 + r5 * 0.25));
   const holdAnalysts = totalAnalysts - buyAnalysts;
   const analystConsensus = `${totalAnalysts} Analist: ${buyAnalysts} Al, ${holdAnalysts} Tut`;
 
-  const dayLow = `₺${(p * (0.975 - r1 * 0.015)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-  const dayHigh = `₺${(p * (1.025 + r2 * 0.015)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-  const yearLow = `₺${(p * (0.62 + r3 * 0.1)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-  const yearHigh = `₺${(p * (1.25 + r4 * 0.25)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+  const dayLow = `₺${_trFmt2.format(p * (0.975 - r1 * 0.015))}`;
+  const dayHigh = `₺${_trFmt2.format(p * (1.025 + r2 * 0.015))}`;
+  const yearLow = `₺${_trFmt2.format(p * (0.62 + r3 * 0.1))}`;
+  const yearHigh = `₺${_trFmt2.format(p * (1.25 + r4 * 0.25))}`;
 
   const baseRevUnit = (paidCapRaw / 1000000000) * 1.8 + 4.5 + (r5 * 20.0);
   const qRev = [
@@ -1119,7 +1124,7 @@ function getOrGenerateStockFinancials(ticker = 'THYAO') {
     mkk: mkk,
     kap: kap,
     cc: cc,
-    price: p.toLocaleString('tr-TR', { minimumFractionDigits: 2 }),
+    price: _trFmt2.format(p),
     priceNum: p,
     change: chgPercentStr,
     changeAmount: chgAmtStr,
@@ -1178,9 +1183,21 @@ function getOrGenerateStockFinancials(ticker = 'THYAO') {
     roeNum: parseFloat(roeVal.toFixed(1)),
     roaNum: parseFloat(roaVal.toFixed(1)),
     netDebtNum: parseFloat((0.6 + r1 * 1.6).toFixed(2)),
-    changeNum: (isUp ? 1 : -1) * chgVal,
-    balanceSheet: buildKapBalanceSheet(t, name, sector, paidCapRaw, p, fkVal, pdddVal, roeVal, seed)
+    changeNum: (isUp ? 1 : -1) * chgVal
   };
+
+  // The balance sheet is only read on the stock detail page, but the overview table
+  // generates financials for all ~1048 stocks; build it on first access instead.
+  let balanceSheet = null;
+  Object.defineProperty(finObj, 'balanceSheet', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      if (!balanceSheet) balanceSheet = buildKapBalanceSheet(t, name, sector, paidCapRaw, p, fkVal, pdddVal, roeVal, seed);
+      return balanceSheet;
+    },
+    set(v) { balanceSheet = v; }
+  });
 
   _stockFinMemoCache.set(t, finObj);
   return finObj;
@@ -1524,7 +1541,7 @@ async function initBistChart() {
           padding: 10,
           cornerRadius: 8,
           callbacks: {
-            label: context => `Endeks: ${context.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} Puan`
+            label: context => `Endeks: ${_trFmt2.format(context.parsed.y)} Puan`
           }
         }
       },
@@ -1670,7 +1687,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
   const vSMA50 = document.getElementById('valSMA50');
   const vSMA200 = document.getElementById('valSMA200');
 
-  if (priceLabel) priceLabel.textContent = `₺${tech.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+  if (priceLabel) priceLabel.textContent = `₺${_trFmt2.format(tech.currentPrice)}`;
   if (changeLabel) changeLabel.textContent = tech.changePercent;
   if (vSMA20) vSMA20.textContent = tech.sma20[tech.sma20.length - 1];
   if (vSMA50) vSMA50.textContent = tech.sma50[tech.sma50.length - 1];
@@ -1694,12 +1711,12 @@ async function initTechnicalCharts(ticker = 'THYAO') {
     const f500El = document.getElementById('fibLvl500');
     const f618El = document.getElementById('fibLvl618');
     const f100El = document.getElementById('fibLvl100');
-    if (f0El) f0El.textContent = `₺${tech.fib.f0.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-    if (f236El) f236El.textContent = `₺${tech.fib.f236.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-    if (f382El) f382El.textContent = `₺${tech.fib.f382.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-    if (f500El) f500El.textContent = `₺${tech.fib.f500.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-    if (f618El) f618El.textContent = `₺${tech.fib.f618.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-    if (f100El) f100El.textContent = `₺${tech.fib.f100.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+    if (f0El) f0El.textContent = `₺${_trFmt2.format(tech.fib.f0)}`;
+    if (f236El) f236El.textContent = `₺${_trFmt2.format(tech.fib.f236)}`;
+    if (f382El) f382El.textContent = `₺${_trFmt2.format(tech.fib.f382)}`;
+    if (f500El) f500El.textContent = `₺${_trFmt2.format(tech.fib.f500)}`;
+    if (f618El) f618El.textContent = `₺${_trFmt2.format(tech.fib.f618)}`;
+    if (f100El) f100El.textContent = `₺${_trFmt2.format(tech.fib.f100)}`;
   }
 
   // Pattern Card Injections
@@ -1879,7 +1896,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
                 const ohlc = context.chart.$ohlc;
                 const i = context.dataIndex;
                 if (ohlc && ohlc.prices && Number.isFinite(ohlc.prices[i])) {
-                  const fmt = v => `₺${v.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+                  const fmt = v => `₺${_trFmt2.format(v)}`;
                   const isBullish = ohlc.prices[i] >= ohlc.opens[i];
                   return [
                     `Açılış: ${fmt(ohlc.opens[i])}`,
@@ -1894,7 +1911,7 @@ async function initTechnicalCharts(ticker = 'THYAO') {
                 const formatted = (v >= 1000000) ? `${(v / 1000000).toFixed(2)}M Lot` : `${(v / 1000).toFixed(0)}K Lot`;
                 return `Hacim: ${formatted}`;
               }
-              return `${context.dataset.label}: ₺${context.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+              return `${context.dataset.label}: ₺${_trFmt2.format(context.parsed.y)}`;
             }
           }
         }
@@ -5664,7 +5681,7 @@ function showToast(message) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'utlToast';
-    toast.className = 'fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-sans flex items-center gap-3 transition-all duration-300 opacity-0 transform translate-y-3';
+    toast.className = 'fixed bottom-28 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-sans flex items-center gap-3 transition-all duration-300 opacity-0 transform translate-y-3';
     document.body.appendChild(toast);
   }
   toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i> <span>${message}</span>`;
