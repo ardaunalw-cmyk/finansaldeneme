@@ -138,7 +138,7 @@ h4, .font-h4 {
 }
 
 /* Gradient headline for primary page titles */
-main h1:not(#stockDetailName) {
+main h1 {
   background: linear-gradient(180deg, #FFFFFF 30%, #B9D2FF 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -799,46 +799,25 @@ input[type="range"]::-moz-range-thumb {
 
 /* ==========================================================================
    STOCK CODE & NAME PILLS
-   High-contrast light pills so tickers never blend into the dark surfaces.
+   Ticker codes are cobalt-tinted chips; company names are plain muted text.
    ========================================================================== */
-#stockDetailName {
-  background-color: #EAF1FF !important;
-  color: #04060B !important;
-  -webkit-text-fill-color: #04060B !important;
-  border-color: #9CC3FF !important;
-  font-weight: 800 !important;
-}
-
-#stockDetailSymbol {
-  background-color: #FFFFFF !important;
-  color: #04060B !important;
-  -webkit-text-fill-color: #04060B !important;
-  border: 2px solid var(--color-accent) !important;
-  font-weight: 800 !important;
-}
-
-.stock-name-black,
-.stock-ticker-black,
-.stock-name-contrast,
+.stock-code-badge,
 .stock-code-pill {
-  color: #04060B !important;
-  -webkit-text-fill-color: #04060B !important;
-}
-
-.stock-code-badge {
-  background-color: #FFFFFF !important;
-  color: #04060B !important;
-  border: 1px solid #9CC3FF !important;
-  font-weight: 800 !important;
-  font-family: var(--font-mono) !important;
+  background-color: rgba(11, 26, 69, 0.6);
+  color: #BCD6FF;
+  border: 1px solid rgba(28, 68, 184, 0.5);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
   border-radius: 6px;
 }
 
-.stock-name-badge {
-  background-color: rgba(234, 241, 255, 0.95) !important;
-  color: #04060B !important;
-  font-weight: 700 !important;
-  border-radius: 4px;
+.stock-name-badge,
+.stock-name-black,
+.stock-ticker-black,
+.stock-name-contrast {
+  color: #CBD5E1;
+  font-weight: 500;
 }
 
 /* Print Styles */

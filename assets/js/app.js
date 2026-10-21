@@ -4424,11 +4424,11 @@ function createPeerTableRow(stockFin, isActive, isSelected, medFk, medPd) {
         ${logoHtml}
         <div>
           <div class="flex items-center gap-1.5">
-            <span class="font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm text-xs font-tv">${stockFin.code}</span>
+            <span class="font-bold text-red-200 bg-red-950/60 px-2 py-0.5 rounded-md border border-red-800/50 tracking-wide text-xs font-tv">${stockFin.code}</span>
             ${isActive ? '<span class="text-[9px] px-1.5 py-px rounded bg-red-950/40 text-red-300 border border-red-800/40 font-bold">AKTİF</span>' : ''}
             ${isSelected ? '<span class="text-[9px] px-1.5 py-px rounded bg-purple-950 text-purple-300 border border-purple-800/40 font-bold">RADARDA</span>' : ''}
           </div>
-          <span class="inline-block text-[10px] text-black font-bold bg-white/90 px-1.5 py-px rounded truncate max-w-[130px] mt-0.5" title="${stockFin.name}">${stockFin.name}</span>
+          <span class="inline-block text-[10px] text-slate-300 font-medium truncate max-w-[130px] mt-0.5" title="${stockFin.name}">${stockFin.name}</span>
         </div>
       </td>
       <td class="py-2.5 px-2 text-right font-bold text-slate-200">${stockFin.fk}</td>
@@ -4993,10 +4993,10 @@ function renderPortfolioHoldingsTable() {
             ${logoHtml}
             <div>
               <div class="flex items-center gap-1.5">
-                <span class="font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm text-xs font-mono">${h.code}</span>
+                <span class="font-bold text-red-200 bg-red-950/60 px-2 py-0.5 rounded-md border border-red-800/50 tracking-wide text-xs font-mono">${h.code}</span>
                 <span class="px-1.5 py-px rounded text-[9px] font-mono border ${h.roleBadgeClass} hidden md:inline-block">${h.role}</span>
               </div>
-              <span class="inline-block text-[10px] text-black font-bold bg-white/90 px-1.5 py-px rounded truncate max-w-[130px] mt-0.5" title="${h.name}">${h.name}</span>
+              <span class="inline-block text-[10px] text-slate-300 font-medium truncate max-w-[130px] mt-0.5" title="${h.name}">${h.name}</span>
             </div>
           </div>
         </td>
@@ -5430,11 +5430,11 @@ function initSearch() {
                   ${getStockLogoHtml(s.code, 28, 'shadow flex-shrink-0')}
                   <div class="min-w-0">
                     <div class="flex items-center gap-2">
-                      <span class="font-mono font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm text-xs font-tv">${s.code}</span>
+                      <span class="font-mono font-bold text-red-200 bg-red-950/60 px-2 py-0.5 rounded-md border border-red-800/50 tracking-wide text-xs font-tv">${s.code}</span>
                       ${s.isBist30 ? '<span class="text-[9px] px-1.5 py-px rounded bg-red-950/40 border border-red-800/50 text-red-300 font-mono font-bold">BIST 30</span>' : ''}
                       <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#162238] text-slate-400 truncate max-w-[120px]">${s.sector}</span>
                     </div>
-                    <div class="text-[11px] text-black font-bold bg-white/90 px-1.5 py-px rounded inline-block truncate max-w-xs sm:max-w-md mt-0.5">${s.name}</div>
+                    <div class="text-[11px] text-slate-300 font-medium inline-block truncate max-w-xs sm:max-w-md mt-0.5">${s.name}</div>
                   </div>
                 </div>
                 <div class="text-right flex-shrink-0">
@@ -6174,10 +6174,10 @@ function renderOverviewStockTable() {
               ${getStockLogoHtml(s.code, 32, 'shadow flex-shrink-0')}
               <div class="min-w-0">
                 <div class="flex items-center gap-1.5">
-                  <span class="font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm font-tv text-xs">${s.code}</span>
+                  <span class="font-bold text-red-200 bg-red-950/60 px-2 py-0.5 rounded-md border border-red-800/50 tracking-wide font-tv text-xs">${s.code}</span>
                   ${s.isBist30 ? '<span class="text-[9px] px-1.5 py-px rounded bg-red-950/40 border border-red-800/50 text-red-300 font-mono font-bold">BIST 30</span>' : ''}
                 </div>
-                <div class="text-xs text-black font-bold truncate max-w-[200px] mt-0.5 bg-white/90 px-1.5 py-px rounded inline-block" title="${s.name}">${s.name}</div>
+                <div class="text-xs text-slate-300 font-medium truncate max-w-[200px] mt-0.5 inline-block" title="${s.name}">${s.name}</div>
               </div>
             </div>
           </td>
@@ -7865,10 +7865,10 @@ function renderWatchlistItems() {
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-1.5">
-              <span class="font-mono font-black text-black bg-white px-2 py-0.5 rounded border border-slate-300 shadow-sm text-xs">${ticker}</span>
+              <span class="font-mono font-bold text-red-200 bg-red-950/60 px-2 py-0.5 rounded-md border border-red-800/50 tracking-wide text-xs">${ticker}</span>
               <span class="text-[9px] font-mono text-slate-400">${fin.sector ? fin.sector.split('&')[0] : 'BIST'}</span>
             </div>
-            <div class="text-[10px] text-black font-bold bg-white/90 px-1.5 py-px rounded inline-block truncate max-w-[140px] mt-0.5" title="${fin.name}">${fin.name}</div>
+            <div class="text-[10px] text-slate-300 font-medium inline-block truncate max-w-[140px] mt-0.5" title="${fin.name}">${fin.name}</div>
           </div>
         </div>
 
