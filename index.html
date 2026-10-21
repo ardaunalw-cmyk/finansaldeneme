@@ -113,7 +113,7 @@
         <span class="text-slate-700">•</span>
         <span class="text-red-400 font-semibold flex items-center gap-1">
           <i class="fa-solid fa-shield-halved text-[10px]"></i>
-          <span>KAP ve BIST Resmi Akış</span>
+          <span>Yahoo Finance • KAP</span>
         </span>
       </div>
     </div>
@@ -192,7 +192,7 @@
         </a>
         <a href="#news" data-view-target="news" class="menu-item">
           <i class="fa-solid fa-newspaper"></i><span>Piyasa Gündemi</span>
-          <span class="menu-badge">12</span>
+          
         </a>
       </div>
 
@@ -2373,7 +2373,7 @@
           <div class="space-y-3">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/40 border border-red-800/40 text-red-300 text-[11px] font-mono">
               <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-              <span>Once ve Always PİYASA GÜNDEMİ &bull; ANLIK MAKRO İSTİHBARAT</span>
+              <span>PİYASA GÜNDEMİ &bull; GERÇEK HABER BAŞLIKLARI</span>
             </div>
 
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif text-white tracking-tight leading-tight">
@@ -2381,19 +2381,19 @@
             </h1>
 
             <p class="text-sm text-slate-400 max-w-3xl font-light leading-relaxed">
-              Borsa İstanbul, TCMB, küresel merkez bankaları ve sektörel dengeleri doğrudan etkileyen kritik haber akışı; varlık iletim kanalları, etki gerekçeleri ve şirket değerleme projeksiyonları.
+              Borsa İstanbul, TCMB, küresel merkez bankaları ve sektörleri ilgilendiren güncel haber başlıkları. Başlıklar Google Haberler üzerinden ilgili yayıncılardan alınır; haberin kendisi yayıncının sitesinde açılır.
             </p>
           </div>
 
           <!-- Top Stats Pills -->
           <div class="flex items-center gap-3 flex-shrink-0">
             <div class="px-4 py-2.5 rounded-xl bg-[#0C1322] border border-[#1A2540] flex items-center gap-3 text-xs">
-              <div class="w-8 h-8 rounded-lg bg-rose-950 text-rose-400 flex items-center justify-center font-bold font-mono">
-                12
+              <div id="newsStatNumber" class="w-8 h-8 rounded-lg bg-rose-950 text-rose-400 flex items-center justify-center font-bold font-mono">
+                —
               </div>
               <div>
-                <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-mono">AKTİF GELİŞME</div>
-                <div class="font-mono font-bold text-white" id="newsTotalCount">12 Haber Listeleniyor</div>
+                <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-mono">SON 3 GÜN</div>
+                <div class="font-mono font-bold text-white" id="newsTotalCount">Yükleniyor...</div>
               </div>
             </div>
 
@@ -2402,8 +2402,8 @@
                 <i class="fa-solid fa-bolt text-xs"></i>
               </div>
               <div>
-                <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-mono">PİYASA İLETİMİ</div>
-                <div class="font-mono font-bold text-emerald-400">Canlı Analiz Aktif</div>
+                <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-mono">KAYNAK</div>
+                <div class="font-mono font-bold text-emerald-400">Google Haberler</div>
               </div>
             </div>
           </div>
@@ -2419,25 +2419,18 @@
               <input 
                 type="text" 
                 id="newsSearchInput" 
-                placeholder="Haber başlığı, şirket (THYAO, EREGL), sektör veya iletim gerekçesi ara..." 
+                placeholder="Haber başlığı veya yayıncı ara..." 
                 class="w-full pl-9 pr-4 py-2.5 bg-[#070B14] border border-[#1A2540] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-600 focus:bg-[#0C1322] transition-all font-sans"
               >
             </div>
 
-            <!-- Impact Filters -->
-            <div class="flex items-center gap-2 overflow-x-auto text-xs font-semibold">
-              <span class="text-[11px] font-mono text-slate-500 uppercase mr-1">Etki:</span>
-              <button class="news-impact-tab px-3 py-1.5 rounded-xl bg-[#2F6BFF] text-white shadow-md shadow-red-600/30 transition-all text-xs font-medium" data-news-impact="all">Tümü</button>
-              <button class="news-impact-tab px-3 py-1.5 rounded-xl bg-[#070B14] text-slate-400 hover:text-white border border-[#1A2540] transition-all text-xs font-medium" data-news-impact="critical">Kritik Etki</button>
-              <button class="news-impact-tab px-3 py-1.5 rounded-xl bg-[#070B14] text-slate-400 hover:text-white border border-[#1A2540] transition-all text-xs font-medium" data-news-impact="high">Yüksek Etki</button>
-              <button class="news-impact-tab px-3 py-1.5 rounded-xl bg-[#070B14] text-slate-400 hover:text-white border border-[#1A2540] transition-all text-xs font-medium" data-news-impact="positive">Pozitif Boğa</button>
-            </div>
+            
           </div>
 
           <!-- Category Pills -->
           <div class="pt-3 border-t border-[#1A2540] flex items-center gap-2 overflow-x-auto text-xs font-medium pb-1 no-scrollbar">
             <span class="text-[11px] font-mono text-slate-500 uppercase mr-1 flex-shrink-0">Kategoriler:</span>
-            <button class="news-cat-tab px-3.5 py-1.5 rounded-xl bg-[#2F6BFF] text-white shadow-md shadow-red-600/30 transition-all flex-shrink-0 font-medium" data-news-cat="all">Tüm Gelişmeler (12)</button>
+            <button class="news-cat-tab px-3.5 py-1.5 rounded-xl bg-[#2F6BFF] text-white shadow-md shadow-red-600/30 transition-all flex-shrink-0 font-medium" data-news-cat="all">Tüm Gelişmeler</button>
             <button class="news-cat-tab px-3.5 py-1.5 rounded-xl bg-[#070B14] text-slate-400 hover:text-white border border-[#1A2540] transition-all flex-shrink-0 font-medium" data-news-cat="monetary">TCMB ve Faiz</button>
             <button class="news-cat-tab px-3.5 py-1.5 rounded-xl bg-[#070B14] text-slate-400 hover:text-white border border-[#1A2540] transition-all flex-shrink-0 font-medium" data-news-cat="energy">Enerji ve Emtia</button>
             <button class="news-cat-tab px-3.5 py-1.5 rounded-xl bg-[#070B14] text-slate-400 hover:text-white border border-[#1A2540] transition-all flex-shrink-0 font-medium" data-news-cat="macro">Küresel Fed ve Makro</button>
@@ -2532,7 +2525,7 @@
           <!-- Calendar Footnote -->
           <div class="flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 pt-1 gap-2 border-t border-[#1A2540]">
             <span class="font-light"><i class="fa-solid fa-circle-info text-red-400 mr-1"></i> Tüm saatler Türkiye Saati (TSİ / UTC+3) olarak senkronizedir. Geri sayım saniyelik olarak güncellenir.</span>
-            <span class="text-emerald-400 font-mono font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Resmi BIST / KAP &bull; SPK Takvimi</span>
+            <span class="text-amber-400 font-mono font-bold flex items-center gap-1"><i class="data-badge sample">ÖRNEK TAKVİM</i> Gerçek bir takvimden alınmamıştır</span>
           </div>
 
         </div>
@@ -3072,8 +3065,8 @@
                   Türkiye gibi yüksek enflasyon ve dalgalı makroekonomik dinamiklerin hüküm sürdüğü piyasalarda, klasik fiyat grafikleri şirketlerin gerçek değerini gizler. Bir hissenin sadece nominal fiyat artışına bakarak karar vermek, şirketin borç çevirme kabiliyetini, TMS 29 Enflasyon Muhasebesi karşısındaki erimesini ve serbest nakit akımı üretimini gözden kaçırmak demektir.
                 </p>
                 <p>
-                  Bu program; <strong>1048 BIST şirketinin tamamını</strong> kapsayan canlı ve resmi KAP veri tabanı altyapısıyla, yatırım kararlarını dedikodulardan çıkarıp saf matematiksel ve muhasebesel rasyolar üzerine oturtmayı amaçlar.
-                </p>
+Bu program, Borsa İstanbul’daki 1048 şirketin künyelerini KAP kayıtlarından derler; gecikmeli fiyatları, KAP raporlarından derlenen bilançoları ve bunlardan hesaplanan rasyoları (şirketlerin yaklaşık %57’si için) aynı ekranda sunar. Amaç, yatırım kararlarını dedikodudan çıkarıp muhasebesel rasyolara dayandırmaktır.
+</p>
               </div>
 
               <!-- 4 Fundamental Quantitative Pillars -->
@@ -3086,8 +3079,8 @@
                     <span>1. 1048 Şirketlik Bütünleşik KAP Veritabanı</span>
                   </div>
                   <p class="text-xs text-slate-400 leading-relaxed font-sans">
-                    Yıldız Pazar, Ana Pazar ve Alt Pazar dahil tüm BIST kotasyonlarının resmi bilançoları, kayıtlı sermaye tavanları, fiili dolaşım oranları ve bağımsız denetim raporları O(1) sabit zamanlı RAM indekslemesi ile anında sorgulanır.
-                  </p>
+Şirket künyeleri, kayıtlı sermaye tavanları ve bağımsız denetçi bilgileri KAP kayıtlarından alınır; bilançolar ve bildirimler ilgili şirketin sayfasında gösterilir.
+</p>
                 </div>
 
                 <!-- Pillar 2 -->
@@ -3097,8 +3090,8 @@
                     <span>2. İleri Düzey Bilanço Dekompozisyonu</span>
                   </div>
                   <p class="text-xs text-slate-400 leading-relaxed font-sans">
-                    3 Aşamalı DuPont kârlılık ayrıştırması, iflas riskini ölçen Altman Z-Skoru ve muhasebe manipülasyonlarını denetleyen 9 kriterli Piotroski F-Skoru ile hisseler kurumsal denetim standartlarında karnelendirilir.
-                  </p>
+DuPont ayrıştırması, Altman Z, Piotroski, O ve A skoru, hedef fiyat ve analist sayıları şu an örnek niteliğindedir ve ilgili bölümlerde “ÖRNEK” etiketiyle belirtilir.
+</p>
                 </div>
 
                 <!-- Pillar 3 -->
@@ -3108,8 +3101,8 @@
                     <span>3. Dinamik İNA (DCF) Değerleme Matrisi</span>
                   </div>
                   <p class="text-xs text-slate-400 leading-relaxed font-sans">
-                    Statik hedef fiyat raporlarının ötesine geçerek; WACC (%16 - %24) ve Terminal Büyüme (%4 - %8) girdileriyle anlık güncellenen 5x5 interaktif duyarlılık matrisi üzerinden hissenin gerçek adil değerini hesaplar.
-                  </p>
+DCF duyarlılık matrisi, seçilen WACC ve uç büyüme girdileriyle çalışan bir hesaplama aracıdır; girdiler örnek değerlerdir ve gerçek bir adil değer iddiası taşımaz.
+</p>
                 </div>
 
                 <!-- Pillar 4 -->
@@ -3119,8 +3112,8 @@
                     <span>4. Kurumsal Risk Masası ve Stres Testi</span>
                   </div>
                   <p class="text-xs text-slate-400 leading-relaxed font-sans">
-                    Parametrik VaR (%95 / %99), Koşullu VaR (CVaR), Maksimum Drawdown (MDD), 8x8 Korelasyon Isı Haritası ve TCMB/Fed faiz şoku, kur sıçraması gibi 4 makro stres senaryosu ile portföyün risk dayanıklılığını ölçer.
-                  </p>
+Model portföy, korelasyon ve stres testi bölümleri gösterim amaçlı örnek verilerle çalışır; gerçek bir portföyü yansıtmaz.
+</p>
                 </div>
 
               </div>
@@ -3146,16 +3139,16 @@
                   <span class="text-red-400 font-mono font-bold text-xs uppercase block">02 &bull; TMS 29 UYUMLU</span>
                   <h4 class="font-serif font-bold text-white text-sm">Reel Bilanço Koruması</h4>
                   <p class="text-[11.5px] text-slate-400 leading-relaxed font-sans">
-                    TMS 29 Enflasyon Muhasebesi ve USD para birimi geçiş anahtarları ile bilanço kalemlerinin enflasyon karşısındaki reel büyüme veya erimesini netleştirir.
-                  </p>
+Bilançolar TMS 29 enflasyon düzeltmeli olarak ve İş Yatırım’ın dönem sonu kurlarıyla USD karşılığıyla görüntülenebilir.
+</p>
                 </div>
 
                 <div class="p-4 rounded-xl bg-oa-subtle border border-oa-border space-y-1.5">
-                  <span class="text-red-400 font-mono font-bold text-xs uppercase block">03 &bull; MİKRO-TİCK MOTORU</span>
-                  <h4 class="font-serif font-bold text-white text-sm">Resmi BIST Fiyat Adımı</h4>
+                  <span class="text-red-400 font-mono font-bold text-xs uppercase block">03 &bull; DERİNLİK (ÖRNEK)</span>
+                  <h4 class="font-serif font-bold text-white text-sm">Derinlik ve AKD (Örnek)</h4>
                   <p class="text-[11.5px] text-slate-400 leading-relaxed font-sans">
-                    Borsa İstanbul Pay Piyasası fiyat adımı kurallarına tam uyumlu 10 kademe L2 derinlik tahtası ve Aracı Kurum Dağılımı (AKD) modelleri içerir.
-                  </p>
+10 kademe emir defteri, aracı kurum dağılımı (AKD) ve yabancı takas ekranları gösterim amaçlı örnek veridir; gerçek veri için lisanslı bir veri kaynağı gerekir.
+</p>
                 </div>
               </div>
 
@@ -3166,8 +3159,8 @@
                   <span class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-wider">BIST ŞİRKETİ</span>
                 </div>
                 <div class="p-3 bg-oa-subtle rounded-xl border border-oa-border">
-                  <span class="block text-xl font-serif font-black text-emerald-400 font-mono">O(1)</span>
-                  <span class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-wider">HAFIZA İNDEKSİ</span>
+                  <span class="block text-xl font-serif font-black text-emerald-400 font-mono">599</span>
+                  <span class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-wider">GERÇEK BİLANÇOLU</span>
                 </div>
                 <div class="p-3 bg-oa-subtle rounded-xl border border-oa-border">
                   <span class="block text-xl font-serif font-black text-red-400 font-mono">5x5</span>
@@ -3269,7 +3262,9 @@
               <div class="space-y-3 text-xs text-slate-400">
                 <div class="border-b border-oa-border pb-2.5">
                   <strong class="text-slate-100 block mb-0.5">Veriler nereden alınıyor?</strong>
-                  <p class="text-[11.5px] leading-relaxed">Şirket künyeleri ve mali tablolar resmi Kamuyu Aydınlatma Platformu (KAP) ile Borsa İstanbul Pay Piyasası verileriyle eşzamanlıdır.</p>
+                  <p class="text-[11.5px] leading-relaxed">
+Fiyatlar Yahoo Finance’ten (gecikmeli), bilançolar İş Yatırım’ın KAP raporlarından derlediği veriden, bildirimler KAP’tan (kap.org.tr), haber başlıkları Google Haberler’den alınır. Şirket künyeleri KAP kayıtlarına dayanır.
+</p>
                 </div>
                 <div class="border-b border-oa-border pb-2.5">
                   <strong class="text-slate-100 block mb-0.5">Terminal bireysel kullanıcılara açık mı?</strong>
@@ -3313,12 +3308,12 @@
             </div>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed font-light max-w-sm">
-            Borsa İstanbul, kurumsal varlıklar ve küresel makro dinamikler için bağımsız kantitatif zeka, kurumsal bilanço analitiği ve yapay zeka destekli portföy optimizasyonu platformu.
+            Borsa İstanbul, kurumsal varlıklar ve küresel makro dinamikler için bağımsız kantitatif zeka, kurumsal bilanço analitiği ve bilanço ve piyasa analizi platformu.
           </p>
           <div class="flex items-center gap-3 text-xs text-slate-400 pt-1">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0C1322] border border-[#1A2540] text-slate-300 font-mono text-[11px]">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              KAP Canlı Akış Aktif
+              Veri: Yahoo Finance • KAP
             </span>
             <span class="font-mono text-[11px] text-slate-500">v2.4.0 Institutional</span>
           </div>
@@ -3371,16 +3366,16 @@
         <div class="md:col-span-4 space-y-3">
           <h4 class="font-mono font-bold text-xs uppercase tracking-wider text-slate-200">Veri Sağlayıcıları ve Lisans</h4>
           <p class="text-xs text-slate-400 leading-relaxed font-light">
-            Finansal tablolar, kurumsal şirket künyeleri ve resmi açıklamalar Kamuyu Aydınlatma Platformu (KAP) ile Borsa İstanbul A.Ş. (BIST) standart veri akışlarıyla eş zamanlı entegredir.
-          </p>
+Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın KAP raporlarından derlediği veriden, bildirimler doğrudan KAP’tan alınır. Veri kaynaklarının şartları geçerlidir.
+</p>
           <div class="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400 pt-1">
             <div class="p-2 bg-[#0C1322] border border-[#1A2540] rounded-lg">
-              <span class="text-slate-500 block text-[9px]">BIST DATA FEED</span>
-              <strong class="text-slate-200">15 Dk. Gecikmeli / EOD</strong>
+              <span class="text-slate-500 block text-[9px]">FİYAT VERİSİ</span>
+              <strong class="text-slate-200">Yahoo Finance • gecikmeli</strong>
             </div>
             <div class="p-2 bg-[#0C1322] border border-[#1A2540] rounded-lg">
               <span class="text-slate-500 block text-[9px]">KAP BİLDİRİMLERİ</span>
-              <strong class="text-emerald-400">Canlı &bull; Anlık API</strong>
+              <strong class="text-emerald-400">KAP’tan (kap.org.tr)</strong>
             </div>
           </div>
         </div>
@@ -3718,6 +3713,8 @@
   <script src="assets/js/technicals.js"></script>
   <script src="assets/js/statements.js"></script>
   <script src="assets/js/disclosures.js"></script>
+  <script src="assets/js/news.js"></script>
+  <script src="assets/js/sample-flags.js"></script>
   <script src="assets/js/live-data.js"></script>
   <script src="assets/js/chat-widget.js" defer></script>
 

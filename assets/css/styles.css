@@ -1478,3 +1478,6 @@ body.is-home #headerSearch { display: none; }
 .is-real { text-decoration: underline dotted #34D399; text-underline-offset: 4px; }
 
 .stmt-msg { display:flex; align-items:center; justify-content:center; height:100%; min-height:12rem; padding:1rem; text-align:center; font-size:12px; font-family:'JetBrains Mono',monospace; color:#7C8BA6; }
+
+.sample-banner { display:flex; align-items:center; gap:8px; margin:-4px 0 12px; padding:8px 12px; border-radius:10px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.25); font-size:11px; line-height:1.45; color:#C9A45A; }
+.sample-banner > span { flex:1; }
