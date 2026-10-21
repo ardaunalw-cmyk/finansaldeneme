@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Once and Always - PWA Service Worker
+   Verity - PWA Service Worker
    - API calls (/api/*) are never touched: prices, history, statements and KAP data must be fresh.
    - App files and data (HTML, JS, CSS, JSON): network first, cached copy only when offline,
      so a new deploy is never mixed with stale scripts.

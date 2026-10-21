@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * Once ve Always - Sovereign Intelligence & Core Financial Controller
+ * Verity - Sovereign Intelligence & Core Financial Controller
  * ==============================================================================
  * Role: Senior Frontend Engineer & UI/UX Specialist
  * Tech Stack: Modern ES6+ JavaScript, Chart.js (v4.4.1), Tailwind CSS Palette
@@ -620,7 +620,7 @@ async function initApp() {
       }
     }, 40);
   } catch (err) {
-    console.warn('[Once ve Always Init Warning]:', err);
+    console.warn('[Verity Init Warning]:', err);
   }
 }
 
@@ -2443,7 +2443,7 @@ async function initPortfolioPerformanceChart() {
       labels: data.labels,
       datasets: [
         {
-          label: 'Once ve Always Model Portföy',
+          label: 'Verity Model Portföy',
           data: data.portfolio,
           borderColor: '#2F6BFF',
           backgroundColor: gradient,
@@ -3425,7 +3425,7 @@ function updateDcfMatrix() {
   }
 
   // Core Gordon Growth DCF Valuation Calculation
-  // Calibrated so that at WACC=22.0% and g=5.5%, intrinsic upside is approx +34.4% (Once ve Always baseline)
+  // Calibrated so that at WACC=22.0% and g=5.5%, intrinsic upside is approx +34.4% (Verity baseline)
   const calcIntrinsic = (w, g) => {
     const spread = Math.max(0.015, (w - g) / 100);
     const k = 0.2102; // Calibrated normalization constant: 1.344 * (0.22 - 0.055) / 1.055
@@ -5538,7 +5538,7 @@ function openReportModal(reportId) {
     'rep-1': {
       category: 'Bankacılık ve Finans',
       title: 'Bankacılık Sektöründe Net Faiz Marjı (NIM) İyileşme Döngüsü',
-      date: '12 Ocak 2025 • Once ve Always Araştırma',
+      date: '12 Ocak 2025 • Verity Araştırma',
       body: `
         <p class="text-sm text-slate-300 leading-relaxed">
           TCMB parasal aktarım mekanizmasının sıkılaşma adımları doğrultusunda, mevduat maliyetlerinin zirve yapmasıyla birlikte BIST Bankacılık (XBANK) endeksi için marj toparlanması ivme kazanmıştır.
@@ -5685,7 +5685,7 @@ function onScreenerInputChange() {
 }
 
 /**
- * Slider for Minimum O ve A Alpha Score
+ * Slider for Minimum Verity Alpha Score
  */
 function onScreenerScoreSlider(val) {
   overviewTableState.screener.scoreMin = parseFloat(val) || 5.0;
@@ -5873,7 +5873,7 @@ function exportOverviewTableToCsv() {
     'FD/FAVÖK',
     'ROE (%)',
     'Net Borç/FAVÖK',
-    'O ve A Alpha Skoru'
+    'Verity Alpha Skoru'
   ];
 
   const rows = filtered.map(s => {
@@ -6597,7 +6597,7 @@ function renderCommandPaletteResults(query) {
     if ('hakkımızda'.startsWith(cmd) || cmd === 'hakkimizda' || cmd === 'about' || cmd === 'iletisim' || cmd === 'iletişim' || cmd === 'yardım' || cmd === 'yardim') {
       actions.push({
         title: '/hakkımızda',
-        desc: 'Once ve Always Platform Misyonu, Bilanço Analitik Metodolojisi and İletişim Masası',
+        desc: 'Verity Platform Misyonu, Bilanço Analitik Metodolojisi and İletişim Masası',
         icon: 'fa-solid fa-circle-info text-blue-400',
         badge: 'HAKKIMIZDA',
         run: () => switchView('about')
@@ -6679,7 +6679,7 @@ function renderCommandPaletteResults(query) {
     if (q.includes('hakk') || q.includes('iletisim') || q.includes('iletişim') || q.includes('about') || q.includes('yardım') || q.includes('yardim')) {
       actions.push({
         title: 'Hakkımızda and İletişim',
-        desc: 'Once ve Always Platform Misyonu, Analitik Mimarisi and Resmi İletişim: onceandalways.help@gmail.com',
+        desc: 'Verity Platform Misyonu, Analitik Mimarisi and Resmi İletişim: onceandalways.help@gmail.com',
         icon: 'fa-solid fa-circle-info text-blue-400',
         badge: 'SAYFA',
         run: () => switchView('about')

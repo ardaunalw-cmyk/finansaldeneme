@@ -327,6 +327,17 @@ const LiveData = (() => {
       console.warn('[LiveData] watchlist quotes unavailable:', e.message);
     }
   }
+
+  /** Real ratios for a ticker from the pre-fetched statements and a given price (used by the chat assistant). */
+  async function ratiosFor(code, price) {
+    const row = (await loadStaticFundamentals())[code];
+    if (!row || !(price > 0)) return null;
+    const [period, shares, equity, totalAssets, netDebt, revenue, ebitda, netIncome] = row;
+    const tmp = { priceNum: price };
+    applyFundamentals(tmp, { period, shares, equity, totalAssets, netDebt, ttm: { revenue, ebitda, netIncome } });
+    return { period, fk: tmp.fkNum, pddd: tmp.pdddNum, roe: tmp.roeNum, fdFavok: tmp.fdFavokNum, revenue, netIncome, equity };
+  }
+
   function init() {
     refreshTicker();
     setTimeout(checkAlerts, 4000);
@@ -341,7 +352,7 @@ const LiveData = (() => {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshTicker(); });
   }
 
-  return { init, syncTable, syncStockHeader, checkAlerts, syncWatchlist };
+  return { init, syncTable, syncStockHeader, checkAlerts, syncWatchlist, ratiosFor };
 })();
 
 window.LiveData = LiveData;

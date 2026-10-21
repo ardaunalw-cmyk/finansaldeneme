@@ -1488,3 +1488,7 @@ body.is-home #headerSearch { display: none; }
 .home-logo { width: 132px; height: 132px; display: block; margin: 0 auto 6px; filter: drop-shadow(0 0 22px rgba(36, 104, 255, 0.5)); }
 @media (max-width: 767px) { .home-logo { width: 104px; height: 104px; } }
 @media (prefers-reduced-motion: reduce) { .brand-logo, .home-logo { animation: none; } }
+
+.oa-chat-actions { margin-top: 10px; }
+.oa-chat-action { padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(79,134,255,0.5); background: rgba(47,107,255,0.15); color: #CFE0FF; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .15s ease; }
+.oa-chat-action:hover { background: rgba(47,107,255,0.32); }
