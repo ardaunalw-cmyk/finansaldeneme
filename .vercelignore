@@ -7,6 +7,14 @@ server.ps1
 start.bat
 docker-compose.yml
 
+# Local tooling and nested checkouts
+finansaldeneme/
+scratch/
+.claude/
+.cursor/
+.vscode/
+.mcp.json
+
 # Unreferenced assets
 assets/backup/
 assets/images/references/
