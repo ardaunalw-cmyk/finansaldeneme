@@ -48,3 +48,6 @@ token.json
 # Local Deploy & Nested Repos
 .vercel/
 finansaldeneme/
+
+.vercel
+.env*

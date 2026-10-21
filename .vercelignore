@@ -18,3 +18,5 @@ scratch/
 # Unreferenced assets
 assets/backup/
 assets/images/references/
+
+.env*
