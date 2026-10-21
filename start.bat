@@ -7,10 +7,15 @@ echo   ONCE & ALWAYS - Finansal Zeka Platformu Baslatiliyor...
 echo ========================================================
 echo.
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch 'Loopback|vEthernet' -and $_.IPAddress -notlike '169.254*' } | Select-Object -First 1).IPAddress; if (-not $ip) { $ip = '127.0.0.1' }; Write-Host '  * Bilgisayarda Baglanti: http://localhost:8080/' -ForegroundColor Green; Write-Host ('  * Telefondan Baglanti:   http://' + $ip + ':8080/') -ForegroundColor Yellow; Start-Process 'http://localhost:8080/'; & '.\server.ps1'"
+rem Node is installed per-user via winget; make sure this window can find it
+for /f "tokens=2,*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nul ^| find "Path"') do set "PATH=%PATH%;%%B"
+
+if not exist node_modules (
+  echo Bagimliliklar kuruluyor...
+  call npm install --no-audit --no-fund
+)
+
+start "" http://localhost:8080/
+call npm run dev
 
 pause
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch 'Loopback|vEthernet' -and $_.IPAddress -notlike '169.254*' } | Select-Object -First 1).IPAddress; if (-not $ip) { $ip = '127.0.0.1' }; Write-Host '  * Bilgisayarda Baglanti: http://localhost:8080/' -ForegroundColor Green; Write-Host ('  * Telefondan Baglanti:   http://' + $ip + ':8080/') -ForegroundColor Yellow; Start-Process 'http://localhost:8080/'; & '.\server.ps1'"
-
-pause
-

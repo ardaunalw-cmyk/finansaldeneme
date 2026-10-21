@@ -2,7 +2,8 @@
   "name": "finansaldeneme",
   "private": true,
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "dev": "node dev.mjs"
   },
   "devDependencies": {
     "tailwindcss": "3.4.17"
