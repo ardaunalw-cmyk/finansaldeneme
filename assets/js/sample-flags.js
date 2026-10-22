@@ -9,18 +9,16 @@
   const SAMPLE = [
     // [heading text, badge, note shown at the top of the card (optional)]
     ['Makroekonomik Veri ve Bilanço Takvimi', 'ÖRNEK', 'Tarihler, beklentiler ve önceki değerler gerçek bir ekonomik takvimden alınmamıştır.'],
-    ['Sektörel F/K ve Yıllık Büyüme Matrisi', 'ÖRNEK', 'Sektör F/K ve büyüme değerleri örnektir.'],
     ['Portföy Performansı vs BIST 100 Benchmark', 'ÖRNEK', 'Model portföy getirisi gerçek bir portföyün performansı değildir.'],
     ['Varlık ve Sektör Dağılımı', 'ÖRNEK'],
     ['Portföy Varlıkları, Ağırlıklar ve Marjinal Risk Katkısı', 'ÖRNEK', 'Ağırlıklar, maliyetler ve risk katkıları örnek model portföye aittir.'],
-    ['Korelasyon Matrisi', 'ÖRNEK', 'Korelasyonlar gerçek fiyat geçmişinden hesaplanmamıştır.'],
     ['Makro Stres Testi Simülatörü', 'ÖRNEK', 'Senaryo etkileri örnek katsayılarla hesaplanır.']
   ];
 
   // Whole views that are demo content
   const VIEWS = [
-    ['view-reports', 'Sektörel raporlardaki yorumlar, rakamlar ve projeksiyonlar örnek içeriktir; gerçek bir araştırma raporu değildir.'],
-    ['view-portfolio', 'Model portföy bir gösterim örneğidir: varlıklar, ağırlıklar, getiri, korelasyon ve stres testi sonuçları gerçek bir portföyü yansıtmaz.']
+    ['view-reports', 'Rapor kartlarındaki yorumlar, rakamlar ve projeksiyonlar örnek içeriktir; gerçek bir araştırma raporu değildir. Sektörel F/K ve PD/DD grafiği gerçek veridir.'],
+    ['view-portfolio', 'Model portföy bir gösterim örneğidir: varlıklar, ağırlıklar, getiri ve stres testi sonuçları gerçek bir portföyü yansıtmaz. Korelasyon matrisi gerçek fiyat geçmişinden hesaplanır.']
   ];
 
   const banner = text => {

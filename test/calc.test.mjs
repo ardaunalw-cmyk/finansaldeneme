@@ -149,3 +149,23 @@ test('Verity score: losses score zero on profitability and P/E; banks skip debt 
   assert.equal(bank.breakdown.parts.map(p => p.name).join(','), 'Kârlılık,Değerleme');
   assert.equal(bank.breakdown.financial, true);
 });
+
+/* ---------- price series ---------- */
+
+test('pearson: perfect, inverse and flat series', () => {
+  assert.equal(Calc.pearson([1, 2, 3], [2, 4, 6]), 1);
+  near(Calc.pearson([1, 2, 3], [3, 2, 1]), -1, 1e-12, 'inverse');
+  assert.equal(Calc.pearson([1, 2, 3], [5, 5, 5]), null);
+});
+
+test('returnCorrelations lines series up by Istanbul day and skips days one series lacks', () => {
+  const day = d => Date.parse(`2026-03-${String(d).padStart(2, '0')}T07:00:00Z`);
+  const stock = { t: [2, 3, 4, 5, 6].map(day), c: [100, 110, 99, 108.9, 119.79] };
+  // Same moves, but one day missing and timestamps at 21:00 UTC the evening before (Istanbul: 00:00 same day)
+  const twin = { t: [2, 3, 5, 6].map(d => day(d) - 10 * 3600 * 1000), c: [50, 55, 54.45, 59.895] };
+  const r = Calc.returnCorrelations([stock, twin]);
+  assert.equal(r.days, 3, 'four common days give three returns');
+  assert.equal(r.from, '2026-03-02');
+  near(r.values[0][1], 1, 1e-9, 'identical returns on common days');
+  assert.equal(r.values[1][1], 1);
+});

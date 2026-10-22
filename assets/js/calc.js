@@ -151,9 +151,39 @@
     };
   }
 
+  /* ---------- price series ---------- */
+
+  /** Pearson correlation of two equal-length arrays; null when either one does not move. */
+  function pearson(a, b) {
+    const n = a.length;
+    if (n < 2) return null;
+    const ma = a.reduce((s, x) => s + x, 0) / n, mb = b.reduce((s, x) => s + x, 0) / n;
+    let cov = 0, va = 0, vb = 0;
+    for (let i = 0; i < n; i++) {
+      cov += (a[i] - ma) * (b[i] - mb);
+      va += (a[i] - ma) ** 2;
+      vb += (b[i] - mb) ** 2;
+    }
+    return va && vb ? cov / Math.sqrt(va * vb) : null;
+  }
+
+  /**
+   * Correlation matrix of daily log returns. series: [{ t: [ms, ...], c: [close, ...] }, ...]
+   * (the /api/history shape). Only days on which every series has a close are used, keyed by the
+   * Istanbul calendar day, so stocks, the index and USD/TRY (which trades on other days) line up.
+   */
+  function returnCorrelations(series) {
+    const TR = 3 * 3600 * 1000;
+    const byDay = series.map(s => new Map(s.t.map((t, i) => [isoDay(t + TR), s.c[i]])));
+    const days = [...byDay[0].keys()].filter(day => byDay.every(m => m.get(day) > 0)).sort();
+    const returns = byDay.map(m => days.slice(1).map((day, i) => Math.log(m.get(day) / m.get(days[i]))));
+    const values = returns.map((a, i) => returns.map((b, j) => (i === j ? 1 : pearson(a, b))));
+    return { days: Math.max(0, days.length - 1), from: days[0] || null, to: days[days.length - 1] || null, values };
+  }
+
   const Calc = {
     fromFile, rowMap, has, val, ttm, flow, prevFyIdx, LY, isBank, isIns, premium, claims,
-    dupont, altman, altmanZone, piotroski, payout, ratios, dividendStats
+    dupont, altman, altmanZone, piotroski, payout, ratios, dividendStats, pearson, returnCorrelations
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = Calc;
   else root.Calc = Calc;

@@ -58,7 +58,7 @@ const Disclosures = (() => {
       box.innerHTML = body.items.map(d => {
         const c = CLASS[d.cls] || { label: d.type || d.cls || 'BİLDİRİM', cls: 'bg-slate-800 text-slate-300 border-slate-700' };
         return `
-          <a href="https://www.kap.org.tr/tr/Bildirim/${d.index}" target="_blank" rel="noopener" class="block p-3 bg-[#090D18] hover:bg-[#121C30] rounded-xl border border-[#162238] transition-colors">
+          <a href="https://www.kap.org.tr/tr/Bildirim/${encodeURIComponent(d.index)}" target="_blank" rel="noopener" class="block p-3 bg-[#090D18] hover:bg-[#121C30] rounded-xl border border-[#162238] transition-colors">
             <div class="flex items-center justify-between gap-2">
               <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold border ${c.cls}">${esc(c.label)}</span>
               <span class="text-[10px] text-slate-400 font-mono">${esc(when(d.date))}</span>

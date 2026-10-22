@@ -11,6 +11,8 @@ const NewsFeed = (() => {
   const cache = new Map();   // cat -> Promise<body>
 
   const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Feed links are third-party: only http(s) may become an href (no javascript:, data:, ...)
+  const safeUrl = u => (/^https?:\/\//i.test(String(u || '')) ? esc(u) : '#');
 
   function ago(ms) {
     const min = Math.max(0, Math.round((Date.now() - ms) / 60000));
@@ -47,11 +49,11 @@ const NewsFeed = (() => {
             <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-red-400 bg-red-950/40 px-2.5 py-0.5 rounded-md border border-red-800/40">${esc(cat)}</span>
             <span class="text-[11px] font-mono text-slate-400 flex items-center gap-1"><i class="fa-regular fa-clock text-slate-500 text-[10px]"></i>${esc(ago(item.date))}</span>
           </div>
-          <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer" class="block font-serif font-bold text-white ${compact ? 'text-base line-clamp-3' : 'text-lg'} leading-snug group-hover:text-red-300 transition-colors">${esc(item.title)}</a>
+          <a href="${safeUrl(item.url)}" target="_blank" rel="noopener noreferrer" class="block font-serif font-bold text-white ${compact ? 'text-base line-clamp-3' : 'text-lg'} leading-snug group-hover:text-red-300 transition-colors">${esc(item.title)}</a>
         </div>
         <div class="pt-3 border-t border-[#162238] flex items-center justify-between text-xs">
           <span class="text-[11px] font-mono text-slate-400 truncate">${esc(item.source || 'Kaynak')}</span>
-          <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer" class="text-red-400 hover:text-red-300 font-bold flex items-center gap-1 flex-shrink-0 ml-2">
+          <a href="${safeUrl(item.url)}" target="_blank" rel="noopener noreferrer" class="text-red-400 hover:text-red-300 font-bold flex items-center gap-1 flex-shrink-0 ml-2">
             <span>Habere git</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
           </a>
         </div>

@@ -801,25 +801,22 @@ const MockFinancialApi = {
   },
 
   /**
-   * Sector Multipliers & Growth Comparison Data.
+   * Real sector median P/E and P/B (assets/data/sector-multiples.json), cheapest P/E first.
+   * Sectors with fewer than SECTOR_CHART_MIN_N companies are left out: a median of a handful
+   * of companies says little about the sector.
    */
   async fetchSectorMultipliers() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve([
-          { sector: 'Ulaştırma', fk: 3.84, growth: 48.5 },
-          { sector: 'Bankacılık', fk: 4.10, growth: 38.2 },
-          { sector: 'Sanayi', fk: 8.20, growth: 22.4 },
-          { sector: 'Otomotiv', fk: 8.90, growth: 35.6 },
-          { sector: 'Holding', fk: 7.40, growth: 29.8 },
-          { sector: 'Perakende', fk: 14.20, growth: 42.1 },
-          { sector: 'Savunma', fk: 16.50, growth: 55.4 },
-          { sector: 'Kimya', fk: 18.40, growth: 18.2 }
-        ]);
-      }, 50);
-    });
+    const res = await fetch('/assets/data/sector-multiples.json');
+    if (!res.ok) throw new Error(`sector-multiples ${res.status}`);
+    const json = await res.json();
+    return Object.entries(json.sectors)
+      .filter(([, s]) => s.n >= SECTOR_CHART_MIN_N && s.pe != null && s.pb != null)
+      .map(([sector, s]) => ({ sector, fk: s.pe, pb: s.pb, n: s.n }))
+      .sort((a, b) => a.fk - b.fk);
   }
 };
+
+const SECTOR_CHART_MIN_N = 8;
 
 
 /* ==============================================================================
@@ -1980,13 +1977,20 @@ async function initProjectionChart() {
 }
 
 /**
- * 8. sectorComparisonChart: P/E vs Annual Growth Dual-Axis Bar Chart
+ * 8. sectorComparisonChart: sector median P/E vs P/B, dual-axis bar chart
  */
 async function initSectorComparisonChart() {
   const canvas = document.getElementById('sectorComparisonChart');
   if (!canvas) return;
 
-  const sectors = await MockFinancialApi.fetchSectorMultipliers();
+  let sectors;
+  try {
+    sectors = await MockFinancialApi.fetchSectorMultipliers();
+  } catch (e) {
+    console.warn('[Sector chart] unavailable:', e.message);
+    canvas.parentElement.innerHTML = '<div class="h-full flex items-center justify-center text-xs font-mono text-amber-400">Sektör çarpanları şu an yüklenemedi.</div>';
+    return;
+  }
 
   if (appState.charts.sector) {
     appState.charts.sector.destroy();
@@ -1995,10 +1999,11 @@ async function initSectorComparisonChart() {
   appState.charts.sector = new Chart(canvas.getContext('2d'), {
     type: 'bar',
     data: {
-      labels: sectors.map(d => d.sector),
+      // "Holding & Girişim Sermayesi" -> two lines, so long names don't collide on the axis
+      labels: sectors.map(d => d.sector.split(' & ').map((p, i, a) => (i < a.length - 1 ? `${p} &` : p))),
       datasets: [
         {
-          label: 'F/K Ortalaması',
+          label: 'Medyan F/K',
           data: sectors.map(d => d.fk),
           backgroundColor: '#2F6BFF', // brand cobalt
           borderRadius: 6,
@@ -2007,8 +2012,8 @@ async function initSectorComparisonChart() {
           yAxisID: 'y'
         },
         {
-          label: 'Yıllık Büyüme Oranı (%)',
-          data: sectors.map(d => d.growth),
+          label: 'Medyan PD/DD',
+          data: sectors.map(d => d.pb),
           backgroundColor: '#38BDF8', // ice cyan
           borderRadius: 6,
           barPercentage: 0.45,
@@ -2031,10 +2036,12 @@ async function initSectorComparisonChart() {
           padding: 10,
           cornerRadius: 8,
           callbacks: {
+            title: items => sectors[items[0].dataIndex].sector,
             label: function(context) {
-              if (context.datasetIndex === 0) return `F/K Oranı: ${context.parsed.y}x`;
-              return `Yıllık Büyüme: %${context.parsed.y}`;
-            }
+              const v = context.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              return context.datasetIndex === 0 ? `Medyan F/K: ${v}x` : `Medyan PD/DD: ${v}x`;
+            },
+            afterBody: items => `${sectors[items[0].dataIndex].n} şirket`
           }
         }
       },
@@ -2053,7 +2060,7 @@ async function initSectorComparisonChart() {
           type: 'linear',
           position: 'right',
           grid: { drawOnChartArea: false },
-          ticks: { color: '#38BDF8', font: { size: 10 }, callback: v => `%${v}` }
+          ticks: { color: '#38BDF8', font: { size: 10 }, callback: v => `${v}x` }
         }
       }
     }
@@ -3379,17 +3386,9 @@ const quantPortfolioDeskData = {
   ],
   correlationMatrix: {
     assets: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'XU100', 'USDTRY'],
-    labels: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'BIST 100', 'USD/TRY'],
-    values: [
-      [ 1.00,  0.58,  0.52,  0.44,  0.38,  0.49,  0.82,  0.35],
-      [ 0.58,  1.00,  0.62,  0.41,  0.42,  0.55,  0.86, -0.18],
-      [ 0.52,  0.62,  1.00,  0.48,  0.36,  0.51,  0.76,  0.42],
-      [ 0.44,  0.41,  0.48,  1.00,  0.29,  0.40,  0.68,  0.26],
-      [ 0.38,  0.42,  0.36,  0.29,  1.00,  0.34,  0.62, -0.24],
-      [ 0.49,  0.55,  0.51,  0.40,  0.34,  1.00,  0.74,  0.38],
-      [ 0.82,  0.86,  0.76,  0.68,  0.62,  0.74,  1.00,  0.08],
-      [ 0.35, -0.18,  0.42,  0.26, -0.24,  0.38,  0.08,  1.00]
-    ]
+    // Symbols for /api/history; values are computed from one year of real daily closes
+    symbols: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'BIST100', 'USDTRY'],
+    labels: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'BIST 100', 'USD/TRY']
   },
   stressScenarios: {
     fx: {
@@ -3537,20 +3536,70 @@ function renderPortfolioHoldingsTable() {
 }
 
 /**
- * 2. Renders the 8x8 Correlation Heatmap Matrix with dynamic cell styling
+ * 2. Renders the 8x8 Correlation Heatmap: correlations of daily log returns over the last year,
+ *    from real Yahoo Finance closes (/api/history). Computed once per page load.
  */
-function renderCorrelationHeatmap() {
+let correlationLoad = null;
+
+async function renderCorrelationHeatmap() {
   const tbody = document.getElementById('correlationHeatmapTbody');
   if (!tbody) return;
 
   const m = quantPortfolioDeskData.correlationMatrix;
+  const badge = document.getElementById('correlationAvgBadge');
+  const insight = document.getElementById('correlationInsight');
+  const message = (text, cls) => {
+    tbody.innerHTML = `<tr><td colspan="${m.labels.length + 1}" class="py-8 text-center text-[11px] font-mono ${cls}">${text}</td></tr>`;
+  };
+
+  message('Fiyat geçmişi yükleniyor...', 'text-slate-500');
+  if (!correlationLoad) {
+    correlationLoad = Promise.all(m.symbols.map(s =>
+      fetch(`/api/history?symbol=${encodeURIComponent(s)}&range=1y&interval=1d`)
+        .then(r => { if (!r.ok) throw new Error(`history ${s} ${r.status}`); return r.json(); })
+    )).then(series => Calc.returnCorrelations(series));
+    correlationLoad.catch(() => { correlationLoad = null; });
+  }
+
+  let corr;
+  try {
+    corr = await correlationLoad;
+    if (corr.days < 20) throw new Error(`only ${corr.days} common days`);
+  } catch (e) {
+    console.warn('[Correlation] unavailable:', e.message);
+    message('Fiyat geçmişi şu an alınamadı; korelasyonlar hesaplanamadı.', 'text-amber-400');
+    if (badge) badge.textContent = 'Veri yok';
+    if (insight) insight.textContent = 'Korelasyonlar gerçek günlük kapanışlardan hesaplanır.';
+    return;
+  }
+
+  const fmt = v => (v == null ? '—' : v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' }));
+  const values = corr.values;
+
+  // Average pairwise correlation of the six stocks, and the lowest pair overall
+  const stocks = m.labels.length - 2;
+  const pairs = [];
+  for (let i = 0; i < m.labels.length; i++) {
+    for (let j = i + 1; j < m.labels.length; j++) if (values[i][j] != null) pairs.push([i, j, values[i][j]]);
+  }
+  const stockPairs = pairs.filter(([i, j]) => i < stocks && j < stocks);
+  if (badge && stockPairs.length) {
+    badge.textContent = `Hisse ort. korelasyon: ${fmt(stockPairs.reduce((s, p) => s + p[2], 0) / stockPairs.length)}`;
+  }
+  if (insight && pairs.length) {
+    const [li, lj, lv] = pairs.reduce((a, b) => (b[2] < a[2] ? b : a));
+    const range = `${corr.days} işlem günü, ${corr.from.split('-').reverse().join('.')} – ${corr.to.split('-').reverse().join('.')}`;
+    insight.textContent = `En düşük ilişki: ${m.labels[li]} – ${m.labels[lj]} (${fmt(lv)}). Günlük getiriler, ${range}.`;
+  }
 
   tbody.innerHTML = m.labels.map((rowLabel, i) => {
     const isBenchmark = (rowLabel === 'BIST 100' || rowLabel === 'USD/TRY');
 
-    const cellsHtml = m.values[i].map((val, j) => {
+    const cellsHtml = values[i].map((val, j) => {
       let cellClass = 'bg-[#0E1626] text-slate-400';
-      if (i === j) {
+      if (val == null) {
+        cellClass = 'bg-[#0B1220] text-slate-500';
+      } else if (i === j) {
         // Diagonal 1.00
         cellClass = 'bg-[#2F6BFF] text-white font-extrabold shadow-sm';
       } else if (val >= 0.70) {
@@ -3566,7 +3615,7 @@ function renderCorrelationHeatmap() {
         cellClass = 'bg-rose-950/80 text-rose-300 font-bold border border-rose-800/40';
       }
 
-      const valFormatted = val === 1 ? '1.00' : (val >= 0 ? `+${val.toFixed(2)}` : val.toFixed(2));
+      const valFormatted = i === j ? '1,00' : fmt(val);
 
       return `
         <td class="py-2 px-1 text-center font-mono text-[10px] sm:text-[11px] transition-all hover:ring-1 hover:ring-red-500 cursor-default ${cellClass}" title="${rowLabel} &bull; ${m.labels[j]}: ${valFormatted}">

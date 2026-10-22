@@ -2104,12 +2104,12 @@
         <div class="utl-card p-6 space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1A2540]">
             <div>
-              <h3 class="font-serif font-bold text-white text-lg">Sektörel F/K ve Yıllık Büyüme Matrisi</h3>
-              <p class="text-xs text-slate-400">Fiyat/Kazanç çarpanı ile yıllık FAVÖK büyümesi kıyaslaması</p>
+              <h3 class="font-serif font-bold text-white text-lg">Sektörel F/K ve PD/DD Çarpanları</h3>
+              <p class="text-xs text-slate-400">Sektör medyanları; gerçek bilanço (son 12 ay, KAP) ve gecikmeli fiyattan, en az 8 şirketli sektörler</p>
             </div>
             <div class="flex items-center gap-4 text-xs font-mono">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-[#2F6BFF]"></span> F/K Çarpanı</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-cyan-400"></span> Büyüme %</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-[#2F6BFF]"></span> Medyan F/K</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-cyan-400"></span> Medyan PD/DD</span>
             </div>
           </div>
 
@@ -2415,11 +2415,11 @@
                   </div>
                   <div>
                     <h3 class="font-serif font-bold text-white text-base">Korelasyon Matrisi (Correlation Heatmap)</h3>
-                    <p class="text-xs text-slate-400 font-light">Portföy varlıkları, BIST 100 ve USD/TRY korelasyon katsayıları (-1.00 ile +1.00)</p>
+                    <p class="text-xs text-slate-400 font-light">Son 1 yılın günlük getirileri; gerçek kapanışlar (Yahoo Finance, gecikmeli), -1,00 ile +1,00</p>
                   </div>
                 </div>
-                <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-950 border border-indigo-800/40 text-indigo-300">
-                  Çeşitlendirme Skoru: 1,42
+                <span id="correlationAvgBadge" class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-950 border border-indigo-800/40 text-indigo-300">
+                  Hesaplanıyor...
                 </span>
               </div>
 
@@ -2450,14 +2450,14 @@
             <div class="pt-3 border-t border-[#1A2540] flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] font-mono text-slate-400">
               <div class="flex items-center gap-1.5">
                 <span class="text-slate-500">Lejant:</span>
-                <span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-800/40 text-rose-300 font-bold">-0.24 (Hedge)</span>
-                <span class="px-1.5 py-0.5 rounded bg-[#0C1322] text-slate-400">0.00 (Nötr)</span>
-                <span class="px-1.5 py-0.5 rounded bg-sky-950 text-sky-300">0.45 (Orta)</span>
-                <span class="px-1.5 py-0.5 rounded bg-[#2F6BFF] text-white font-bold">1.00 (Tam)</span>
+                <span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-800/40 text-rose-300 font-bold">&lt; 0 (Ters)</span>
+                <span class="px-1.5 py-0.5 rounded bg-[#0C1322] text-slate-400">0,00 (Nötr)</span>
+                <span class="px-1.5 py-0.5 rounded bg-sky-950 text-sky-300">0,45 (Orta)</span>
+                <span class="px-1.5 py-0.5 rounded bg-[#2F6BFF] text-white font-bold">1,00 (Tam)</span>
               </div>
               <span class="text-slate-400">
                 <i class="fa-solid fa-circle-info text-red-400 mr-1"></i>
-                BIMAS ve USD/TRY negatif korelasyonu portföyü kur şoklarına karşı korur.
+                <span id="correlationInsight">Korelasyonlar gerçek günlük kapanışlardan hesaplanıyor...</span>
               </span>
             </div>
           </div>
