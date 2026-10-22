@@ -273,7 +273,7 @@ const Dividends = (() => {
     const recent = row.d.filter(([dt]) => dt > y1);
     const last = row.d[row.d.length - 1];
     return {
-      asOf, paid: true, price: row.p, count12: recent.length,
+      asOf, paid: true, price: row.p, count12: recent.length, count24: row.d.filter(([dt]) => dt > y2).length,
       yield12: sum(y1, today) / row.p * 100,
       yieldPrev: sum(y2, y1) / row.p * 100,
       last: { date: last[0], amount: last[1], label: fullDate(last[0]) }

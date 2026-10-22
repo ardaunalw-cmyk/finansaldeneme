@@ -8,13 +8,6 @@
 (function () {
   const SAMPLE = [
     // [heading text, badge, note shown at the top of the card (optional)]
-    ['Sektörel Sermaye Akışı', 'ÖRNEK', 'Sektör getirileri ve sermaye payları sabit örnek değerlerdir.'],
-    ['İnteraktif İNA Duyarlılık Matrisi', 'ÖRNEK GİRDİLER', 'Matris, örnek nakit akışı ve hedef fiyat girdileriyle çalışır; adil değer tahmini değildir.'],
-    ['Sermaye Artırımı ve Temettü İstihbaratı', 'KISMEN ÖRNEK', 'Bedelsiz potansiyeli bilançodaki özkaynaktan hesaplanır (bilançosu olmayan şirketlerde örnektir). Temettü verimi gerçek nakit temettü geçmişinden (Yahoo Finance), dağıtım oranı nakit akış tablosundan hesaplanır. Halka açıklık ve esneklik derecesi örnektir.'],
-    ['10 Kademe Emir Defteri', 'ÖRNEK', 'Gerçek emir defteri verisi lisanslı veri gerektirir; gösterilen kademeler örnektir.'],
-    ['Aracı Kurum Dağılımı (AKD)', 'ÖRNEK', 'Gerçek AKD verisi lisanslı veri gerektirir; kurumlar ve oranlar örnektir.'],
-    ['Yabancı Takas ve MKK Saklama Dağılımı', 'ÖRNEK', 'Gerçek takas verisi MKK’dan lisanslı alınır; gösterilen oranlar örnektir.'],
-    ['Başabaş Rakip Kıyaslama', 'KARMA VERİ', 'Rakipler elle seçilmiştir. Fiyat ve rasyolar yalnızca gerçek verisi yüklenmiş şirketlerde gerçektir; skor ve radar eksenleri örnektir.'],
     ['Makroekonomik Veri ve Bilanço Takvimi', 'ÖRNEK', 'Tarihler, beklentiler ve önceki değerler gerçek bir ekonomik takvimden alınmamıştır.'],
     ['Sektörel F/K ve Yıllık Büyüme Matrisi', 'ÖRNEK', 'Sektör F/K ve büyüme değerleri örnektir.'],
     ['Portföy Performansı vs BIST 100 Benchmark', 'ÖRNEK', 'Model portföy getirisi gerçek bir portföyün performansı değildir.'],

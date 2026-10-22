@@ -470,6 +470,7 @@ const Statements = (() => {
 
     // Summary used by the capital / bonus-share module
     const equity = bank || ins ? val(d, '2O', 0) : val(d, '2N', 0);
+    fin.equityRaw = equity;
     const parentEq = bank ? equity - val(d, '2OVA', 0) : ins ? equity : val(d, '2O', 0);
     const finDebt = bank || ins ? 0 : val(d, '2AA', 0) + val(d, '2BA', 0);
     const cash = bank || ins ? 0 : val(d, '1AA', 0) + val(d, '1AB', 0);
@@ -652,6 +653,7 @@ const Statements = (() => {
     state.reason = null;
     fin.quarterlyLive = false;
     fin.payout = undefined;
+    fin.equityRaw = undefined;
     setCurrencyButtons();
     renderUnavailable();
 
@@ -663,7 +665,8 @@ const Statements = (() => {
       state.reason = d.reason;
       renderUnavailable();
       fin.payout = { missing: 'no-data' };
-      if (typeof renderPayoutCard === 'function') renderPayoutCard(fin);
+      fin.equityRaw = null;
+      if (typeof renderCapitalAndDividendIntelligence === 'function') renderCapitalAndDividendIntelligence(fin);
       return;
     }
 
@@ -725,14 +728,20 @@ const Statements = (() => {
 
   /** Entry point used by the stock page: render what we have, or start loading. */
   function show(fin) {
-    const payoutCard = () => { if (typeof renderPayoutCard === 'function') renderPayoutCard(fin); };
+    const capitalCard = () => { if (typeof renderCapitalAndDividendIntelligence === 'function') renderCapitalAndDividendIntelligence(fin); };
     if (state.code === fin.code && state.status === 'ready') {
       // A freshly built company object has none of the derived figures yet
-      if (fin.payout === undefined) { applyDerived(fin, state.data); payoutCard(); }
+      if (fin.payout === undefined) { applyDerived(fin, state.data); capitalCard(); }
       renderIncome(fin); renderBalance(fin); renderHealth();
       return;
     }
-    if (state.code === fin.code && state.status === 'unavailable') { renderUnavailable(); fin.payout = { missing: 'no-data' }; payoutCard(); return; }
+    if (state.code === fin.code && state.status === 'unavailable') {
+      renderUnavailable();
+      fin.payout = { missing: 'no-data' };
+      fin.equityRaw = null;
+      capitalCard();
+      return;
+    }
     ensure(fin);
   }
 

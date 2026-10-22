@@ -1,9 +1,9 @@
 /**
  * Gecikmeli piyasa fiyatları (Yahoo Finance, /api/quote üzerinden).
  *
- * Sadece fiyat verisi gelir: son fiyat, günlük değişim, gün ve 52 hafta aralığı, hacim.
- * F/K, PD/DD, ROE, skor, hedef fiyat gibi bilanço türevleri hâlâ örnek veridir ve
- * arayüzde "ÖRNEK" etiketiyle gösterilir.
+ * Fiyat verisi: son fiyat, günlük değişim, gün ve 52 hafta aralığı, hacim. F/K, PD/DD, ROE,
+ * skor ve model değer, bu fiyat ile gerçek bilançodan (fundamentals.json / /api/financials)
+ * hesaplanır; ikisinden biri yoksa alanlar boş ('—' / 'N/A') kalır.
  */
 const LiveData = (() => {
   const TTL_MS = 60 * 1000;
@@ -57,6 +57,7 @@ const LiveData = (() => {
     if (q.dayHigh != null) fin.dayHigh = `₺${fmt.format(q.dayHigh)}`;
     if (q.yearLow != null) fin.yearLow = `₺${fmt.format(q.yearLow)}`;
     if (q.yearHigh != null) fin.yearHigh = `₺${fmt.format(q.yearHigh)}`;
+    fin.yearPos = q.yearLow != null && q.yearHigh > q.yearLow ? (q.price - q.yearLow) / (q.yearHigh - q.yearLow) * 100 : null;
     if (q.volume) {
       fin.volumeNum = q.volume;
       fin.volume = `${fmt.format(q.volume / 1e6)} Mn lot`;
@@ -83,9 +84,23 @@ const LiveData = (() => {
       }
     });
 
+    const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+    const usd = quotes.USDTRY;
+    if (usd) {
+      set('usdCardPrice', fmt.format(usd.price));
+      const chg = document.getElementById('usdCardChange');
+      if (chg && usd.prevClose) {
+        const pct = (usd.price - usd.prevClose) / usd.prevClose * 100;
+        chg.textContent = `${pct >= 0 ? '▲ +' : '▼ -'}%${fmt.format(Math.abs(pct))}`;
+        chg.className = pct >= 0
+          ? 'font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded text-[11px] font-bold'
+          : 'font-mono text-rose-400 bg-rose-950/60 border border-rose-800/40 px-2 py-0.5 rounded text-[11px] font-bold';
+      }
+    }
+    if (quotes.EURTRY) set('eurCardPrice', `EUR/TL ${fmt.format(quotes.EURTRY.price)}`);
+
     const bist = quotes.BIST100;
     if (bist) {
-      const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
       set('bistCardPrice', fmt.format(bist.price));
       if (bist.prevClose) {
         const diff = bist.price - bist.prevClose;
@@ -186,13 +201,12 @@ const LiveData = (() => {
 
       const priceBadge = `<i class="data-badge live">GECİKMELİ FİYAT</i> Yahoo Finance · ${clock(q.time)} `;
       if (note) {
-        note.innerHTML = priceBadge +
-          '<i class="data-badge sample">ÖRNEK</i> F/K, PD/DD ve ROE örnek veridir; skor ve model değer için gerçek bilanço gerekir.';
+        note.innerHTML = priceBadge + 'Bilanço oranları yükleniyor...';
       }
       syncFundamentals(fin, note, priceBadge);
     } catch {
       if (note) {
-        note.innerHTML = '<i class="data-badge sample">ÖRNEK VERİ</i> Canlı fiyat alınamadı; gösterilen fiyat ve rasyolar örnek veridir.';
+        note.innerHTML = '<i class="data-badge sample">VERİ YOK</i> Fiyat alınamadı; fiyata bağlı oranlar, skor ve model değer hesaplanamadı.';
       }
     }
   }
@@ -251,18 +265,41 @@ const LiveData = (() => {
     });
     return changed;
   }
+  /** Writes the ratio cards, score header and the source note of the stock page. */
+  function paintStockFundamentals(fin, note, priceBadge, sourceText) {
+    if (window.VerityScore) VerityScore.paintHeader(fin);
+    if (window.PlainSummary) PlainSummary.render(fin);
+    const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+    set('stockDetailFK', fin.fk);
+    set('stockDetailPDDD', fin.pddd);
+    set('stockDetailFDFavok', fin.fdFavok);
+    set('stockDetailNetDebt', fin.netDebt);
+    set('stockDetailROE', fin.roe);
+    set('stockDetailROA', fin.roa);
+    if (note) {
+      note.innerHTML = priceBadge +
+        `<i class="data-badge live">GERÇEK BİLANÇO</i> ${sourceText}; son 12 ay toplamı. ` +
+        '<i class="data-badge live">GERÇEK HESAP</i> Skor ve model değer bu bilançodan ve sektör medyanlarından hesaplanır.';
+    }
+  }
+
   async function syncFundamentals(fin, note, priceBadge) {
     const code = fin.code;
+    // The pre-fetched file answers at once; the live statement below refines it when it arrives
+    const row = (await loadStaticFundamentals())[code];
+    if (row && appState.currentStock === code && await applyStaticFundamentals([code])) {
+      paintStockFundamentals(fin, note, priceBadge, `Önceden derlenmiş bilanço · ${row[0]}`);
+    }
     try {
       const res = await fetch(`/api/financials?symbol=${encodeURIComponent(typeof tradingCode === 'function' ? tradingCode(code) : code)}`);
       const f = res.ok ? await res.json() : null;
       if (appState.currentStock !== code) return;
       if (!f || !f.available) {
-        if (note) {
+        if (note && !fin.fundamentalsLive) {
           const why = f && f.reason === 'financial-company'
             ? 'Banka ve finans şirketlerinin bilanço verisi henüz bağlanmadı'
             : 'Bu şirket için bilanço verisi bulunamadı';
-          note.innerHTML = priceBadge + `<i class="data-badge sample">ÖRNEK</i> ${why}; rasyolar örnek veridir; skor ve model değer hesaplanamaz.`;
+          note.innerHTML = priceBadge + `<i class="data-badge sample">VERİ YOK</i> ${why}; oranlar, skor ve model değer hesaplanamaz.`;
         }
         return;
       }
@@ -270,22 +307,7 @@ const LiveData = (() => {
       if (window.VerityScore) await VerityScore.ready();
       if (appState.currentStock !== code) return;
       applyFundamentals(fin, f);
-      if (window.VerityScore) VerityScore.paintHeader(fin);
-      if (window.PlainSummary) PlainSummary.render(fin);
-
-      const set =(id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
-      set('stockDetailFK', fin.fk);
-      set('stockDetailPDDD', fin.pddd);
-      set('stockDetailFDFavok', fin.fdFavok);
-      set('stockDetailNetDebt', fin.netDebt);
-      set('stockDetailROE', fin.roe);
-      set('stockDetailROA', fin.roa);
-
-      if (note) {
-        note.innerHTML = priceBadge +
-          `<i class="data-badge live">GERÇEK BİLANÇO</i> ${f.source} · ${f.period} · ${f.basis}; son 12 ay toplamı. ` +
-          '<i class="data-badge live">GERÇEK HESAP</i> Skor ve model değer bu bilançodan ve sektör medyanlarından hesaplanır. <i class="data-badge sample">ÖRNEK</i> "Sektör ort." kartları örnektir.';
-      }
+      paintStockFundamentals(fin, note, priceBadge, `${f.source} · ${f.period} · ${f.basis}`);
     } catch (e) {
       console.warn('[LiveData] fundamentals unavailable:', e.message);
     }
@@ -334,6 +356,20 @@ const LiveData = (() => {
     }
   }
 
+  /** Real quotes and statement ratios for a few tickers (used by the peer comparison). */
+  async function ensure(codes) {
+    const need = codes.filter(c => !fetchedAt.has(c) || Date.now() - fetchedAt.get(c) > TTL_MS);
+    if (need.length) {
+      try {
+        const quotes = await getQuotes(need);
+        need.forEach(c => applyQuote(c, quotes[c]));
+      } catch (e) {
+        console.warn('[LiveData] peer quotes unavailable:', e.message);
+      }
+    }
+    await applyStaticFundamentals(codes);
+  }
+
   /** Real ratios for a ticker from the pre-fetched statements and a given price (used by the chat assistant). */
   async function ratiosFor(code, price) {
     const row = (await loadStaticFundamentals())[code];
@@ -358,7 +394,7 @@ const LiveData = (() => {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshTicker(); });
   }
 
-  return { init, syncTable, syncStockHeader, checkAlerts, syncWatchlist, ratiosFor };
+  return { init, syncTable, syncStockHeader, checkAlerts, syncWatchlist, ratiosFor, ensure };
 })();
 
 window.LiveData = LiveData;

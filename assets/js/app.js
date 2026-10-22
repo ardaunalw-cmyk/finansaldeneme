@@ -1,24 +1,12 @@
 /**
  * ==============================================================================
- * Verity - Sovereign Intelligence & Core Financial Controller
+ * Verity - core controller: views, search, overview table, stock page, charts
  * ==============================================================================
- * Role: Senior Frontend Engineer & UI/UX Specialist
- * Tech Stack: Modern ES6+ JavaScript, Chart.js (v4.4.1), Tailwind CSS Palette
- * 
- * Includes:
- * 1. Mock Financial API Engine (Yahoo Finance, TradingView & BIST DataFeed simulator)
- * 2. Complete Chart.js (v4) Renderers for All 8 Canvas IDs:
- *    - bistTrendChart (BIST 100 Area/Line Chart)
- *    - technicalPriceChart (OHLC Candlestick + Moving Averages SMA 20/50/200 + Bollinger Bands)
- *    - technicalOscillatorChart (RSI 14 / MACD 12,26,9 Dual Oscillator)
- *    - stockIncomeChart (Quarterly/Annual Revenue & EBITDA Bar + Margin Line)
- *    - portfolioPerformanceChart (UTL Model Portfolio vs BIST 100 Benchmark)
- *    - portfolioDonutChart (Sector Asset Allocation Donut)
- *    - stockProjectionChart (Multi-Year DCF Growth & Scenario Projection)
- *    - sectorComparisonChart (Sector Multiples P/E vs Annual Growth Dual-Axis Bar)
- * 3. Robust View Switcher & Lazy Canvas Resizer (Fixes 0x0 hidden canvas rendering)
- * 4. Universal 756-Stock KAP Search & Live Autocomplete
- * 5. Interactive DCF Simulation Sliders & DuPont/Altman-Z Scoring Cards
+ * Market and balance-sheet figures come only from real sources (live-data.js,
+ * statements.js, technicals.js, dividends.js). Where a figure cannot be fetched or
+ * computed, the page shows '—' instead of a generated value. The model portfolio,
+ * sector reports and macro calendar views are demo content and say so on screen
+ * (sample-flags.js).
  * ==============================================================================
  */
 
@@ -587,7 +575,6 @@ async function initApp() {
   try {
     initKapCompanyIndex();
     initClock();
-    initTickerAnimation();
     initNavigation();
     
     // Fast First Render: Switch view immediately without blocking on heavy charts
@@ -625,7 +612,7 @@ async function initApp() {
 }
 
 /* ==============================================================================
-   2. Universal KAP Database Service & Quantitative Financial Generator
+   2. KAP company registry and the per-stock data object
    ============================================================================== */
 
 // High-Performance In-Memory Index Map for O(1) Instant Stock Queries & Global Financial Memoization Cache
@@ -682,24 +669,6 @@ function getBistTickSize(price) {
 window.getBistTickSize = getBistTickSize;
 
 /**
- * Deterministic pseudo-random number generator for consistent metrics per stock.
- */
-function getStockHash(ticker) {
-  let hash = 0;
-  const str = (ticker || '').toUpperCase();
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
-function pseudoRandom(seed, offset = 0) {
-  const x = Math.sin(seed + offset) * 10000;
-  return x - Math.floor(x);
-}
-
-/**
  * Formats financial monetary figures (Millions / Billions TL)
  */
 // toLocaleString(locale, options) builds a new formatter on every call; reuse two instead
@@ -718,173 +687,11 @@ function formatKapMoney(val) {
 }
 
 /**
- * Builds an authentic, audited consolidated Balance Sheet & Income Statement for ANY stock
- * based on official KAP records and financial engine ratios.
- */
-function buildKapBalanceSheet(ticker, name, sector, paidCapRaw, priceNum, fkVal, pdddVal, roeVal, seed) {
-  const p = priceNum || 50.0;
-  const fk = fkVal || 6.0;
-  const pb = pdddVal || 1.2;
-  const roe = roeVal || 22.0;
-  const cap = paidCapRaw || 500000000;
-
-  // Real announced figures for Turkish Airlines (THYAO)
-  if (ticker === 'THYAO') {
-    return {
-      summary: {
-        totalAssets: '₺1.082,0 Mlr',
-        assetsYoY: '+%46,2',
-        totalEquity: '₺481,4 Mlr',
-        roe: '%28,4',
-        netDebt: '₺182,3 Mlr',
-        netDebtRatio: '1.12x',
-        netIncome: '₺68,4 Mlr',
-        netMargin: '%12,66'
-      },
-      items: [
-        { name: 'DÖNEN VARLIKLAR', category: 'varlik', isHeader: true },
-        { name: 'Nakit ve Nakit Benzerleri', category: 'varlik', q3_24: '₺142.500 Mn', q4_23: '₺104.200 Mn', q3_23: '₺88.500 Mn', yoy: '+%61,0', isPositive: true, status: 'LİDER', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'Finansal Yatırımlar (Menkul Kıymetler)', category: 'varlik', q3_24: '₺28.450 Mn', q4_23: '₺22.100 Mn', q3_23: '₺18.200 Mn', yoy: '+%56,3', isPositive: true, status: 'YÜKSEK', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-        { name: 'Ticari Alacaklar (Yolcu & Kargo)', category: 'varlik', q3_24: '₺42.800 Mn', q4_23: '₺36.400 Mn', q3_23: '₺31.500 Mn', yoy: '+%35,8', isPositive: true, status: 'NORMAL', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-        { name: 'Stoklar (Yedek Parça & İkram)', category: 'varlik', q3_24: '₺24.670 Mn', q4_23: '₺20.500 Mn', q3_23: '₺16.100 Mn', yoy: '+%53,2', isPositive: true, status: 'GÜVENLİ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-        { name: 'Diğer Dönen Varlıklar', category: 'varlik', q3_24: '₺30.000 Mn', q4_23: '₺25.000 Mn', q3_23: '₺21.000 Mn', yoy: '+%42,8', isPositive: true, status: 'NORMAL', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-        { name: 'TOPLAM DÖNEN VARLIKLAR', category: 'varlik', isSubtotal: true, q3_24: '₺268.420 Mn', q4_23: '₺208.200 Mn', q3_23: '₺175.300 Mn', yoy: '+%53,1', isPositive: true, status: 'REKOR', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-
-        { name: 'DURAN VARLIKLAR', category: 'varlik', isHeader: true },
-        { name: 'Maddi Duran Varlıklar (Uçak Filosu & Tesisler)', category: 'varlik', q3_24: '₺714.200 Mn', q4_23: '₺582.400 Mn', q3_23: '₺495.100 Mn', yoy: '+%44,2', isPositive: true, status: 'GÜÇLÜ', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'Maddi Olmayan Duran Varlıklar & Şerefiye', category: 'varlik', q3_24: '₺38.500 Mn', q4_23: '₺32.100 Mn', q3_23: '₺28.400 Mn', yoy: '+%35,5', isPositive: true, status: 'SABİT', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-        { name: 'Finansal Duran Varlıklar & İştirakler', category: 'varlik', q3_24: '₺60.900 Mn', q4_23: '₺48.500 Mn', q3_23: '₺41.200 Mn', yoy: '+%47,8', isPositive: true, status: 'BÜYÜME', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-        { name: 'TOPLAM DURAN VARLIKLAR', category: 'varlik', isSubtotal: true, q3_24: '₺813.600 Mn', q4_23: '₺663.000 Mn', q3_23: '₺564.700 Mn', yoy: '+%44,0', isPositive: true, status: 'GÜÇLÜ', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'TOPLAM VARLIKLAR (AKTİFLER)', category: 'varlik', isSubtotal: true, q3_24: '₺1.082.020 Mn', q4_23: '₺871.200 Mn', q3_23: '₺740.000 Mn', yoy: '+%46,2', isPositive: true, status: 'BIST AMİRALİ', statusClass: 'bg-red-900/60 text-red-300 border border-red-700/60' },
-
-        { name: 'KISA VADELİ YÜKÜMLÜLÜKLER', category: 'yukumluluk', isHeader: true },
-        { name: 'Kısa Vadeli Finansal Borçlar & Krediler', category: 'yukumluluk', q3_24: '₺98.400 Mn', q4_23: '₺82.100 Mn', q3_23: '₺68.500 Mn', yoy: '+%43,6', isPositive: false, status: 'KONTROLLÜ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-        { name: 'Ticari Borçlar (Tedarikçiler)', category: 'yukumluluk', q3_24: '₺88.500 Mn', q4_23: '₺74.200 Mn', q3_23: '₺62.400 Mn', yoy: '+%41,8', isPositive: false, status: 'NORMAL', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-        { name: 'Diğer Kısa Vadeli Yükümlülükler', category: 'yukumluluk', q3_24: '₺65.200 Mn', q4_23: '₺54.800 Mn', q3_23: '₺46.200 Mn', yoy: '+%41,1', isPositive: false, status: 'DENGELİ', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-        { name: 'TOPLAM KISA VADELİ YÜKÜMLÜLÜKLER', category: 'yukumluluk', isSubtotal: true, q3_24: '₺252.100 Mn', q4_23: '₺211.100 Mn', q3_23: '₺177.100 Mn', yoy: '+%42,3', isPositive: false, status: 'DENGELİ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-
-        { name: 'UZUN VADELİ YÜKÜMLÜLÜKLER', category: 'yukumluluk', isHeader: true },
-        { name: 'Uzun Vadeli Finansal Krediler & Tahviller', category: 'yukumluluk', q3_24: '₺286.400 Mn', q4_23: '₺254.200 Mn', q3_23: '₺225.100 Mn', yoy: '+%27,2', isPositive: false, status: 'YÖNETİLEBİLİR', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-        { name: 'Diğer Uzun Vadeli Yükümlülükler', category: 'yukumluluk', q3_24: '₺62.120 Mn', q4_23: '₺55.400 Mn', q3_23: '₺48.200 Mn', yoy: '+%28,8', isPositive: false, status: 'SABİT', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-        { name: 'TOPLAM UZUN VADELİ YÜKÜMLÜLÜKLER', category: 'yukumluluk', isSubtotal: true, q3_24: '₺348.520 Mn', q4_23: '₺309.600 Mn', q3_23: '₺273.300 Mn', yoy: '+%27,5', isPositive: false, status: 'DÜŞÜK RİSK', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'TOPLAM YÜKÜMLÜLÜKLER (BORÇLAR)', category: 'yukumluluk', isSubtotal: true, q3_24: '₺600.620 Mn', q4_23: '₺520.700 Mn', q3_23: '₺450.400 Mn', yoy: '+%33,3', isPositive: false, status: 'SAĞLIKLI KALDIRAÇ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-
-        { name: 'ÖZKAYNAKLAR', category: 'ozkaynak', isHeader: true },
-        { name: 'Ödenmiş Sermaye (KAP Resmi Kayıtlı)', category: 'ozkaynak', q3_24: '₺1.380 Mn', q4_23: '₺1.380 Mn', q3_23: '₺1.380 Mn', yoy: '%0,0', isPositive: true, status: 'KAP TEYİTLİ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-        { name: 'Sermaye Düzeltme Farkları', category: 'ozkaynak', q3_24: '₺84.500 Mn', q4_23: '₺84.500 Mn', q3_23: '₺62.100 Mn', yoy: '+%36,0', isPositive: true, status: 'POZİTİF', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'Kâr Yedekleri ve Geçmiş Yıllar Kârları', category: 'ozkaynak', q3_24: '₺326.920 Mn', q4_23: '₺214.200 Mn', q3_23: '₺172.500 Mn', yoy: '+%89,5', isPositive: true, status: 'OLAĞANÜSTÜ', statusClass: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60' },
-        { name: 'Net Dönem Kârı / Zararı', category: 'ozkaynak', q3_24: '₺68.400 Mn', q4_23: '₺51.800 Mn', q3_23: '₺55.000 Mn', yoy: '+%24,3', isPositive: true, status: 'REKOR KÂR', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'TOPLAM ÖZKAYNAKLAR', category: 'ozkaynak', isSubtotal: true, q3_24: '₺481.400 Mn', q4_23: '₺350.500 Mn', q3_23: '₺289.600 Mn', yoy: '+%66,2', isPositive: true, status: 'ÇOK GÜÇLÜ', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-
-        { name: 'GELİR TABLOSU VE KÂRLILIK', category: 'gelir', isHeader: true },
-        { name: 'Satış Hasılatı / Net Gelirler', category: 'gelir', q3_24: '₺540.200 Mn', q4_23: '₺420.500 Mn', q3_23: '₺380.400 Mn', yoy: '+%42,0', isPositive: true, status: 'LİDER', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'Satışların Maliyeti (SMM)', category: 'gelir', q3_24: '-₺418.600 Mn', q4_23: '-₺332.100 Mn', q3_23: '-₺298.500 Mn', yoy: '+%40,2', isPositive: false, status: 'KONTROLLÜ', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-        { name: 'Brüt Kâr', category: 'gelir', q3_24: '₺121.600 Mn', q4_23: '₺88.400 Mn', q3_23: '₺81.900 Mn', yoy: '+%48,4', isPositive: true, status: 'GÜÇLÜ MARJ', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'Esas Faaliyet Kârı', category: 'gelir', q3_24: '₺104.200 Mn', q4_23: '₺72.500 Mn', q3_23: '₺68.400 Mn', yoy: '+%52,3', isPositive: true, status: 'YÜKSEK', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-        { name: 'FAVÖK (EBITDA)', category: 'gelir', q3_24: '₺138.800 Mn', q4_23: '₺102.400 Mn', q3_23: '₺94.800 Mn', yoy: '+%46,4', isPositive: true, status: 'REKOR', statusClass: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60' },
-        { name: 'Net Finansman Gelir / (Gideri)', category: 'gelir', q3_24: '-₺18.500 Mn', q4_23: '-₺12.400 Mn', q3_23: '-₺9.200 Mn', yoy: '+%101,0', isPositive: false, status: 'İZLENMELİ', statusClass: 'bg-rose-950/60 text-rose-400 border border-rose-800/50' },
-        { name: 'DÖNEM NET KÂRI', category: 'gelir', isSubtotal: true, q3_24: '₺68.400 Mn', q4_23: '₺51.800 Mn', q3_23: '₺55.000 Mn', yoy: '+%24,3', isPositive: true, status: 'MÜKEMMEL', statusClass: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60' }
-      ]
-    };
-  }
-
-  // Universal Balance Sheet generator for all other stocks
-  const mCapVal = cap * p;
-  const equityVal = mCapVal / Math.max(0.4, pb);
-  const isBank = sector.includes('Bankacılık') || sector.includes('Finans');
-  const levVal = isBank ? 7.8 : (1.6 + ((seed % 12) * 0.12));
-  const totalAssetsVal = equityVal * levVal;
-  const totalLiabVal = totalAssetsVal - equityVal;
-
-  const currentRatio = isBank ? 0.48 : (sector.includes('Perakende') ? 0.65 : 0.42);
-  const currentAssetsVal = totalAssetsVal * currentRatio;
-  const nonCurrentAssetsVal = totalAssetsVal - currentAssetsVal;
-
-  const shortRatio = isBank ? 0.74 : 0.58;
-  const shortLiabVal = totalLiabVal * shortRatio;
-  const longLiabVal = totalLiabVal - shortLiabVal;
-
-  const cashVal = currentAssetsVal * 0.38;
-  const tradeRecVal = currentAssetsVal * 0.32;
-  const invVal = isBank ? 0 : currentAssetsVal * 0.18;
-  const otherCurVal = currentAssetsVal - (cashVal + tradeRecVal + invVal);
-
-  const tangVal = nonCurrentAssetsVal * 0.74;
-  const intangVal = nonCurrentAssetsVal * 0.11;
-  const finNonCurVal = nonCurrentAssetsVal * 0.09;
-
-  const shortDebtVal = shortLiabVal * 0.45;
-  const tradePayVal = shortLiabVal * 0.38;
-  const longDebtVal = longLiabVal * 0.76;
-  const totDebtVal = shortDebtVal + longDebtVal;
-  const netDebtVal = Math.max(0, totDebtVal - cashVal);
-
-  const netProfitVal = Math.max(10000000, mCapVal / Math.max(2.0, fk));
-  const revVal = isBank ? (netProfitVal * 3.5) : (Math.max(netProfitVal * 6.8, totalAssetsVal * 0.65));
-  const favokVal = isBank ? (netProfitVal * 1.5) : (revVal * 0.22);
-
-  const growthFactor23 = 0.71 + ((seed % 8) * 0.02);
-  const growthFactor23Q3 = 0.61 + ((seed % 8) * 0.02);
-  const yoyPct = Math.round(((1 / growthFactor23Q3) - 1) * 1000) / 10;
-  const yoyStr = `+${yoyPct.toFixed(1)}%`;
-
-  return {
-    summary: {
-      totalAssets: formatKapMoney(totalAssetsVal),
-      assetsYoY: yoyStr,
-      totalEquity: formatKapMoney(equityVal),
-      roe: `%${roe.toFixed(1)}`,
-      netDebt: formatKapMoney(netDebtVal),
-      netDebtRatio: isBank ? 'N/A' : `${(netDebtVal / Math.max(1, favokVal)).toFixed(2)}x`,
-      netIncome: formatKapMoney(netProfitVal),
-      netMargin: `%${((netProfitVal / revVal) * 100).toFixed(2)}`
-    },
-    items: [
-      { name: 'DÖNEN VARLIKLAR', category: 'varlik', isHeader: true },
-      { name: 'Nakit ve Nakit Benzerleri', category: 'varlik', q3_24: formatKapMoney(cashVal), q4_23: formatKapMoney(cashVal * growthFactor23), q3_23: formatKapMoney(cashVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'POZİTİF', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'Finansal Yatırımlar (Menkul Değerler)', category: 'varlik', q3_24: formatKapMoney(currentAssetsVal * 0.12), q4_23: formatKapMoney(currentAssetsVal * 0.12 * growthFactor23), q3_23: formatKapMoney(currentAssetsVal * 0.12 * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'DENGELİ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-      { name: 'Ticari Alacaklar (Müşteriler)', category: 'varlik', q3_24: formatKapMoney(tradeRecVal), q4_23: formatKapMoney(tradeRecVal * growthFactor23), q3_23: formatKapMoney(tradeRecVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'NORMAL', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-      { name: 'Stoklar (Mamul & Yarı Mamul)', category: 'varlik', q3_24: formatKapMoney(invVal), q4_23: formatKapMoney(invVal * growthFactor23), q3_23: formatKapMoney(invVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'SAĞLIKLI', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-      { name: 'Diğer Dönen Varlıklar', category: 'varlik', q3_24: formatKapMoney(otherCurVal), q4_23: formatKapMoney(otherCurVal * growthFactor23), q3_23: formatKapMoney(otherCurVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'DÜZENLİ', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-      { name: 'TOPLAM DÖNEN VARLIKLAR', category: 'varlik', isSubtotal: true, q3_24: formatKapMoney(currentAssetsVal), q4_23: formatKapMoney(currentAssetsVal * growthFactor23), q3_23: formatKapMoney(currentAssetsVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'GÜÇLÜ', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-
-      { name: 'DURAN VARLIKLAR', category: 'varlik', isHeader: true },
-      { name: 'Maddi Duran Varlıklar (Tesis & Gayrimenkul)', category: 'varlik', q3_24: formatKapMoney(tangVal), q4_23: formatKapMoney(tangVal * growthFactor23), q3_23: formatKapMoney(tangVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'DEĞERLİ', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'Maddi Olmayan Duran Varlıklar', category: 'varlik', q3_24: formatKapMoney(intangVal), q4_23: formatKapMoney(intangVal * growthFactor23), q3_23: formatKapMoney(intangVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'SABİT', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-      { name: 'Finansal Duran Varlıklar & İştirakler', category: 'varlik', q3_24: formatKapMoney(finNonCurVal), q4_23: formatKapMoney(finNonCurVal * growthFactor23), q3_23: formatKapMoney(finNonCurVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'BÜYÜME', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-      { name: 'TOPLAM DURAN VARLIKLAR', category: 'varlik', isSubtotal: true, q3_24: formatKapMoney(nonCurrentAssetsVal), q4_23: formatKapMoney(nonCurrentAssetsVal * growthFactor23), q3_23: formatKapMoney(nonCurrentAssetsVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'SAĞLAM', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'TOPLAM VARLIKLAR (AKTİFLER)', category: 'varlik', isSubtotal: true, q3_24: formatKapMoney(totalAssetsVal), q4_23: formatKapMoney(totalAssetsVal * growthFactor23), q3_23: formatKapMoney(totalAssetsVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'KAP TEYİTLİ', statusClass: 'bg-red-900/60 text-red-300 border border-red-700/60' },
-
-      { name: 'KISA VADELİ YÜKÜMLÜLÜKLER', category: 'yukumluluk', isHeader: true },
-      { name: 'Kısa Vadeli Finansal Borçlar', category: 'yukumluluk', q3_24: formatKapMoney(shortDebtVal), q4_23: formatKapMoney(shortDebtVal * growthFactor23), q3_23: formatKapMoney(shortDebtVal * growthFactor23Q3), yoy: yoyStr, isPositive: false, status: 'YÖNETİLEBİLİR', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-      { name: 'Ticari Borçlar (Tedarikçi Hesapları)', category: 'yukumluluk', q3_24: formatKapMoney(tradePayVal), q4_23: formatKapMoney(tradePayVal * growthFactor23), q3_23: formatKapMoney(tradePayVal * growthFactor23Q3), yoy: yoyStr, isPositive: false, status: 'NORMAL', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-      { name: 'TOPLAM KISA VADELİ YÜKÜMLÜLÜKLER', category: 'yukumluluk', isSubtotal: true, q3_24: formatKapMoney(shortLiabVal), q4_23: formatKapMoney(shortLiabVal * growthFactor23), q3_23: formatKapMoney(shortLiabVal * growthFactor23Q3), yoy: yoyStr, isPositive: false, status: 'DENGELİ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-
-      { name: 'UZUN VADELİ YÜKÜMLÜLÜKLER', category: 'yukumluluk', isHeader: true },
-      { name: 'Uzun Vadeli Finansal Krediler', category: 'yukumluluk', q3_24: formatKapMoney(longDebtVal), q4_23: formatKapMoney(longDebtVal * growthFactor23), q3_23: formatKapMoney(longDebtVal * growthFactor23Q3), yoy: yoyStr, isPositive: false, status: 'KONTROLLÜ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-      { name: 'TOPLAM UZUN VADELİ YÜKÜMLÜLÜKLER', category: 'yukumluluk', isSubtotal: true, q3_24: formatKapMoney(longLiabVal), q4_23: formatKapMoney(longLiabVal * growthFactor23), q3_23: formatKapMoney(longLiabVal * growthFactor23Q3), yoy: yoyStr, isPositive: false, status: 'DÜŞÜK RİSK', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'TOPLAM YÜKÜMLÜLÜKLER (BORÇLAR)', category: 'yukumluluk', isSubtotal: true, q3_24: formatKapMoney(totalLiabVal), q4_23: formatKapMoney(totalLiabVal * growthFactor23), q3_23: formatKapMoney(totalLiabVal * growthFactor23Q3), yoy: yoyStr, isPositive: false, status: 'KONTROLLÜ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-
-      { name: 'ÖZKAYNAKLAR', category: 'ozkaynak', isHeader: true },
-      { name: 'Ödenmiş Sermaye (KAP Resmi Kayıtlı)', category: 'ozkaynak', q3_24: formatKapMoney(cap), q4_23: formatKapMoney(cap), q3_23: formatKapMoney(cap), yoy: '%0,0', isPositive: true, status: 'KAP TESCİLLİ', statusClass: 'bg-red-950/40 text-red-400 border border-red-800/50' },
-      { name: 'Kâr Yedekleri ve Geçmiş Yıllar Kârları', category: 'ozkaynak', q3_24: formatKapMoney(equityVal * 0.62), q4_23: formatKapMoney(equityVal * 0.62 * growthFactor23), q3_23: formatKapMoney(equityVal * 0.62 * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'GÜÇLÜ', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'Net Dönem Kârı', category: 'ozkaynak', q3_24: formatKapMoney(netProfitVal), q4_23: formatKapMoney(netProfitVal * growthFactor23), q3_23: formatKapMoney(netProfitVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'POZİTİF', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'TOPLAM ÖZKAYNAKLAR', category: 'ozkaynak', isSubtotal: true, q3_24: formatKapMoney(equityVal), q4_23: formatKapMoney(equityVal * growthFactor23), q3_23: formatKapMoney(equityVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'YÜKSEK GÜVEN', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-
-      { name: 'GELİR TABLOSU VE KÂRLILIK', category: 'gelir', isHeader: true },
-      { name: 'Satış Hasılatı / Net Gelirler', category: 'gelir', q3_24: formatKapMoney(revVal), q4_23: formatKapMoney(revVal * growthFactor23), q3_23: formatKapMoney(revVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'BÜYÜME', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'Satışların Maliyeti (SMM)', category: 'gelir', q3_24: `-${formatKapMoney(revVal * 0.74)}`, q4_23: `-${formatKapMoney(revVal * 0.74 * growthFactor23)}`, q3_23: `-${formatKapMoney(revVal * 0.74 * growthFactor23Q3)}`, yoy: yoyStr, isPositive: false, status: 'NORMAL', statusClass: 'bg-slate-800 text-slate-300 border border-slate-700' },
-      { name: 'Brüt Kâr', category: 'gelir', q3_24: formatKapMoney(revVal * 0.26), q4_23: formatKapMoney(revVal * 0.26 * growthFactor23), q3_23: formatKapMoney(revVal * 0.26 * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'SAĞLIKLI', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'Esas Faaliyet Kârı', category: 'gelir', q3_24: formatKapMoney(revVal * 0.18), q4_23: formatKapMoney(revVal * 0.18 * growthFactor23), q3_23: formatKapMoney(revVal * 0.18 * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'POZİTİF', statusClass: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' },
-      { name: 'FAVÖK (EBITDA)', category: 'gelir', q3_24: formatKapMoney(favokVal), q4_23: formatKapMoney(favokVal * growthFactor23), q3_23: formatKapMoney(favokVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'GÜÇLÜ', statusClass: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60' },
-      { name: 'DÖNEM NET KÂRI', category: 'gelir', isSubtotal: true, q3_24: formatKapMoney(netProfitVal), q4_23: formatKapMoney(netProfitVal * growthFactor23), q3_23: formatKapMoney(netProfitVal * growthFactor23Q3), yoy: yoyStr, isPositive: true, status: 'NET KÂR', statusClass: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60' }
-    ]
-  };
-}
-
-/**
- * Generates or retrieves full institutional financials, ratios, DuPont, Altman-Z,
- * Piotroski, KAP data and projections for ANY of the 1048 BIST companies.
+ * The per-stock object every view reads from. It starts with the KAP registry facts only; every
+ * market or balance-sheet figure stays empty ('—' / 'N/A') until real data fills it in:
+ *   - price, change, ranges, volume: LiveData (Yahoo Finance quotes)
+ *   - ratios, score, model value:    LiveData.applyFundamentals + VerityScore
+ *   - quarterly series, statements:  Statements (KAP-based statements)
  */
 function getOrGenerateStockFinancials(ticker = 'THYAO') {
   const t = (ticker || 'THYAO').toUpperCase().trim();
@@ -892,537 +699,62 @@ function getOrGenerateStockFinancials(ticker = 'THYAO') {
     return _stockFinMemoCache.get(t);
   }
 
-  const raw = getRawCompany(t);
-  const curated = (typeof KAP_CURATED_STOCKS !== 'undefined' && KAP_CURATED_STOCKS[t]) ? KAP_CURATED_STOCKS[t] : null;
-  const utlStock = (typeof UTL_DATA !== 'undefined' && UTL_DATA.stocks && UTL_DATA.stocks[t]) ? UTL_DATA.stocks[t] : null;
-
-  // Base institutional attributes from official KAP records
-  const name = (raw && raw.n) ? raw.n : (curated ? (utlStock ? utlStock.name : `${t} Ticaret ve Sanayi A.Ş.`) : `${t} A.Ş.`);
-  const sector = (raw && raw.sec) ? raw.sec : (utlStock ? utlStock.sector : 'Sanayi & İmalat');
-  const index = (raw && raw.idx) ? raw.idx : (curated ? 'BIST 30' : 'BIST TÜM');
-  const paidCap = (raw && raw.cap) ? raw.cap : '₺500.00 Mn';
-  const paidCapRaw = (raw && raw.capRaw) ? raw.capRaw : 500000000;
-  const capCeil = (raw && raw.ceil) ? raw.ceil : '₺2.00 Mlr';
-  const city = (raw && raw.city) ? raw.city : 'İSTANBUL';
-  const auditor = (raw && raw.aud) ? raw.aud : 'BAĞIMSIZ DENETİM VE SMMM A.Ş.';
-  const mkk = (raw && raw.mkk) ? raw.mkk : '';
-  const kap = (raw && raw.kap) ? raw.kap : '';
-  const cc = (raw && raw.cc) ? raw.cc : '';
-
-  const seed = getStockHash(t);
-  const r1 = pseudoRandom(seed, 1);
-  const r2 = pseudoRandom(seed, 2);
-  const r3 = pseudoRandom(seed, 3);
-  const r4 = pseudoRandom(seed, 4);
-  const r5 = pseudoRandom(seed, 5);
-  const r6 = pseudoRandom(seed, 6);
-
-  if (curated) {
-    const p = curated.priceNum || parseFloat(curated.price.replace(/\./g, '').replace(',', '.'));
-    const isUp = curated.isPositive !== undefined ? curated.isPositive : !curated.change.startsWith('-');
-    const volNum = (paidCapRaw > 1000000000) ? 3500000000 : 1500000000;
-    const roeNum = parseFloat(curated.roe.replace('%', '').replace(',', '.'));
-    const netMarginStr = `%${(roeNum / 2.24).toFixed(2)}`;
-    const fkNum = parseFloat(curated.fk) || 4.0;
-    const pdddNum = parseFloat(curated.pddd) || 1.0;
-    const fdFavokNum = parseFloat(curated.fdFavok) || 3.5;
-    const roaNum = parseFloat((curated.roa || '10').replace('%', '').replace(',', '.')) || 10;
-    const netDebtNum = parseFloat((curated.netDebt || '1.15').replace('x', '')) || 1.15;
-    const changeNum = (isUp ? 1 : -1) * (parseFloat((curated.change || '0').replace(/[^\d.,]/g, '').replace(',', '.')) || 0);
-
-    const curatedObj = {
-      code: t,
-      name: name,
-      symbol: `${t}.IS`,
-      sector: sector,
-      index: index,
-      paidCapital: paidCap,
-      paidCapitalRaw: paidCapRaw,
-      capitalCeiling: capCeil,
-      city: city,
-      auditor: auditor,
-      mkk: mkk,
-      kap: kap,
-      cc: cc,
-      price: curated.price,
-      priceNum: p,
-      change: curated.change,
-      changeAmount: curated.changeAmount || `${isUp ? '+' : '-'}₺${(p * 0.02).toFixed(2)}`,
-      isPositive: isUp,
-      volume: curated.volume || '₺2.50 Mlr',
-      volumeNum: volNum,
-      fk: curated.fk,
-      pddd: curated.pddd,
-      fdFavok: curated.fdFavok,
-      netDebt: curated.netDebt || '1.15x',
-      roe: curated.roe,
-      roa: curated.roa,
-      score: null, // set from the real balance sheet (VerityScore); the curated sample score is not shown
-      scoreStatus: 'Bilanço verisi yok',
-      scorePercentile: '',
-      targetPrice: curated.targetPrice,
-      potential: curated.potential,
-      analystConsensus: curated.analystConsensus,
-      dayLow: curated.dayLow,
-      dayHigh: curated.dayHigh,
-      yearLow: curated.yearLow,
-      yearHigh: curated.yearHigh,
-      quarterly: {
-        periods: ['2023/09', '2023/12', '2024/03', '2024/06', '2024/09'],
-        revenue: curated.qRev,
-        favok: curated.qFav,
-        margin: curated.qMar
-      },
-      annualRevenue: curated.annRev,
-      annualFavok: curated.annFav,
-      netIncome: curated.netInc,
-      altZ: curated.altZ,
-      altZStatus: curated.altZStatus,
-      altZDesc: `${name} operasyonel nakit üretimi ve kaldıraç yapısıyla iflas riski taşımamaktadır.`,
-      pio: curated.pio,
-      pioStatus: 'GÜÇLÜ İYİLEŞME',
-      pioDesc: 'Kârlılık, kaldıraç verimliliği ve operasyonel nakit akışı parametreleri tepe noktada.',
-      dupont: {
-        netMargin: netMarginStr,
-        assetTurnover: '1.12x',
-        leverage: '2.00x',
-        roe: curated.roe
-      },
-      analystSum: curated.analystSum,
-      riskOpp: curated.riskOpp,
-      projections: {
-        chart: {
-          labels: ['23/09', '23/12', '24/03', '24/06', '24/09', '24/12T', '25/03T', '25/06T', '25/09T'],
-          historical: [...curated.qRev, null, null, null, null],
-          projected: [null, null, null, null, curated.qRev[4], Math.round(curated.qRev[4] * 1.12 * 10) / 10, Math.round(curated.qRev[4] * 1.23 * 10) / 10, Math.round(curated.qRev[4] * 1.35 * 10) / 10, Math.round(curated.qRev[4] * 1.48 * 10) / 10]
-        },
-        scenarios: {
-          bull: { price: `₺${(p * 1.45).toFixed(2)}`, potential: '+%45,0', desc: `${name} için yüksek kapasite kullanımı ve pazar payı artışı.` },
-          base: { price: curated.targetPrice, potential: curated.potential, desc: 'Sektörel beklentilere paralel istikrarlı büyüme.' },
-          bear: { price: `₺${(p * 1.08).toFixed(2)}`, potential: '+%8,0', desc: 'Genel makroekonomik dalgalanma ve talep yavaşlaması.' }
-        }
-      },
-      fkNum: fkNum,
-      pdddNum: pdddNum,
-      fdFavokNum: fdFavokNum,
-      roeNum: roeNum,
-      roaNum: roaNum,
-      netDebtNum: netDebtNum,
-      changeNum: changeNum,
-      balanceSheet: buildKapBalanceSheet(t, name, sector, paidCapRaw, p, fkNum, pdddNum, roeNum, seed)
-    };
-    _stockFinMemoCache.set(t, curatedObj);
-    return curatedObj;
-  }
-
-  // Universal deterministic model for all 1048 BIST stocks
-  let p = 14.0 + Math.floor(r1 * 240);
-  if (p < 5) p = 5.20;
-  p = parseFloat((p + r2 * 0.95).toFixed(2));
-
-  const isUp = r3 > 0.40;
-  const chgVal = parseFloat(((r4 * 4.2) + 0.15).toFixed(2));
-  const chgSign = isUp ? '+' : '-';
-  const chgPercentStr = `${chgSign}%${_trFmt2.format(chgVal)}`;
-  const chgAmt = parseFloat((p * (chgVal / 100)).toFixed(2));
-  const chgAmtStr = `${chgSign}₺${_trFmt2.format(chgAmt)}`;
-
-  const volVal = (paidCapRaw > 1000000000) ? (1.2 + r5 * 3.8) : (0.12 + r5 * 1.1);
-  const volStr = `₺${volVal.toFixed(2)} Mlr`;
-
-  let fkVal = 5.0 + (r6 * 14.0);
-  let pdddVal = 0.85 + (r2 * 2.8);
-  let fdFavokVal = 4.2 + (r3 * 8.0);
-  let roeVal = 14.0 + (r4 * 28.0);
-  let roaVal = 5.0 + (r5 * 11.0);
-
-  if (sector.includes('Bankacılık') || sector.includes('Finans')) {
-    fkVal = 3.4 + (r6 * 3.2);
-    pdddVal = 0.75 + (r2 * 0.7);
-    fdFavokVal = 3.2 + (r3 * 2.0);
-    roeVal = 26.0 + (r4 * 16.0);
-    roaVal = 3.2 + (r5 * 2.5);
-  } else if (sector.includes('Savunma') || sector.includes('Teknoloji') || sector.includes('Bilişim')) {
-    fkVal = 14.0 + (r6 * 16.0);
-    pdddVal = 3.5 + (r2 * 5.0);
-    fdFavokVal = 11.0 + (r3 * 8.0);
-    roeVal = 30.0 + (r4 * 25.0);
-    roaVal = 12.0 + (r5 * 12.0);
-  } else if (sector.includes('Gayrimenkul')) {
-    fkVal = 2.8 + (r6 * 4.5);
-    pdddVal = 0.55 + (r2 * 1.2);
-    fdFavokVal = 4.0 + (r3 * 4.0);
-    roeVal = 15.0 + (r4 * 15.0);
-    roaVal = 7.0 + (r5 * 8.0);
-  }
-
-  const fk = fkVal.toFixed(2);
-  const pddd = pdddVal.toFixed(2);
-  const fdFavok = fdFavokVal.toFixed(2);
-  const roe = `%${roeVal.toFixed(1)}`;
-  const roa = `%${roaVal.toFixed(1)}`;
-
-  const score = parseFloat((7.0 + (r1 * 2.5)).toFixed(1));
-  const scoreStatus = score >= 9.0 ? 'Mükemmel Finansal Sağlık & Güçlü Bilanço' :
-                      score >= 8.0 ? 'Dengeli Finansal Yapı & Büyüme Potansiyeli' :
-                      'İzlenmeli & Seçici Portföy Değerlemesi';
-  const scorePercentile = `BIST ${sector.split('&')[0].trim()}: %${Math.floor(65 + r2 * 34)} Diliminde`;
-
-  const targetUpside = 0.25 + (r3 * 0.25);
-  const targetPriceNum = parseFloat((p * (1 + targetUpside)).toFixed(2));
-  const targetPrice = `₺${_trFmt2.format(targetPriceNum)}`;
-  const potential = `+${Math.round(targetUpside * 1000) / 10}% Potansiyel`;
-  const totalAnalysts = 8 + Math.floor(r4 * 12);
-  const buyAnalysts = Math.floor(totalAnalysts * (0.7 + r5 * 0.25));
-  const holdAnalysts = totalAnalysts - buyAnalysts;
-  const analystConsensus = `${totalAnalysts} Analist: ${buyAnalysts} Al, ${holdAnalysts} Tut`;
-
-  const dayLow = `₺${_trFmt2.format(p * (0.975 - r1 * 0.015))}`;
-  const dayHigh = `₺${_trFmt2.format(p * (1.025 + r2 * 0.015))}`;
-  const yearLow = `₺${_trFmt2.format(p * (0.62 + r3 * 0.1))}`;
-  const yearHigh = `₺${_trFmt2.format(p * (1.25 + r4 * 0.25))}`;
-
-  const baseRevUnit = (paidCapRaw / 1000000000) * 1.8 + 4.5 + (r5 * 20.0);
-  const qRev = [
-    parseFloat((baseRevUnit * 0.75).toFixed(1)),
-    parseFloat((baseRevUnit * 0.84).toFixed(1)),
-    parseFloat((baseRevUnit * 0.93).toFixed(1)),
-    parseFloat((baseRevUnit * 1.05).toFixed(1)),
-    parseFloat((baseRevUnit * 1.22).toFixed(1))
-  ];
-  const marRate = (0.15 + r6 * 0.18);
-  const qFav = qRev.map(r => parseFloat((r * marRate).toFixed(1)));
-  const qMar = qRev.map((r, i) => parseFloat(((qFav[i] / r) * 100).toFixed(1)));
-
-  const sumRev = qRev.slice(1).reduce((a, b) => a + b, 0);
-  const sumFav = qFav.slice(1).reduce((a, b) => a + b, 0);
-  const annualRevenue = `₺${sumRev.toFixed(1)} Mlr`;
-  const annualFavok = `₺${sumFav.toFixed(1)} Mlr`;
-  const netIncome = `₺${(sumFav * 0.55).toFixed(1)} Mlr`;
-
-  const altZVal = (sector.includes('Bankacılık') || sector.includes('Finans')) ? 'N/A' : (2.4 + r1 * 2.2).toFixed(2);
-  const altZStatus = (altZVal === 'N/A') ? 'BANKACILIK ÖZEL MODELİ' : (parseFloat(altZVal) >= 2.99 ? 'GÜVENLİ BÖLGE' : 'DENGELİ BÖLGE');
-  const pioScore = 7 + (r2 > 0.45 ? 1 : 0);
-  const pio = `${pioScore} / 9`;
-
-  const netMarginNum = (roeVal / (1.15 * 1.9)).toFixed(2);
-  const dupont = {
-    netMargin: `%${netMarginNum}`,
-    assetTurnover: '1.15x',
-    leverage: '1.90x',
-    roe: roe
-  };
-
-  const analystSum = `${name}, ${sector} sektöründe güçlü operasyonel verimliliği ve son dönem finansal sonuçlarıyla öne çıkmaktadır. Ödenmiş sermayesi (${paidCap}) ve kayıtlı sermaye tavanı (${capCeil}) ile güçlü bir sermaye esnekliğine sahiptir.`;
-  const riskOpp = `${city} merkezli şirket, sektöründeki pazar payı genişleme dinamikleriyle olumlu ayrışmaktadır. Girdi maliyetleri ve faiz ortamı yakından takip edilmelidir.`;
-
+  const raw = getRawCompany(t) || {};
   const finObj = {
     code: t,
-    name: name,
+    name: raw.n || t,
     symbol: `${t}.IS`,
-    sector: sector,
-    index: index,
-    paidCapital: paidCap,
-    paidCapitalRaw: paidCapRaw,
-    capitalCeiling: capCeil,
-    city: city,
-    auditor: auditor,
-    mkk: mkk,
-    kap: kap,
-    cc: cc,
-    price: _trFmt2.format(p),
-    priceNum: p,
-    change: chgPercentStr,
-    changeAmount: chgAmtStr,
-    isPositive: isUp,
-    volume: volStr,
-    volumeNum: volVal * 1000000000,
-    fk: fk,
-    pddd: pddd,
-    fdFavok: fdFavok,
-    netDebt: `${(0.6 + r1 * 1.6).toFixed(2)}x`,
-    roe: roe,
-    roa: roa,
-    score: null, // set from the real balance sheet (VerityScore)
+    sector: raw.sec || '',
+    index: raw.idx || 'BIST TÜM',
+    paidCapital: raw.cap || '—',
+    paidCapitalRaw: raw.capRaw || null,
+    capitalCeiling: raw.ceil || '—',
+    city: raw.city || '—',
+    auditor: raw.aud || '—',
+    mkk: raw.mkk || '',
+    kap: raw.kap || '',
+    cc: raw.cc || '',
+    price: '—',
+    change: '',
+    changeAmount: '',
+    isPositive: true,
+    volume: '—',
+    fk: 'N/A',
+    pddd: 'N/A',
+    fdFavok: 'N/A',
+    netDebt: 'N/A',
+    roe: 'N/A',
+    roa: 'N/A',
+    score: null,
     scoreStatus: 'Bilanço verisi yok',
     scorePercentile: '',
-    targetPrice: targetPrice,
-    potential: potential,
-    analystConsensus: analystConsensus,
-    dayLow: dayLow,
-    dayHigh: dayHigh,
-    yearLow: yearLow,
-    yearHigh: yearHigh,
-    quarterly: {
-      periods: ['2023/09', '2023/12', '2024/03', '2024/06', '2024/09'],
-      revenue: qRev,
-      favok: qFav,
-      margin: qMar
-    },
-    annualRevenue: annualRevenue,
-    annualFavok: annualFavok,
-    netIncome: netIncome,
-    altZ: altZVal,
-    altZStatus: altZStatus,
-    altZDesc: `${name} kısa vadeli işletme sermayesi ve borçluluk rasyoları sektör normları dahilindedir.`,
-    pio: pio,
-    pioStatus: 'GÜÇLÜ İYİLEŞME',
-    pioDesc: 'Kârlılık ve operasyonel nakit akışı rasyoları sağlam seviyededir.',
-    dupont: dupont,
-    analystSum: analystSum,
-    riskOpp: riskOpp,
-    projections: {
-      chart: {
-        labels: ['23/09', '23/12', '24/03', '24/06', '24/09', '24/12T', '25/03T', '25/06T', '25/09T'],
-        historical: [...qRev, null, null, null, null],
-        projected: [null, null, null, null, qRev[4], Math.round(qRev[4] * 1.12 * 10) / 10, Math.round(qRev[4] * 1.24 * 10) / 10, Math.round(qRev[4] * 1.36 * 10) / 10, Math.round(qRev[4] * 1.50 * 10) / 10]
-      },
-      scenarios: {
-        bull: { price: `₺${(p * 1.48).toFixed(2)}`, potential: '+%48,0', desc: `${name} için yeni yatırımlar ve sektör liderliği ivmesi.` },
-        base: { price: targetPrice, potential: potential, desc: 'Dengeli büyüme ve istikrarlı FAVÖK marjı.' },
-        bear: { price: `₺${(p * 1.08).toFixed(2)}`, potential: '+%8,0', desc: 'Genel sektör durgunluğu ve maliyet baskısı.' }
-      }
-    },
-    fkNum: parseFloat(fk),
-    pdddNum: parseFloat(pddd),
-    fdFavokNum: parseFloat(fdFavok),
-    roeNum: parseFloat(roeVal.toFixed(1)),
-    roaNum: parseFloat(roaVal.toFixed(1)),
-    netDebtNum: parseFloat((0.6 + r1 * 1.6).toFixed(2)),
-    changeNum: (isUp ? 1 : -1) * chgVal
+    dayLow: '—',
+    dayHigh: '—',
+    yearLow: '—',
+    yearHigh: '—',
+    quarterly: { periods: [], revenue: [], favok: [], margin: [] },
+    annualRevenue: '—',
+    annualFavok: '—',
+    netIncome: '—',
+    projections: {},
+    balanceSheet: null
   };
-
-  // The balance sheet is only read on the stock detail page, but the overview table
-  // generates financials for all ~1048 stocks; build it on first access instead.
-  let balanceSheet = null;
-  Object.defineProperty(finObj, 'balanceSheet', {
-    enumerable: true,
-    configurable: true,
-    get() {
-      if (!balanceSheet) balanceSheet = buildKapBalanceSheet(t, name, sector, paidCapRaw, p, fkVal, pdddVal, roeVal, seed);
-      return balanceSheet;
-    },
-    set(v) { balanceSheet = v; }
-  });
 
   _stockFinMemoCache.set(t, finObj);
   return finObj;
 }
 
 const MockFinancialApi = {
-  /**
-   * Simulates BIST 100 real-time trend line with timeframe variations.
-   */
+  /** BIST 100 trend from real price history; null when it cannot be fetched. */
   async fetchBistTrend(timeframe = '1G') {
-    if (window.TechData) {
-      try { return await TechData.bist(timeframe); } catch (e) { console.warn('[BIST chart] real history unavailable, using sample:', e.message); }
-    }
-    return this.fetchBistTrendSample(timeframe);
+    if (!window.TechData) return null;
+    try { return await TechData.bist(timeframe); } catch (e) { console.warn('[BIST chart] real history unavailable:', e.message); return null; }
   },
 
-  fetchBistTrendSample(timeframe = '1G') {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const datasets = {
-          '1G': {
-            labels: ['10:00', '11:15', '12:30', '13:45', '15:00', '16:15', '17:30', 'Kapanış'],
-            data: [9310.20, 9345.50, 9330.10, 9385.40, 9360.80, 9405.20, 9390.15, 9420.15],
-            change: '+%1,42'
-          },
-          '1H': {
-            labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Güncel'],
-            data: [9120.0, 9180.5, 9250.2, 9310.0, 9380.4, 9420.15],
-            change: '+%3,29'
-          },
-          '1A': {
-            labels: ['4 Hafta Önce', '3 Hafta Önce', '2 Hafta Önce', 'Geçen Hafta', 'Bu Hafta'],
-            data: [8850.0, 8990.0, 9150.0, 9280.0, 9420.15],
-            change: '+%6,44'
-          },
-          '3A': {
-            labels: ['Ocak', 'Şubat', 'Mart', 'Nisan'],
-            data: [8420.0, 8760.0, 9100.0, 9420.15],
-            change: '+%11,87'
-          },
-          '1Y': {
-            labels: ['2023 Q2', '2023 Q3', '2023 Q4', '2024 Q1', '2024 Q2'],
-            data: [5400.0, 6800.0, 7900.0, 8700.0, 9420.15],
-            change: '+%74,44'
-          },
-          'YBB': {
-            labels: ['Ocak Başı', 'Şubat', 'Mart', 'Nisan', 'Güncel'],
-            data: [7470.0, 8200.0, 8950.0, 9200.0, 9420.15],
-            change: '+%26,10'
-          }
-        };
-        resolve(datasets[timeframe] || datasets['1G']);
-      }, 30);
-    });
-  },
-
-  /**
-   * Generates realistic OHLCV and Technical Indicator series for ANY BIST stock code.
-   */
+  /** OHLCV and indicator series from real price history; null when it cannot be fetched. */
   async fetchTechnicalData(ticker = 'THYAO', timeframe = '1M') {
-    if (window.TechData) {
-      try { return await TechData.stock(ticker, timeframe); } catch (e) { console.warn('[Technical] real history unavailable, using sample:', e.message); }
-    }
-    return this.fetchTechnicalDataSample(ticker, timeframe);
-  },
-
-  fetchTechnicalDataSample(ticker = 'THYAO', timeframe = '1M') {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const fin = getOrGenerateStockFinancials(ticker);
-        const currentPrice = fin.priceNum;
-
-        let pointCount = 28;
-        if (timeframe === '3M') pointCount = 60;
-        if (timeframe === '6M') pointCount = 90;
-        if (timeframe === '1Y') pointCount = 120;
-
-        const dates = [];
-        const prices = [];
-        const opens = [];
-        const highs = [];
-        const lows = [];
-        const sma20 = [];
-        const sma50 = [];
-        const sma200 = [];
-        const bbUpper = [];
-        const bbLower = [];
-        const rsi = [];
-        const macdLine = [];
-        const macdSignal = [];
-        const macdHist = [];
-
-        const seed = getStockHash(ticker);
-        const today = new Date();
-        let runningPrice = currentPrice * 0.88;
-
-        for (let i = pointCount; i >= 0; i--) {
-          const d = new Date(today);
-          d.setDate(d.getDate() - i);
-          const dateStr = d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
-          dates.push(dateStr);
-
-          // Deterministic OHLC random walk: the open is the previous close,
-          // so every stock gets a stable, realistic candlestick series.
-          const rndBody = pseudoRandom(seed, i * 17 + 1);
-          const rndWick = pseudoRandom(seed, i * 17 + 2);
-          const changePercent = (Math.sin(i * 0.3) * 1.15) + ((rndBody - 0.47) * 2.4);
-          const openPrice = parseFloat(runningPrice.toFixed(2));
-          runningPrice = runningPrice * (1 + (changePercent / 100));
-          if (i === 0) runningPrice = currentPrice;
-
-          const p = parseFloat(runningPrice.toFixed(2));
-          const bodyHigh = Math.max(openPrice, p);
-          const bodyLow = Math.min(openPrice, p);
-          const wickUnit = Math.max(p * 0.0035, (bodyHigh - bodyLow) * 0.6);
-          const high = parseFloat((bodyHigh + wickUnit * (0.35 + rndWick * 0.9)).toFixed(2));
-          const low = parseFloat(Math.max(0.01, bodyLow - wickUnit * (0.35 + (1 - rndWick) * 0.9)).toFixed(2));
-
-          opens.push(openPrice);
-          highs.push(Math.max(high, openPrice, p));
-          lows.push(Math.min(low, openPrice, p));
-          prices.push(p);
-
-          const s20 = parseFloat((p * 0.985 + Math.sin(i * 0.2) * (currentPrice * 0.01)).toFixed(2));
-          const s50 = parseFloat((p * 0.965 + Math.cos(i * 0.1) * (currentPrice * 0.015)).toFixed(2));
-          const s200 = parseFloat((p * 0.910).toFixed(2));
-          sma20.push(s20);
-          sma50.push(s50);
-          sma200.push(s200);
-
-          const stdDev = p * 0.035;
-          bbUpper.push(parseFloat((s20 + stdDev * 2).toFixed(2)));
-          bbLower.push(parseFloat((s20 - stdDev * 2).toFixed(2)));
-
-          const rsiVal = parseFloat(Math.min(85, Math.max(25, 52 + (Math.sin(i * 0.4) * 22) + ((Math.random() - 0.5) * 6))).toFixed(1));
-          rsi.push(rsiVal);
-
-          const mVal = parseFloat((Math.sin(i * 0.25) * (currentPrice * 0.015)).toFixed(2));
-          const sigVal = parseFloat((Math.sin(i * 0.25 - 0.4) * (currentPrice * 0.012)).toFixed(2));
-          macdLine.push(mVal);
-          macdSignal.push(sigVal);
-          macdHist.push(parseFloat((mVal - sigVal).toFixed(2)));
-        }
-
-        // Realistic Volume Data (Lot)
-        const volumes = [];
-        const baseVolLot = (fin.paidCapitalRaw > 1000000000) ? 18000000 : 3500000;
-        for (let i = 0; i < prices.length; i++) {
-          const mult = 0.55 + (pseudoRandom(seed, i * 13) * 1.15) + (i === prices.length - 1 ? 0.35 : 0);
-          volumes.push(Math.round(baseVolLot * mult));
-        }
-
-        // Fibonacci Retracement Levels
-        const maxP = Math.max(...prices);
-        const minP = Math.min(...prices);
-        const diffP = maxP - minP;
-        const fib = {
-          f0: maxP,
-          f236: parseFloat((maxP - diffP * 0.236).toFixed(2)),
-          f382: parseFloat((maxP - diffP * 0.382).toFixed(2)),
-          f500: parseFloat((maxP - diffP * 0.500).toFixed(2)),
-          f618: parseFloat((maxP - diffP * 0.618).toFixed(2)),
-          f100: minP
-        };
-
-        // Stochastic Oscillator (%K, %D)
-        const stochK = [];
-        for (let i = 0; i < prices.length; i++) {
-          const window = prices.slice(Math.max(0, i - 13), i + 1);
-          const high = Math.max(...window);
-          const low = Math.min(...window);
-          const k = (high === low) ? 50 : Math.round(((prices[i] - low) / (high - low)) * 100);
-          stochK.push(Math.min(95, Math.max(5, k)));
-        }
-        const stochD = [];
-        for (let i = 0; i < stochK.length; i++) {
-          const windowK = stochK.slice(Math.max(0, i - 2), i + 1);
-          const d = Math.round(windowK.reduce((a, b) => a + b, 0) / windowK.length);
-          stochD.push(d);
-        }
-
-        const patterns = [
-          { name: 'Boğa Bayrağı (Bull Flag)', type: 'Yükseliş Kırılımı', target: `₺${(currentPrice * 1.18).toFixed(2)}`, support: `₺${(currentPrice * 0.94).toFixed(2)}`, reliability: '%88 Yüksek Güvenilirlik', desc: `${fin.name} fiyatı konsolidasyon kanalının üst direncini artan işlem hacmiyle test ediyor. Kırılım durumunda Fibonacci 1.618 hedefi geçerlidir.` },
-          { name: 'Fincan Kulp (Cup & Handle)', type: 'Boğa Kırılımı', target: `₺${(currentPrice * 1.22).toFixed(2)}`, support: `₺${(currentPrice * 0.92).toFixed(2)}`, reliability: '%91 Çok Yüksek Güvenilirlik', desc: `Direnç seviyesinin yukarı kırılmasıyla formasyon tamamlandı. Kulp derinliği kadar yükseliş projeksiyonu hedeflenmektedir.` },
-          { name: 'Yükselen Üçgen (Ascending Triangle)', type: 'Trend Devam Formasyonu', target: `₺${(currentPrice * 1.15).toFixed(2)}`, support: `₺${(currentPrice * 0.95).toFixed(2)}`, reliability: '%84 Yüksek Güvenilirlik', desc: `Yükselen dipler alıcıların giderek daha yüksek seviyelerden piyasaya girdiğini ve yatay direncin aşılmak üzere olduğunu gösterir.` },
-          { name: 'Altın Kesişim (Golden Cross)', type: 'Güçlü Alım Sinyali', target: `₺${(currentPrice * 1.25).toFixed(2)}`, support: `₺${(currentPrice * 0.91).toFixed(2)}`, reliability: '%93 Kurumsal Onay', desc: `50 günlük hareketli ortalama, 200 günlük uzun vadeli ortalamayı yukarı yönlü kesti. Güçlü kurumsal alım döngüsü başlamıştır.` }
-        ];
-        const patternIdx = getStockHash(ticker) % patterns.length;
-
-        resolve({
-          ticker: fin.code,
-          currentPrice: fin.priceNum,
-          changePercent: fin.change,
-          dates,
-          prices,
-          opens,
-          highs,
-          lows,
-          volumes,
-          fib,
-          sma20,
-          sma50,
-          sma200,
-          bbUpper,
-          bbLower,
-          rsi,
-          macd: {
-            line: macdLine,
-            signal: macdSignal,
-            histogram: macdHist
-          },
-          stoch: {
-            k: stochK,
-            d: stochD
-          },
-          pattern: patterns[patternIdx]
-        });
-      }, 30);
-    });
+    if (!window.TechData) return null;
+    try { return await TechData.stock(ticker, timeframe); } catch (e) { console.warn('[Technical] real history unavailable:', e.message); return null; }
   },
 
   /**
@@ -1540,6 +872,15 @@ async function initBistChart() {
   if (!canvas) return;
 
   const data = await MockFinancialApi.fetchBistTrend('1G');
+  if (!data) {
+    const badge = document.getElementById('bistChartBadge');
+    if (badge) { badge.className = 'data-badge sample'; badge.textContent = 'VERİ YOK'; }
+    canvas.style.display = 'none';
+    if (!canvas.parentElement.querySelector('.stmt-msg')) {
+      canvas.parentElement.insertAdjacentHTML('beforeend', '<div class="stmt-msg">BIST 100 fiyat geçmişi şu an alınamadı.</div>');
+    }
+    return;
+  }
   const ctx = canvas.getContext('2d');
   
   // brand cobalt Gradient (#2F6BFF)
@@ -1621,6 +962,7 @@ async function initBistChart() {
 
       const tf = btn.textContent.trim();
       const updated = await MockFinancialApi.fetchBistTrend(tf);
+      if (!updated) { showToast('BIST 100 fiyat geçmişi şu an alınamadı.'); return; }
       if (appState.charts.bist) {
         appState.charts.bist.data.labels = updated.labels;
         appState.charts.bist.data.datasets[0].data = updated.data;
@@ -1729,9 +1071,14 @@ async function initTechnicalCharts(ticker = 'THYAO') {
   const tech = await MockFinancialApi.fetchTechnicalData(ticker, appState.technical.timeframe);
 
   const techNote = document.getElementById('techDataNote');
+  if (!tech) {
+    if (techNote) { techNote.className = 'data-badge sample'; techNote.textContent = 'VERİ ALINAMADI'; }
+    ['techPrice', 'techOsc'].forEach(k => { if (appState.charts[k]) { appState.charts[k].destroy(); appState.charts[k] = null; } });
+    return;
+  }
   if (techNote) {
-    techNote.className = tech.isReal ? 'data-badge live' : 'data-badge sample';
-    techNote.textContent = tech.isReal ? 'GERÇEK GEÇMİŞ VERİ · YAHOO FINANCE · GECİKMELİ' : 'ÖRNEK VERİ';
+    techNote.className = 'data-badge live';
+    techNote.textContent = 'GERÇEK GEÇMİŞ VERİ · YAHOO FINANCE · GECİKMELİ';
   }
 
   // Update DOM Labels in Technical Header
@@ -2625,14 +1972,6 @@ async function initProjectionChart() {
       }
     }
   });
-
-  // Set Scenario Descriptions
-  const bullDesc = document.getElementById('projBullDesc');
-  const baseDesc = document.getElementById('projBaseDesc');
-  const bearDesc = document.getElementById('projBearDesc');
-  if (bullDesc) bullDesc.textContent = proj.scenarios.bull.desc;
-  if (baseDesc) baseDesc.textContent = proj.scenarios.base.desc;
-  if (bearDesc) bearDesc.textContent = proj.scenarios.bear.desc;
 }
 
 /**
@@ -2931,9 +2270,9 @@ async function loadStockDetails(ticker) {
       ? 'px-2 py-0.5 rounded bg-red-950/40 text-red-400 font-mono text-xs font-bold border border-red-800/50' 
       : 'px-2 py-0.5 rounded bg-[#162238] text-slate-300 font-mono text-xs font-bold border border-[#1E2B45]';
   }
-  if (headerPrice) headerPrice.textContent = `₺${fin.price}`;
+  if (headerPrice) headerPrice.textContent = fin.liveTime ? `₺${fin.price}` : '—';
   if (headerChange) {
-    headerChange.textContent = `${fin.change} (${fin.changeAmount})`;
+    headerChange.textContent = fin.liveTime ? `${fin.change} (${fin.changeAmount})` : '';
     headerChange.className = fin.isPositive 
       ? 'text-emerald-400 font-bold text-xs sm:text-sm font-mono' 
       : 'text-rose-400 font-bold text-xs sm:text-sm font-mono';
@@ -2999,14 +2338,6 @@ async function loadStockDetails(ticker) {
   if (annFav) annFav.textContent = annLive ? fin.annualFavok : '—';
   if (netInc) netInc.textContent = annLive ? fin.netIncome : '—';
 
-  // 7. Analyst Research Note
-  const anaSummary = document.getElementById('analystNoteSummary');
-  const anaRisk = document.getElementById('analystNoteRiskOpp');
-  const anaDate = document.getElementById('analystNoteDate');
-  if (anaSummary) anaSummary.textContent = fin.analystSum;
-  if (anaRisk) anaRisk.textContent = fin.riskOpp;
-  if (anaDate) anaDate.textContent = 'ÖRNEK METİN • gerçek analist notu değildir';
-
   // 8. Official KAP Institutional Profile
   const kapTitle = document.getElementById('kapDetailTitle');
   const kapCap = document.getElementById('kapDetailPaidCapital');
@@ -3031,26 +2362,9 @@ async function loadStockDetails(ticker) {
 
   // 10-11. Technical indicator scorecard, consensus and commentary (computed from real bars)
   renderTechScorecard(fin.code);
-  // 12. Quant Projections & DCF Fair Value
-  const projDcf = document.getElementById('projDcfValue');
-  const projPot = document.getElementById('projModelPotential');
-  if (projDcf) projDcf.textContent = fin.targetPrice;
-  if (projPot) projPot.textContent = `▲ ${fin.potential}`;
-
   // 12.5. Render Top 5 Income Statement Items (Gelir Tablosu Özeti)
   renderTop5IncomeItems(fin);
 
-  // 12.6. Render Interactive DCF Sensitivity Matrix (5x5 WACC & Terminal Growth)
-  updateDcfMatrix();
-
-  // 12.7. Render Market Microstructure (Level 2 Depth, AKD, Foreign Custody)
-  if (typeof renderOrderBookDepth === 'function') renderOrderBookDepth(fin.priceNum, true);
-  if (typeof renderAkdAndForeignCustody === 'function') {
-    renderAkdAndForeignCustody(fin);
-  } else {
-    if (typeof renderBrokerageDistribution === 'function') renderBrokerageDistribution(fin);
-    if (typeof renderForeignCustodyAnalysis === 'function') renderForeignCustodyAnalysis(fin);
-  }
 
   // 13. Official KAP Consolidated Balance Sheet & Financial Statements
   renderBalanceSheetTable(fin);
@@ -3076,11 +2390,6 @@ async function loadStockDetails(ticker) {
   // 17. Synchronize Active Sub-Tab and Protected Canvas Sizing
   if (typeof switchStockSubTab === 'function') {
     switchStockSubTab(appState.currentStockSubTab || 'summary');
-  }
-
-  // Charts are built lazily now, so (re)start the live tick engine once they exist
-  if (typeof window.startLiveStockSimulation === 'function') {
-    window.startLiveStockSimulation(appState.currentStock);
   }
 }
 
@@ -3276,48 +2585,6 @@ function computeFinancialYoY(raw24TRY, raw23TRY, currency) {
 }
 
 /**
- * Calculates Net Monetary Position Gain / (Loss) under TMS 29 (IAS 29)
- */
-function computeMonetaryGain(fin) {
-  if (!fin || !fin.balanceSheet || !fin.balanceSheet.summary) {
-    return { amountTRY: 14800000000, ratio: '21.6', isGain: true, note: 'Net parasal borçlanma enflasyon kârı' };
-  }
-
-  if (fin.code === 'THYAO') {
-    return {
-      amountTRY: 14800000000,
-      ratio: '21.6',
-      isGain: true,
-      note: 'Net parasal borçlanma enflasyon kârı'
-    };
-  }
-
-  const netIncomeTRY = parseKapItemTRY(fin.balanceSheet.summary.netIncome) || 45000000000;
-  const isBank = (fin.sector || '').includes('Bankacılık') || (fin.sector || '').includes('Finans');
-  const seed = getStockHash(fin.code || 'THYAO');
-
-  if (isBank) {
-    const lossRate = 0.22 + ((seed % 8) * 0.012);
-    const lossTRY = -Math.abs(netIncomeTRY * lossRate);
-    return {
-      amountTRY: lossTRY,
-      ratio: (lossRate * 100).toFixed(1),
-      isGain: false,
-      note: 'Net parasal varlık enflasyon kaybı'
-    };
-  } else {
-    const gainRate = 0.16 + ((seed % 7) * 0.014);
-    const gainTRY = Math.abs(netIncomeTRY * gainRate);
-    return {
-      amountTRY: gainTRY,
-      ratio: (gainRate * 100).toFixed(1),
-      isGain: true,
-      note: 'Net parasal borçlanma enflasyon kârı'
-    };
-  }
-}
-
-/**
  * Toggles Balance Sheet Currency / Accounting Standard:
  * - 'nominal': Reported Historical TL (₺)
  * - 'usd': US Dollar ($) with TCMB quarterly exchange rates
@@ -3357,589 +2624,6 @@ function renderTop5IncomeItems(fin) {
 function renderBalanceSheetTable(fin) {
   if (window.Statements && fin) Statements.show(fin);
 }
-/* ==============================================================================
-   6. Interactive DCF Sensitivity Matrix Engine (5x5 WACC & Terminal Growth)
-   ============================================================================== */
-
-/**
- * Calculates and updates the 5x5 DCF Sensitivity Matrix, fair value, and upside %
- */
-function updateDcfMatrix() {
-  const waccInput = document.getElementById('dcfWaccSlider');
-  const termInput = document.getElementById('dcfTerminalSlider');
-  const waccValEl = document.getElementById('dcfWaccVal');
-  const termValEl = document.getElementById('dcfTerminalVal');
-  const currentPriceEl = document.getElementById('dcfCurrentPriceDisplay');
-  const intrinsicValEl = document.getElementById('dcfIntrinsicVal');
-  const upsideValEl = document.getElementById('dcfUpsideVal');
-  const theadEl = document.getElementById('dcfMatrixThead');
-  const tbodyEl = document.getElementById('dcfMatrixTbody');
-  const insightEl = document.getElementById('dcfMatrixInsight');
-
-  if (!waccInput || !termInput || !theadEl || !tbodyEl) return;
-
-  const currentWacc = parseFloat(waccInput.value) || 22.0;
-  const currentTerm = parseFloat(termInput.value) || 5.50;
-
-  if (waccValEl) waccValEl.textContent = `%${currentWacc.toFixed(1)}`;
-  if (termValEl) termValEl.textContent = `%${currentTerm.toFixed(2)}`;
-
-  // Determine current market price
-  let currentPrice = 312.50;
-  if (appState.currentCompanyData && appState.currentCompanyData.priceNum) {
-    currentPrice = appState.currentCompanyData.priceNum;
-  } else {
-    const pEl = document.getElementById('stockDetailPrice');
-    if (pEl) {
-      const parsed = parseFloat(pEl.textContent.replace(/[^0-9,-]+/g, '').replace(',', '.'));
-      if (parsed > 0) currentPrice = parsed;
-    }
-  }
-
-  if (currentPriceEl) {
-    currentPriceEl.textContent = `₺${currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-
-  // Core Gordon Growth DCF Valuation Calculation
-  // Calibrated so that at WACC=22.0% and g=5.5%, intrinsic upside is approx +34.4% (Verity baseline)
-  const calcIntrinsic = (w, g) => {
-    const spread = Math.max(0.015, (w - g) / 100);
-    const k = 0.2102; // Calibrated normalization constant: 1.344 * (0.22 - 0.055) / 1.055
-    const fairVal = currentPrice * ((k * (1 + (g / 100))) / spread);
-    const upside = ((fairVal - currentPrice) / currentPrice) * 100;
-    return { fairVal: Math.max(currentPrice * 0.15, fairVal), upside };
-  };
-
-  // Calculate Base Case (Active Slider Values)
-  const baseCase = calcIntrinsic(currentWacc, currentTerm);
-  if (intrinsicValEl) {
-    intrinsicValEl.textContent = `₺${baseCase.fairVal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-  if (upsideValEl) {
-    const sign = baseCase.upside >= 0 ? '+' : '';
-    upsideValEl.textContent = `${sign}%${baseCase.upside.toFixed(1).replace('.', ',')}`;
-    upsideValEl.className = baseCase.upside >= 0
-      ? 'font-bold text-emerald-400 text-sm font-mono'
-      : 'font-bold text-rose-400 text-sm font-mono';
-  }
-
-  // Build 5 Discrete Columns (Terminal Growth g) centered around currentTerm
-  const colOffsets = [-1.0, -0.5, 0.0, 0.5, 1.0];
-  const gColumns = colOffsets.map(off => {
-    return Math.max(2.0, Math.min(10.0, +(currentTerm + off).toFixed(2)));
-  });
-
-  // Build 5 Discrete Rows (WACC) centered around currentWacc
-  const rowOffsets = [-2.0, -1.0, 0.0, 1.0, 2.0];
-  const wRows = rowOffsets.map(off => {
-    return Math.max(15.0, Math.min(35.0, +(currentWacc + off).toFixed(1)));
-  });
-
-  // 1. Render Table Header
-  theadEl.innerHTML = `
-    <tr class="bg-[#090D18] text-slate-400 font-mono text-[11px] border-b border-[#1E2B45]">
-      <th class="py-2.5 px-3 text-left font-bold text-slate-300 uppercase">
-        <span class="text-red-400">WACC \\ Uç (g)</span>
-      </th>
-      ${gColumns.map((g, idx) => `
-        <th class="py-2.5 px-2 font-bold ${idx === 2 ? 'text-emerald-400 bg-emerald-950/30 border-x border-emerald-800/40' : 'text-slate-300'}">
-          %${g.toFixed(2)}${idx === 2 ? ' <span class="text-[9px] text-emerald-400">(Baz)</span>' : ''}
-        </th>
-      `).join('')}
-    </tr>
-  `;
-
-  // 2. Render Table Body (5x5 Cells)
-  tbodyEl.innerHTML = wRows.map((w, rIdx) => {
-    const isBaseRow = (rIdx === 2);
-    return `
-      <tr class="hover:bg-[#121C30]/50 transition-colors border-b border-[#162238]/60">
-        <td class="py-2.5 px-3 font-mono font-bold text-left text-xs ${isBaseRow ? 'text-red-400 bg-red-950/30 border-y border-red-800/40' : 'text-slate-300'}">
-          %${w.toFixed(1)}${isBaseRow ? ' <span class="text-[9px] text-red-400">(Baz)</span>' : ''}
-        </td>
-        ${gColumns.map((g, cIdx) => {
-          const isBaseCell = (rIdx === 2 && cIdx === 2);
-          const cellResult = calcIntrinsic(w, g);
-          const valFormatted = `₺${cellResult.fairVal.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
-          const sign = cellResult.upside >= 0 ? '+' : '';
-          const upFormatted = `${sign}%${cellResult.upside.toFixed(1).replace('.', ',')}`;
-
-          let cellBg = '';
-          let pillClass = '';
-          if (cellResult.upside >= 25) {
-            cellBg = 'bg-emerald-950/40 text-emerald-300';
-            pillClass = 'text-emerald-400 font-bold';
-          } else if (cellResult.upside >= 0) {
-            cellBg = 'bg-red-950/30 text-red-200';
-            pillClass = 'text-red-400 font-bold';
-          } else {
-            cellBg = 'bg-rose-950/30 text-rose-300';
-            pillClass = 'text-rose-400 font-bold';
-          }
-
-          if (isBaseCell) {
-            cellBg = 'bg-red-900/60 text-white ring-2 ring-red-500 shadow-[0_0_15px_rgba(47,107,255,0.55)] relative font-black';
-          }
-
-          return `
-            <td onclick="selectDcfCell(${w}, ${g})" class="py-2 px-2 cursor-pointer transition-all hover:scale-[1.03] ${cellBg} ${isBaseCell ? 'z-10' : ''}">
-              <div class="font-mono text-xs font-bold leading-tight">${valFormatted}</div>
-              <div class="font-mono text-[10px] mt-0.5 ${pillClass}">${upFormatted}</div>
-              ${isBaseCell ? '<span class="absolute top-1 right-1 text-[8px] bg-[#2F6BFF] text-white font-extrabold px-1 rounded shadow">BAZ</span>' : ''}
-            </td>
-          `;
-        }).join('')}
-      </tr>
-    `;
-  }).join('');
-
-  // 3. Dynamic Sensitivity Insight Note
-  if (insightEl) {
-    const waccPlus1 = calcIntrinsic(currentWacc + 1.0, currentTerm);
-    const waccDelta = (((waccPlus1.fairVal - baseCase.fairVal) / baseCase.fairVal) * 100).toFixed(1);
-    const termPlus05 = calcIntrinsic(currentWacc, currentTerm + 0.5);
-    const termDelta = (((termPlus05.fairVal - baseCase.fairVal) / baseCase.fairVal) * 100).toFixed(1);
-
-    insightEl.innerHTML = `
-      <strong class="text-white">Duyarlılık Analizi:</strong> WACC %1,0 arttığında içsel değer <strong class="text-rose-400">%${waccDelta}</strong> değişmektedir. Uç büyüme %0,5 arttığında içsel değer <strong class="text-emerald-400">+%${termDelta}</strong> yükselmektedir.
-    `;
-  }
-}
-
-function selectDcfCell(w, g) {
-  const waccInput = document.getElementById('dcfWaccSlider');
-  const termInput = document.getElementById('dcfTerminalSlider');
-  if (waccInput) waccInput.value = w;
-  if (termInput) termInput.value = g;
-  updateDcfMatrix();
-}
-
-function resetDcfSliders() {
-  const waccInput = document.getElementById('dcfWaccSlider');
-  const termInput = document.getElementById('dcfTerminalSlider');
-  if (waccInput) waccInput.value = 22.0;
-  if (termInput) termInput.value = 5.50;
-  updateDcfMatrix();
-  if (typeof showToast === 'function') {
-    showToast('İNA duyarlılık parametreleri varsayılan seviyeye (%22.0 WACC / %5.50 Büyüme) sıfırlandı.');
-  }
-}
-
-// Backwards compatibility aliases
-function updateSimulation() {
-  updateDcfMatrix();
-}
-
-function resetSimulation() {
-  resetDcfSliders();
-}
-
-/* ==============================================================================
-   6.1. Borsa İstanbul Market Microstructure Engine
-   - 10 Kademe Canlı Emir Defteri Derinliği (Level 2 Order Book Depth)
-   - Aracı Kurum Dağılımı (Brokerage Distribution - AKD)
-   - Yabancı Takas & MKK Saklama Analizi (Foreign Custody Analysis)
-   ============================================================================== */
-
-const l2DepthState = {
-  bidLots: [],
-  askLots: [],
-  bidOrders: [],
-  askOrders: [],
-  initializedFor: null
-};
-
-/**
- * 1. 10 Kademe Emir Defteri Derinliği (Level 2 Depth)
- * Computes official BIST tick steps, bid/ask depth volume, spread, and imbalance %
- */
-function renderOrderBookDepth(currentPrice, isUp) {
-  const tbody = document.getElementById('depthTableBody');
-  if (!tbody) return;
-
-  const sym = appState.currentStock || 'THYAO';
-  const p = currentPrice || 312.50;
-  
-  // Official BIST Tick Size
-  const tickSize = (typeof getBistTickSize === 'function')
-    ? getBistTickSize(p)
-    : (window.oaMicroTickEngine ? window.oaMicroTickEngine.getTickSize(p) : (p < 20 ? 0.01 : p < 50 ? 0.02 : p < 100 ? 0.05 : 0.10));
-
-  // Initialize or reseed baseline lot distribution on stock switch
-  if (l2DepthState.initializedFor !== sym || !l2DepthState.bidLots.length) {
-    l2DepthState.initializedFor = sym;
-    l2DepthState.bidLots = [];
-    l2DepthState.askLots = [];
-    l2DepthState.bidOrders = [];
-    l2DepthState.askOrders = [];
-
-    const baseLot = Math.round(Math.max(12000, 4800000 / Math.max(1, p)));
-    for (let i = 0; i < 10; i++) {
-      const mult = (1 - (i * 0.04)) + ((i % 3) * 0.12);
-      l2DepthState.bidLots.push(Math.round(baseLot * mult * (0.85 + Math.random() * 0.35)));
-      l2DepthState.askLots.push(Math.round(baseLot * mult * (0.80 + Math.random() * 0.35)));
-      l2DepthState.bidOrders.push(Math.round(45 + (i * 12) + (Math.random() * 25)));
-      l2DepthState.askOrders.push(Math.round(38 + (i * 11) + (Math.random() * 22)));
-    }
-  } else {
-    // Dynamic live micro-tick fluctuation: 2-3 levels oscillate on each tick
-    for (let k = 0; k < 3; k++) {
-      const idx = Math.floor(Math.random() * 10);
-      const deltaFactor = 1 + ((Math.random() - 0.49) * 0.055);
-      l2DepthState.bidLots[idx] = Math.max(500, Math.round(l2DepthState.bidLots[idx] * deltaFactor));
-      l2DepthState.askLots[idx] = Math.max(500, Math.round(l2DepthState.askLots[idx] * deltaFactor));
-    }
-  }
-
-  // Generate 10 Bid & 10 Ask Prices
-  const bids = [];
-  const asks = [];
-  for (let i = 0; i < 10; i++) {
-    bids.push(Math.max(tickSize, +(p - (i * tickSize)).toFixed(2)));
-    asks.push(+(p + ((i + 1) * tickSize)).toFixed(2));
-  }
-
-  let totalBidLots = 0;
-  let totalAskLots = 0;
-  let maxLot = 1;
-
-  for (let i = 0; i < 10; i++) {
-    totalBidLots += l2DepthState.bidLots[i];
-    totalAskLots += l2DepthState.askLots[i];
-    if (l2DepthState.bidLots[i] > maxLot) maxLot = l2DepthState.bidLots[i];
-    if (l2DepthState.askLots[i] > maxLot) maxLot = l2DepthState.askLots[i];
-  }
-
-  // Imbalance calculation
-  const totalVolume = Math.max(1, totalBidLots + totalAskLots);
-  const bidRatio = (totalBidLots / totalVolume) * 100;
-  const askRatio = 100 - bidRatio;
-
-  const bidImbalanceEl = document.getElementById('depthBidImbalancePct');
-  const askImbalanceEl = document.getElementById('depthAskImbalancePct');
-  const totalBidVolEl = document.getElementById('depthTotalBidVolume');
-  const totalAskVolEl = document.getElementById('depthTotalAskVolume');
-  const imbalanceBarEl = document.getElementById('depthImbalanceBar');
-  const spreadBadgeEl = document.getElementById('depthSpreadBadge');
-  const sumBidsEl = document.getElementById('depthSummaryBids');
-  const sumAsksEl = document.getElementById('depthSummaryAsks');
-  const tickStepEl = document.getElementById('depthTickStepBadge');
-
-  if (bidImbalanceEl) bidImbalanceEl.textContent = bidRatio.toFixed(1).replace('.', ',');
-  if (askImbalanceEl) askImbalanceEl.textContent = askRatio.toFixed(1).replace('.', ',');
-  if (totalBidVolEl) totalBidVolEl.textContent = totalBidLots.toLocaleString('tr-TR');
-  if (totalAskVolEl) totalAskVolEl.textContent = totalAskLots.toLocaleString('tr-TR');
-  if (imbalanceBarEl) imbalanceBarEl.style.width = `${bidRatio.toFixed(1)}%`;
-
-  if (spreadBadgeEl) {
-    const spreadPct = (tickSize / p) * 100;
-    spreadBadgeEl.textContent = `Makas: ₺${tickSize.toFixed(2)} (%${spreadPct.toFixed(2).replace('.', ',')})`;
-  }
-
-  if (tickStepEl) tickStepEl.textContent = `Adım: ₺${tickSize.toFixed(2)}`;
-  if (sumBidsEl) {
-    const bidMln = (totalBidLots * p) / 1e6;
-    sumBidsEl.textContent = `Top. Alış: ${(totalBidLots / 1e6).toFixed(2)}M Lot (₺${bidMln.toFixed(1)}M)`;
-  }
-  if (sumAsksEl) {
-    const askMln = (totalAskLots * p) / 1e6;
-    sumAsksEl.textContent = `Top. Satış: ${(totalAskLots / 1e6).toFixed(2)}M Lot (₺${askMln.toFixed(1)}M)`;
-  }
-
-  // Render Table Rows with visual depth bars
-  tbody.innerHTML = bids.map((bPrice, i) => {
-    const aPrice = asks[i];
-    const bLot = l2DepthState.bidLots[i];
-    const aLot = l2DepthState.askLots[i];
-    const bOrder = l2DepthState.bidOrders[i];
-    const aOrder = l2DepthState.askOrders[i];
-
-    const bPct = Math.min(100, Math.round((bLot / maxLot) * 100));
-    const aPct = Math.min(100, Math.round((aLot / maxLot) * 100));
-    const isBestLevel = (i === 0);
-
-    return `
-      <tr class="hover:bg-[#121C30]/70 transition-colors border-b border-[#162238]/60 relative text-[11px]">
-        <td class="py-1 px-2 text-left text-slate-500 font-mono relative z-10 w-10">${bOrder}</td>
-        
-        <td class="py-1 px-2 text-right font-mono text-emerald-400 font-bold relative z-10 w-24">
-          ${bLot.toLocaleString('tr-TR')}
-        </td>
-
-        <td class="py-1 px-2 text-right font-mono font-extrabold text-white relative z-10 w-24 ${isBestLevel ? 'text-emerald-300' : ''}">
-          ₺${bPrice.toFixed(2).replace('.', ',')}
-          <div class="absolute right-0 top-0 bottom-0 bg-emerald-500/15 pointer-events-none transition-all duration-300" style="width: ${bPct}%;"></div>
-        </td>
-
-        <td class="py-1 px-2 text-left font-mono font-extrabold text-white relative z-10 w-24 border-l border-[#1E2B45] ${isBestLevel ? 'text-rose-300' : ''}">
-          ₺${aPrice.toFixed(2).replace('.', ',')}
-          <div class="absolute left-0 top-0 bottom-0 bg-rose-500/15 pointer-events-none transition-all duration-300" style="width: ${aPct}%;"></div>
-        </td>
-
-        <td class="py-1 px-2 text-left font-mono text-rose-400 font-bold relative z-10 w-24">
-          ${aLot.toLocaleString('tr-TR')}
-        </td>
-
-        <td class="py-1 px-2 text-right text-slate-500 font-mono relative z-10 w-10">${aOrder}</td>
-      </tr>
-    `;
-  }).join('');
-}
-
-/**
- * 2. Aracı Kurum Dağılımı (Brokerage Distribution - AKD)
- * Renders Top 5 Net Buyers vs Top 5 Net Sellers with costs, shares, and concentration (CR5)
- */
-function renderBrokerageDistribution(fin) {
-  const buyersTbody = document.getElementById('akdBuyersTbody');
-  const sellersTbody = document.getElementById('akdSellersTbody');
-  if (!buyersTbody || !sellersTbody) return;
-
-  const f = (fin && typeof fin === 'object') ? fin : (appState.currentCompanyData || getOrGenerateStockFinancials(fin || 'THYAO'));
-  const p = (f && f.priceNum) ? f.priceNum : 312.50;
-  const seed = getStockHash(f.code || 'THYAO');
-
-  // Deterministik Aracı Kurum Havuzları (BofA, İş, Yapı Kredi, HSBC, Ünlü Menkul vb.)
-  const institutionalBrokers = [
-    { name: 'Bank of America', code: 'BOFA', baseShare: 32.4, costOffset: -0.0012 },
-    { name: 'İş Yatırım', code: 'ISY', baseShare: 19.8, costOffset: 0.0008 },
-    { name: 'Yapı Kredi Yatırım', code: 'YKY', baseShare: 14.5, costOffset: 0.0014 },
-    { name: 'HSBC Yatırım', code: 'HSBC', baseShare: 12.0, costOffset: -0.0018 },
-    { name: 'Ünlü Menkul Değerler', code: 'UNLU', baseShare: 8.6, costOffset: -0.0005 },
-    { name: 'QNB Finansinvest', code: 'QNB', baseShare: 7.2, costOffset: -0.0008 },
-    { name: 'Oyak Yatırım', code: 'OYK', baseShare: 6.5, costOffset: 0.0006 }
-  ];
-
-  const sellerBrokersPool = [
-    { name: 'Garanti BBVA Yatırım', code: 'GAR', baseShare: 26.5, costOffset: 0.0015 },
-    { name: 'Ak Yatırım', code: 'AKY', baseShare: 19.4, costOffset: 0.0005 },
-    { name: 'Deniz Yatırım', code: 'DNZ', baseShare: 14.8, costOffset: 0.0022 },
-    { name: 'Vakıf Yatırım', code: 'VAK', baseShare: 11.2, costOffset: 0.0008 },
-    { name: 'TEB Yatırım', code: 'TEB', baseShare: 8.5, costOffset: 0.0011 },
-    { name: 'Ziraat Yatırım', code: 'ZRT', baseShare: 7.0, costOffset: 0.0004 },
-    { name: 'Gedik Yatırım', code: 'GDK', baseShare: 6.0, costOffset: 0.0016 }
-  ];
-
-  // Hisseye özel deterministik kurum sıralaması
-  const buyerOffset = seed % 3;
-  const buyersList = institutionalBrokers.slice(buyerOffset, buyerOffset + 5);
-  while (buyersList.length < 5) buyersList.push(institutionalBrokers[buyersList.length]);
-
-  const sellerOffset = (seed + 2) % 3;
-  const sellersList = sellerBrokersPool.slice(sellerOffset, sellerOffset + 5);
-  while (sellersList.length < 5) sellersList.push(sellerBrokersPool[sellersList.length]);
-
-  const totalSessionLot = Math.round(Math.max(80000, 850000000 / Math.max(1, p)));
-
-  // Normalize Buyer Shares to ~80% CR5
-  const sumB = buyersList.reduce((acc, b) => acc + b.baseShare, 0);
-  buyersList.forEach(b => {
-    b.share = +((b.baseShare / sumB) * 81.4).toFixed(1);
-  });
-  const cr5Buyers = +buyersList.reduce((acc, b) => acc + b.share, 0).toFixed(1);
-  const otherBuyersShare = +(100 - cr5Buyers).toFixed(1);
-
-  const buyerRows = buyersList.map(b => {
-    const lot = Math.round(totalSessionLot * (b.share / 100));
-    const cost = +(p * (1 + b.costOffset)).toFixed(2);
-    return { ...b, lot, cost };
-  });
-  const otherBuyerLot = Math.round(totalSessionLot * (otherBuyersShare / 100));
-  const otherBuyerCost = +(p * 1.0002).toFixed(2);
-
-  // Normalize Seller Shares to ~78% CR5
-  const sumS = sellersList.reduce((acc, s) => acc + s.baseShare, 0);
-  sellersList.forEach(s => {
-    s.share = +((s.baseShare / sumS) * 78.2).toFixed(1);
-  });
-  const cr5Sellers = +sellersList.reduce((acc, s) => acc + s.share, 0).toFixed(1);
-  const otherSellersShare = +(100 - cr5Sellers).toFixed(1);
-
-  const sellerRows = sellersList.map(s => {
-    const lot = Math.round(totalSessionLot * 0.94 * (s.share / 100));
-    const cost = +(p * (1 + s.costOffset)).toFixed(2);
-    return { ...s, lot, cost };
-  });
-  const otherSellerLot = Math.round(totalSessionLot * 0.94 * (otherSellersShare / 100));
-  const otherSellerCost = +(p * 1.0005).toFixed(2);
-
-  // Render Buyers Table
-  buyersTbody.innerHTML = `
-    ${buyerRows.map(b => `
-      <tr class="hover:bg-[#121C30]/50 transition-colors">
-        <td class="py-1.5 px-2 font-medium text-slate-200 flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span class="truncate" title="${b.name}">${b.name}</span>
-        </td>
-        <td class="py-1.5 px-1.5 text-right font-bold text-emerald-400">+${b.lot.toLocaleString('tr-TR')}</td>
-        <td class="py-1.5 px-1.5 text-right text-slate-300">₺${b.cost.toFixed(2).replace('.', ',')}</td>
-        <td class="py-1.5 px-1.5 text-right">
-          <div class="flex items-center justify-end gap-1.5">
-            <span class="font-bold text-emerald-300">%${b.share.toFixed(1).replace('.', ',')}</span>
-            <div class="w-8 h-1 rounded-full bg-emerald-950 overflow-hidden hidden sm:block">
-              <div class="h-full bg-emerald-400" style="width: ${(b.share / 40) * 100}%"></div>
-            </div>
-          </div>
-        </td>
-      </tr>
-    `).join('')}
-    <!-- Diğer Alıcılar -->
-    <tr class="bg-[#090D18]/80 text-slate-400 border-t border-[#1E2B45]">
-      <td class="py-1.5 px-2 font-medium flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-        <span>Diğer Alıcılar</span>
-      </td>
-      <td class="py-1.5 px-1.5 text-right font-medium text-emerald-400/80">+${otherBuyerLot.toLocaleString('tr-TR')}</td>
-      <td class="py-1.5 px-1.5 text-right text-slate-400">₺${otherBuyerCost.toFixed(2).replace('.', ',')}</td>
-      <td class="py-1.5 px-1.5 text-right font-bold text-slate-400">%${otherBuyersShare.toFixed(1).replace('.', ',')}</td>
-    </tr>
-  `;
-
-  // Render Sellers Table
-  sellersTbody.innerHTML = `
-    ${sellerRows.map(s => `
-      <tr class="hover:bg-[#121C30]/50 transition-colors">
-        <td class="py-1.5 px-2 font-medium text-slate-200 flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-          <span class="truncate" title="${s.name}">${s.name}</span>
-        </td>
-        <td class="py-1.5 px-1.5 text-right font-bold text-rose-400">-${s.lot.toLocaleString('tr-TR')}</td>
-        <td class="py-1.5 px-1.5 text-right text-slate-300">₺${s.cost.toFixed(2).replace('.', ',')}</td>
-        <td class="py-1.5 px-1.5 text-right">
-          <div class="flex items-center justify-end gap-1.5">
-            <span class="font-bold text-rose-300">%${s.share.toFixed(1).replace('.', ',')}</span>
-            <div class="w-8 h-1 rounded-full bg-rose-950 overflow-hidden hidden sm:block">
-              <div class="h-full bg-rose-400" style="width: ${(s.share / 40) * 100}%"></div>
-            </div>
-          </div>
-        </td>
-      </tr>
-    `).join('')}
-    <!-- Diğer Satıcılar -->
-    <tr class="bg-[#090D18]/80 text-slate-400 border-t border-[#1E2B45]">
-      <td class="py-1.5 px-2 font-medium flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-        <span>Diğer Satıcılar</span>
-      </td>
-      <td class="py-1.5 px-1.5 text-right font-medium text-rose-400/80">-${otherSellerLot.toLocaleString('tr-TR')}</td>
-      <td class="py-1.5 px-1.5 text-right text-slate-400">₺${otherSellerCost.toFixed(2).replace('.', ',')}</td>
-      <td class="py-1.5 px-1.5 text-right font-bold text-slate-400">%${otherSellersShare.toFixed(1).replace('.', ',')}</td>
-    </tr>
-  `;
-
-  // Update Headers & Footers
-  const cr5Badge = document.getElementById('akdCr5Badge') || document.getElementById('akdConcentrationBadge');
-  const buyersShareEl = document.getElementById('akdBuyersTotalShare') || document.getElementById('akdNetBuyersTotal');
-  const sellersShareEl = document.getElementById('akdSellersTotalShare') || document.getElementById('akdNetSellersTotal');
-  const netFlowEl = document.getElementById('akdNetCashFlow');
-  const leaderEl = document.getElementById('akdTopBrokerLeader');
-
-  if (cr5Badge) cr5Badge.textContent = `CR5 Yoğunlaşma: %${cr5Buyers.toFixed(1).replace('.', ',')}`;
-  if (buyersShareEl) buyersShareEl.textContent = `%${cr5Buyers.toFixed(1).replace('.', ',')} Pay`;
-  if (sellersShareEl) sellersShareEl.textContent = `%${cr5Sellers.toFixed(1).replace('.', ',')} Pay`;
-
-  const netLot = totalSessionLot - Math.round(totalSessionLot * 0.94);
-  const netMlnTL = (netLot * p) / 1e6;
-  if (netFlowEl) {
-    netFlowEl.textContent = `+₺${netMlnTL.toFixed(1).replace('.', ',')} Mn (Net Para Girişi)`;
-  }
-  if (leaderEl) {
-    leaderEl.textContent = `Lider Alıcı: ${buyerRows[0].name} (%${buyerRows[0].share.toFixed(1).replace('.', ',')})`;
-  }
-}
-
-/**
- * 2.5. Combined Market Microstructure (AKD & Foreign Custody) Initializer
- * Populates #akdBuyersTbody, #akdSellersTbody, foreign custody metrics, and summary badges.
- */
-function renderAkdAndForeignCustody(symbol) {
-  const fin = (symbol && typeof symbol === 'object')
-    ? symbol
-    : (appState.currentCompanyData || getOrGenerateStockFinancials(symbol || appState.currentStock || 'THYAO'));
-  
-  renderBrokerageDistribution(fin);
-  renderForeignCustodyAnalysis(fin);
-}
-window.renderAkdAndForeignCustody = renderAkdAndForeignCustody;
-window.renderBrokerageDistribution = renderBrokerageDistribution;
-
-/**
- * 3. Yabancı Takas Analizi (Foreign Custody Analysis - MKK)
- * Calculates Citibank & Deutsche Bank foreign custody ratios, 30-day change & trend
- */
-function renderForeignCustodyAnalysis(fin) {
-  const code = (fin && fin.code) ? fin.code : 'THYAO';
-  const seed = getStockHash(code);
-
-  const totalEl = document.getElementById('foreignTotalRatio');
-  const deltaEl = document.getElementById('foreignMonthlyDelta');
-  const citiRatioEl = document.getElementById('foreignCitiRatio');
-  const citiLotsEl = document.getElementById('foreignCitiLots');
-  const citiDeltaEl = document.getElementById('foreignCitiDelta');
-  const deutRatioEl = document.getElementById('foreignDeutRatio');
-  const deutLotsEl = document.getElementById('foreignDeutLots');
-  const deutDeltaEl = document.getElementById('foreignDeutDelta');
-  const monthlyFlowEl = document.getElementById('foreignMonthlyFlow');
-  const weeklyFlowEl = document.getElementById('foreignWeeklyFlow');
-  const badgeEl = document.getElementById('foreignTrendBadge');
-  const commEl = document.getElementById('foreignAnalysisCommentary');
-
-  let foreignRatio = 38.45;
-  let monthlyDelta = 2.15;
-  if (code !== 'THYAO') {
-    foreignRatio = +(30.0 + ((seed % 18) * 0.85)).toFixed(2);
-    monthlyDelta = +(0.8 + ((seed % 9) * 0.28)).toFixed(2);
-  }
-
-  const citiShare = +(foreignRatio * 0.645).toFixed(2);
-  const deutShare = +(foreignRatio * 0.264).toFixed(2);
-
-  const totalPaidCap = (fin && fin.paidCapitalRaw) ? fin.paidCapitalRaw : 1380000000;
-  const citiLots = Math.round(totalPaidCap * (citiShare / 100));
-  const deutLots = Math.round(totalPaidCap * (deutShare / 100));
-
-  if (totalEl) totalEl.textContent = `%${foreignRatio.toFixed(2).replace('.', ',')}`;
-  if (deltaEl) deltaEl.textContent = `+%${monthlyDelta.toFixed(2).replace('.', ',')} Artış`;
-  if (citiRatioEl) citiRatioEl.textContent = `%${citiShare.toFixed(2).replace('.', ',')}`;
-  if (citiLotsEl) citiLotsEl.textContent = `${citiLots.toLocaleString('tr-TR')} Lot`;
-  if (citiDeltaEl) citiDeltaEl.textContent = '+%1,40 (30G)';
-  if (deutRatioEl) deutRatioEl.textContent = `%${deutShare.toFixed(2).replace('.', ',')}`;
-  if (deutLotsEl) deutLotsEl.textContent = `${deutLots.toLocaleString('tr-TR')} Lot`;
-  if (deutDeltaEl) deutDeltaEl.textContent = '+%0,65 (30G)';
-
-  const p = (fin && fin.priceNum) ? fin.priceNum : 312.5;
-  const monthlyFlowMln = ((totalPaidCap * (monthlyDelta / 100) * p) / 1e9).toFixed(2);
-  const weeklyFlowMln = (((totalPaidCap * (monthlyDelta / 100) * p) / 4) / 1e6).toFixed(1);
-
-  if (monthlyFlowEl) monthlyFlowEl.textContent = `+₺${monthlyFlowMln.replace('.', ',')} Mlr`;
-  if (weeklyFlowEl) weeklyFlowEl.textContent = `+₺${weeklyFlowMln.replace('.', ',')} Mn`;
-
-  if (badgeEl) {
-    badgeEl.innerHTML = `<i class="fa-solid fa-arrow-trend-up"></i> YABANCI GİRİŞİ GÜÇLÜ (+%${monthlyDelta.toFixed(2).replace('.', ',')})`;
-  }
-
-  if (commEl) {
-    const low30 = (foreignRatio - monthlyDelta).toFixed(2);
-    commEl.innerHTML = `
-      <strong class="text-white">Takas Yorumu:</strong> Citibank ve Deutsche Bank son 30 işlem gününde istikrarlı net alıcı konumundadır. ${code} yabancı takas oranı %${low30.replace('.', ',')} dip bölgesinden %${foreignRatio.toFixed(2).replace('.', ',')} seviyesine toparlanarak güçlü kurumsal birikime işaret etmektedir.
-    `;
-  }
-
-  // Alternate element IDs support
-  const altTotal = document.getElementById('custodyForeignRatio');
-  if (altTotal) altTotal.textContent = `%${foreignRatio.toFixed(2).replace('.', ',')}`;
-  const altDelta = document.getElementById('custodyForeignChange');
-  if (altDelta) altDelta.textContent = `+%${monthlyDelta.toFixed(2).replace('.', ',')}`;
-  const altCiti = document.getElementById('custodyCitiShare');
-  if (altCiti) altCiti.textContent = `%${citiShare.toFixed(2).replace('.', ',')}`;
-  const altCitiDelta = document.getElementById('custodyCitiChange');
-  if (altCitiDelta) altCitiDelta.textContent = '+%1,40 (30G)';
-  const altDeut = document.getElementById('custodyDeutscheShare');
-  if (altDeut) altDeut.textContent = `%${deutShare.toFixed(2).replace('.', ',')}`;
-  const altDeutDelta = document.getElementById('custodyDeutscheChange');
-  if (altDeutDelta) altDeutDelta.textContent = '+%0,65 (30G)';
-}
-window.renderForeignCustodyAnalysis = renderForeignCustodyAnalysis;
 
 /* ==============================================================================
    5.3. Başabaş Rakip Kıyaslama (Head-to-Head Peer Comparison)
@@ -4000,99 +2684,51 @@ function resolveSectorPeers(activeTicker, activeSector) {
     return [...PEER_SECTOR_MAP[t]];
   }
 
-  const peers = [];
-  const normalizedSec = (activeSector || '').toLowerCase().trim();
-
-  // Try finding in cached BIST list by same sector
-  if (typeof cachedBistStockList !== 'undefined' && Array.isArray(cachedBistStockList)) {
-    for (const c of cachedBistStockList) {
-      if (c.code !== t && c.sector && c.sector.toLowerCase().includes(normalizedSec)) {
-        peers.push(c.code);
-        if (peers.length >= 3) break;
-      }
-    }
-  }
-
-  // Fallback to top liquid tickers
-  const defaultFallbacks = ['PGSUS', 'TAVHL', 'AKBNK', 'GARAN', 'FROTO', 'BIMAS', 'TUPRS', 'KCHOL', 'ASELS'];
-  for (const fb of defaultFallbacks) {
-    if (peers.length >= 3) break;
-    if (fb !== t && !peers.includes(fb)) {
-      peers.push(fb);
-    }
-  }
-
-  return peers.slice(0, 3);
+  // Same KAP sector only (BIST 30 members first, then by paid-in capital); no unrelated fallbacks
+  if (!activeSector) return [];
+  return getFullBistStockList()
+    .filter(c => c.code !== t && c.raw.sec === activeSector)
+    .sort((a, b) => (b.isBist30 - a.isBist30) || ((b.raw.capRaw || 0) - (a.raw.capRaw || 0)))
+    .slice(0, 3)
+    .map(c => c.code);
 }
 
-/**
- * Computes multi-factor radar axis scores (0 - 100) for a given financial object.
- * Axes: Değerleme, Büyüme, Kârlılık, Borçluluk, Momentum, Temettü
- */
+/** Radar axes: the Verity score components (0-10, scaled to 100) and the 52-week range position. */
+const RADAR_AXES = [
+  ['valuation', 'Değerleme'],
+  ['profitability', 'Kârlılık'],
+  ['operating', 'Faaliyet gücü'],
+  ['solvency', 'Borç durumu'],
+  ['momentum', '52H konum']
+];
+
+/** Axis scores (0-100) from real data; an axis without data is null. */
 function getRadarAxisScores(fin) {
-  if (!fin) return { valuation: 50, growth: 50, profitability: 50, solvency: 50, momentum: 50, dividend: 50 };
-
-  const code = fin.code || 'THYAO';
-  const seed = getStockHash(code);
-  const fk = parseFloat(fin.fk) || 6.5;
-  const pddd = parseFloat(fin.pddd) || 1.3;
-  const roe = parseFloat(fin.roe) || 24;
-  const pio = fin.pio != null ? parseInt(fin.pio) : 7;
-  const isUp = fin.isPositive !== undefined ? fin.isPositive : true;
-
-  // 1. Değerleme: Lower P/E and P/B give higher score
-  let valScore = Math.round(100 - (Math.min(25, fk) * 2.4 + Math.min(6, pddd) * 5.0));
-  if (code === 'THYAO') valScore = 88;
-  if (code === 'PGSUS') valScore = 74;
-  valScore = Math.max(15, Math.min(95, valScore));
-
-  // 2. Büyüme: Revenue YoY expansion & market share CAGR
-  let growthScore = 55 + (seed % 28);
-  if (code === 'THYAO') growthScore = 88;
-  if (code === 'PGSUS') growthScore = 93;
-  if (code === 'TAVHL') growthScore = 82;
-  growthScore = Math.max(20, Math.min(98, growthScore));
-
-  // 3. Kârlılık: ROE, Net Margin, EBITDA strength
-  let profScore = Math.round(Math.min(95, roe * 1.8 + (seed % 10)));
-  if (code === 'THYAO') profScore = 91;
-  if (code === 'PGSUS') profScore = 79;
-  profScore = Math.max(25, Math.min(98, profScore));
-
-  // 4. Borçluluk (Solvency): Piotroski F-score, Altman Z, manageable leverage
-  let solScore = Math.round((pio / 9) * 55 + 30 + ((seed % 12) - 6));
-  if (code === 'THYAO') solScore = 85;
-  if (code === 'PGSUS') solScore = 72;
-  solScore = Math.max(20, Math.min(95, solScore));
-
-  // 5. Momentum: RSI, 52-week position and trend dynamics
-  let momScore = Math.round(45 + (seed % 35) + (isUp ? 14 : -8));
-  if (code === 'THYAO') momScore = 86;
-  if (code === 'PGSUS') momScore = 90;
-  momScore = Math.max(20, Math.min(98, momScore));
-
-  // 6. Temettü: Cash payout predictability & yield
-  let divScore = Math.round(30 + (seed % 45));
-  if (code === 'THYAO') divScore = 78;
-  if (code === 'FROTO') divScore = 96;
-  if (code === 'TUPRS') divScore = 94;
-  if (code === 'PGSUS') divScore = 60;
-  divScore = Math.max(15, Math.min(98, divScore));
-
+  const part = name => {
+    const p = fin && fin.scoreParts && fin.scoreParts.find(([k]) => k === name);
+    return p ? Math.round(p[1] * 10) : null;
+  };
   return {
-    valuation: valScore,
-    growth: growthScore,
-    profitability: profScore,
-    solvency: solScore,
-    momentum: momScore,
-    dividend: divScore
+    valuation: part('Değerleme'),
+    profitability: part('Kârlılık'),
+    operating: part('Faaliyet gücü'),
+    solvency: part('Borç durumu'),
+    momentum: fin && Number.isFinite(fin.yearPos) ? Math.round(fin.yearPos) : null
   };
 }
 
+/** Median of the finite values, or null. */
+function medianOf(values) {
+  const v = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const mid = Math.floor(v.length / 2);
+  return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
+}
+
 /**
- * Initializes or updates the 6-Axis Chart.js Radar Chart (#peerRadarChart).
+ * Initializes or updates the radar chart (#peerRadarChart).
  */
-function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
+function initPeerRadarChart(activeFin, peerFin, medianScores) {
   const canvas = document.getElementById('peerRadarChart');
   if (!canvas) return;
 
@@ -4103,96 +2739,46 @@ function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
 
   const activeScores = getRadarAxisScores(activeFin);
   const peerScores = getRadarAxisScores(peerFin);
-  const medScores = sectorMedianScores || {
-    valuation: 65,
-    growth: 68,
-    profitability: 65,
-    solvency: 65,
-    momentum: 62,
-    dividend: 58
-  };
+  const labels = RADAR_AXES.map(([, label]) => label);
+  const activeData = RADAR_AXES.map(([k]) => activeScores[k]);
+  const peerData = RADAR_AXES.map(([k]) => peerScores[k]);
+  const medianData = RADAR_AXES.map(([k]) => medianScores[k]);
 
-  const labels = [
-    'Değerleme',
-    'Büyüme',
-    'Kârlılık',
-    'Borçluluk',
-    'Momentum',
-    'Temettü'
-  ];
-
-  const activeData = [
-    activeScores.valuation,
-    activeScores.growth,
-    activeScores.profitability,
-    activeScores.solvency,
-    activeScores.momentum,
-    activeScores.dividend
-  ];
-
-  const peerData = [
-    peerScores.valuation,
-    peerScores.growth,
-    peerScores.profitability,
-    peerScores.solvency,
-    peerScores.momentum,
-    peerScores.dividend
-  ];
-
-  const medianData = [
-    medScores.valuation,
-    medScores.growth,
-    medScores.profitability,
-    medScores.solvency,
-    medScores.momentum,
-    medScores.dividend
-  ];
-
-  const activeAvg = Math.round(activeData.reduce((a, b) => a + b, 0) / 6);
-  const peerAvg = Math.round(peerData.reduce((a, b) => a + b, 0) / 6);
-  const diff = activeAvg - peerAvg;
-
-  // Advantage pill update
+  // Compare only the axes both stocks have data for
+  const shared = RADAR_AXES.map((_, i) => i).filter(i => activeData[i] != null && peerData[i] != null);
+  const avg = data => shared.reduce((a, i) => a + data[i], 0) / shared.length;
   const advantageEl = document.getElementById('peerRadarScoreAdvantage');
-  if (advantageEl) {
-    if (diff >= 0) {
-      advantageEl.textContent = `+${diff} Puan Avantaj`;
-      advantageEl.className = 'text-emerald-400 font-bold';
-    } else {
-      advantageEl.textContent = `${diff} Puan Geride`;
-      advantageEl.className = 'text-rose-400 font-bold';
-    }
-  }
-
-  // Strongest axes identification
-  const strongActiveAxes = [];
-  const strongPeerAxes = [];
-  labels.forEach((lbl, idx) => {
-    if (activeData[idx] >= peerData[idx] + 5) strongActiveAxes.push(lbl);
-    else if (peerData[idx] >= activeData[idx] + 5) strongPeerAxes.push(lbl);
-  });
-
-  // Dynamic analytical commentary
   const commEl = document.getElementById('peerRadarCommentary');
-  if (commEl) {
-    const actName = activeFin.code || 'Aktif Hisse';
-    const peerName = peerFin.code || 'Seçili Rakip';
-    let text = `<strong class="text-white">${actName}</strong>, `;
-    if (strongActiveAxes.length > 0) {
-      text += `<span class="text-red-400 font-medium">${strongActiveAxes.join(' ve ')}</span> eksenlerinde ${peerName}'a karşı üstünlük kurmaktadır. `;
-    } else {
-      text += `dengeli bir çarpan dağılımı sergilemektedir. `;
+  const actName = activeFin.code;
+  const peerName = peerFin.code;
+
+  if (!shared.length) {
+    if (advantageEl) { advantageEl.textContent = 'Veri yok'; advantageEl.className = 'text-slate-400 font-bold'; }
+    if (commEl) commEl.textContent = `${actName} ve ${peerName} için karşılaştırılabilir bilanço ve fiyat verisi yok.`;
+  } else {
+    const diff = Math.round(avg(activeData) - avg(peerData));
+    if (advantageEl) {
+      advantageEl.textContent = diff >= 0 ? `+${diff} Puan Avantaj` : `${diff} Puan Geride`;
+      advantageEl.className = diff >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
     }
-    if (strongPeerAxes.length > 0) {
-      text += `<strong class="text-purple-300">${peerName}</strong> ise <span class="text-purple-400 font-medium">${strongPeerAxes.join(' ve ')}</span> tarafında daha agresif metriklere sahiptir.`;
+    const strongActive = shared.filter(i => activeData[i] >= peerData[i] + 5).map(i => labels[i]);
+    const strongPeer = shared.filter(i => peerData[i] >= activeData[i] + 5).map(i => labels[i]);
+    if (commEl) {
+      let text = `<strong class="text-white">${actName}</strong>, `;
+      text += strongActive.length
+        ? `<span class="text-red-400 font-medium">${strongActive.join(', ')}</span> ekseninde ${peerName} hissesinden önde. `
+        : `${peerName} ile hiçbir eksende 5 puandan fazla önde değil. `;
+      if (strongPeer.length) text += `<strong class="text-purple-300">${peerName}</strong> ise <span class="text-purple-400 font-medium">${strongPeer.join(', ')}</span> ekseninde önde.`;
+      const missing = RADAR_AXES.length - shared.length;
+      if (missing) text += ` <span class="text-slate-500">${missing} eksende iki hissenin de verisi olmadığı için karşılaştırma yapılmadı.</span>`;
+      commEl.innerHTML = text;
     }
-    commEl.innerHTML = text;
   }
 
   const radarActiveLabel = document.getElementById('radarActiveTickerLabel');
   const radarPeerLabel = document.getElementById('radarPeerTickerLabel');
-  if (radarActiveLabel) radarActiveLabel.textContent = activeFin.code || 'THYAO';
-  if (radarPeerLabel) radarPeerLabel.textContent = peerFin.code || 'PGSUS';
+  if (radarActiveLabel) radarActiveLabel.textContent = actName;
+  if (radarPeerLabel) radarPeerLabel.textContent = peerName;
 
   appState.charts.peerRadar = new Chart(canvas.getContext('2d'), {
     type: 'radar',
@@ -4200,7 +2786,7 @@ function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
       labels: labels,
       datasets: [
         {
-          label: activeFin.code || 'Aktif Hisse',
+          label: actName,
           data: activeData,
           fill: true,
           backgroundColor: 'rgba(47, 107, 255, 0.22)',
@@ -4213,7 +2799,7 @@ function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
           pointRadius: 3.5
         },
         {
-          label: peerFin.code || 'Rakip Hisse',
+          label: peerName,
           data: peerData,
           fill: true,
           backgroundColor: 'rgba(168, 85, 247, 0.22)',
@@ -4226,7 +2812,7 @@ function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
           pointRadius: 3.5
         },
         {
-          label: 'Sektör Medyanı',
+          label: 'Grup Medyanı',
           data: medianData,
           fill: false,
           borderColor: '#10B981',
@@ -4241,6 +2827,7 @@ function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      spanGaps: true,
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -4251,7 +2838,7 @@ function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
           bodyFont: { family: 'ui-monospace, monospace', size: 11 },
           callbacks: {
             label: function(ctx) {
-              return ` ${ctx.dataset.label}: ${ctx.raw} / 100 Puan`;
+              return ` ${ctx.dataset.label}: ${ctx.raw == null ? 'veri yok' : `${ctx.raw} / 100`}`;
             }
           }
         }
@@ -4282,17 +2869,15 @@ function initPeerRadarChart(activeFin, peerFin, sectorMedianScores) {
  * Creates an individual row for the Peer Comparison table.
  */
 function createPeerTableRow(stockFin, isActive, isSelected, medFk, medPd) {
-  const fk = parseFloat(stockFin.fk) || 5.0;
-  const pd = parseFloat(stockFin.pddd) || 1.2;
-
-  // Relative valuation composite vs Sector Median
-  const relDiff = ((fk / medFk - 1) * 50) + ((pd / medPd - 1) * 50);
-  const isDiscount = relDiff < 0;
-  const absDiff = Math.abs(relDiff).toFixed(1);
-
-  const diffBadge = isDiscount
-    ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/90 border border-emerald-700/60 text-emerald-300">-%${absDiff} İskonto</span>`
-    : `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950/90 border border-rose-700/60 text-rose-300">+%${absDiff} Prim</span>`;
+  // Premium / discount to the group median, only when the stock and the medians are all positive
+  const fk = stockFin.fkNum, pd = stockFin.pdddNum;
+  const relDiff = fk > 0 && pd > 0 && medFk > 0 && medPd > 0 ? ((fk / medFk - 1) * 50) + ((pd / medPd - 1) * 50) : null;
+  const absDiff = relDiff == null ? '' : Math.abs(relDiff).toFixed(1);
+  const diffBadge = relDiff == null
+    ? '<span class="text-[10px] font-mono text-slate-500">—</span>'
+    : relDiff < 0
+      ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/90 border border-emerald-700/60 text-emerald-300">-%${absDiff} İskonto</span>`
+      : `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950/90 border border-rose-700/60 text-rose-300">+%${absDiff} Prim</span>`;
 
   let rowBg = 'hover:bg-[#121C30]/60 transition-colors cursor-pointer';
   if (isActive) {
@@ -4328,9 +2913,10 @@ function createPeerTableRow(stockFin, isActive, isSelected, medFk, medPd) {
 }
 
 /**
- * Main Controller for the Head-to-Head Peer Comparison Module.
+ * Main Controller for the Head-to-Head Peer Comparison Module. Peers get real quotes and
+ * statement ratios first (LiveData.ensure); the module is drawn again once they arrive.
  */
-function renderPeerComparisonModule(fin) {
+function renderPeerComparisonModule(fin, synced = false) {
   if (!fin) return;
   const activeTicker = (fin.code || 'THYAO').toUpperCase();
   const peers = resolveSectorPeers(activeTicker, fin.sector);
@@ -4338,7 +2924,7 @@ function renderPeerComparisonModule(fin) {
   if (!window.currentPeerState || window.currentPeerState.activeTicker !== activeTicker) {
     window.currentPeerState = {
       activeTicker: activeTicker,
-      selectedPeer: peers[0] || 'PGSUS',
+      selectedPeer: peers[0] || null,
       peers: peers
     };
   }
@@ -4346,7 +2932,28 @@ function renderPeerComparisonModule(fin) {
   const selectedPeer = window.currentPeerState.selectedPeer;
   const activeFin = fin;
   const peerFins = window.currentPeerState.peers.map(p => getOrGenerateStockFinancials(p));
+
+  if (!selectedPeer) {
+    const tbody = document.getElementById('peerComparisonTbody');
+    if (tbody) tbody.innerHTML = createPeerTableRow(activeFin, true, false, null, null) +
+      '<tr><td colspan="8" class="py-4 px-3 text-center text-xs text-slate-400">Aynı sektörde kıyaslanacak başka şirket bulunamadı. Yukarıdan bir hisse kodu yazarak kıyaslayabilirsin.</td></tr>';
+    if (appState.charts.peerRadar) { appState.charts.peerRadar.destroy(); appState.charts.peerRadar = null; }
+    const adv = document.getElementById('peerRadarScoreAdvantage');
+    const comm = document.getElementById('peerRadarCommentary');
+    if (adv) { adv.textContent = '—'; adv.className = 'text-slate-400 font-bold'; }
+    if (comm) comm.textContent = 'Kıyaslama için bir rakip seç.';
+    populatePeerStockDatalist();
+    renderPeerQuickPills([], null);
+    return;
+  }
   const selectedFin = getOrGenerateStockFinancials(selectedPeer);
+
+  if (!synced && window.LiveData) {
+    const codes = [...new Set([activeTicker, ...window.currentPeerState.peers, selectedPeer])];
+    LiveData.ensure(codes).then(() => {
+      if (window.currentPeerState.activeTicker === activeTicker) renderPeerComparisonModule(fin, true);
+    });
+  }
 
   // Sector badge
   const secBadge = document.getElementById('peerSectorBadge');
@@ -4356,53 +2963,29 @@ function renderPeerComparisonModule(fin) {
   populatePeerStockDatalist();
   renderPeerQuickPills(window.currentPeerState.peers, selectedPeer);
 
-  // Sector Median Calculations
+  // Medians over the stock and its peers (real values only)
   const allList = [activeFin, ...peerFins];
-  const fks = allList.map(f => parseFloat(f.fk) || 5.0).sort((a,b)=>a-b);
-  const pds = allList.map(f => parseFloat(f.pddd) || 1.2).sort((a,b)=>a-b);
-  const fds = allList.map(f => parseFloat(f.fdFavok) || 4.5).sort((a,b)=>a-b);
-  const roes = allList.map(f => parseFloat(f.roe) || 20.0).sort((a,b)=>a-b);
-  const debts = allList.map(f => parseFloat(f.netDebt) || 1.1).sort((a,b)=>a-b);
-  const scores = allList.map(f => f.score).filter(v => v != null).sort((a,b)=>a-b);
+  const medFk = medianOf(allList.map(f => f.fkNum).filter(v => v > 0));
+  const medPd = medianOf(allList.map(f => f.pdddNum).filter(v => v > 0));
+  const medFd = medianOf(allList.map(f => f.fdFavokNum).filter(v => v > 0));
+  const medRoe = medianOf(allList.map(f => f.roeNum));
+  const medDebt = medianOf(allList.map(f => f.netDebtNum));
+  const medScore = medianOf(allList.map(f => f.score));
+  const fmtMed = (v, f) => (v == null ? '—' : f(v));
 
-  const getMedian = (arr) => {
-    const mid = Math.floor(arr.length / 2);
-    return arr.length % 2 !== 0 ? arr[mid] : ((arr[mid - 1] + arr[mid]) / 2);
-  };
-
-  const medFk = getMedian(fks);
-  const medPd = getMedian(pds);
-  const medFd = getMedian(fds);
-  const medRoe = getMedian(roes);
-  const medDebt = getMedian(debts);
-  const medScore = scores.length ? getMedian(scores) : null;
-
-  // Radar median axis scores
   const allAxisScores = allList.map(f => getRadarAxisScores(f));
-  const medRadar = {
-    valuation: Math.round(getMedian(allAxisScores.map(s => s.valuation).sort((a,b)=>a-b))),
-    growth: Math.round(getMedian(allAxisScores.map(s => s.growth).sort((a,b)=>a-b))),
-    profitability: Math.round(getMedian(allAxisScores.map(s => s.profitability).sort((a,b)=>a-b))),
-    solvency: Math.round(getMedian(allAxisScores.map(s => s.solvency).sort((a,b)=>a-b))),
-    momentum: Math.round(getMedian(allAxisScores.map(s => s.momentum).sort((a,b)=>a-b))),
-    dividend: Math.round(getMedian(allAxisScores.map(s => s.dividend).sort((a,b)=>a-b)))
-  };
+  const medRadar = Object.fromEntries(RADAR_AXES.map(([k]) => {
+    const m = medianOf(allAxisScores.map(s => s[k]));
+    return [k, m == null ? null : Math.round(m)];
+  }));
 
   // Render Table Rows
   const tbody = document.getElementById('peerComparisonTbody');
   if (tbody) {
-    let rowsHtml = '';
-
-    // Active Stock Row
-    rowsHtml += createPeerTableRow(activeFin, true, false, medFk, medPd);
-
-    // Peer Rows
+    let rowsHtml = createPeerTableRow(activeFin, true, false, medFk, medPd);
     peerFins.forEach(pFin => {
-      const isSelected = pFin.code === selectedPeer;
-      rowsHtml += createPeerTableRow(pFin, false, isSelected, medFk, medPd);
+      rowsHtml += createPeerTableRow(pFin, false, pFin.code === selectedPeer, medFk, medPd);
     });
-
-    // Sector Median Row
     rowsHtml += `
       <tr class="bg-[#121C30]/80 font-bold border-t-2 border-[#1E2B45] text-slate-300">
         <td class="py-2.5 px-3 flex items-center gap-2">
@@ -4410,16 +2993,16 @@ function renderPeerComparisonModule(fin) {
             <i class="fa-solid fa-chart-simple"></i>
           </div>
           <div>
-            <span class="text-white">SEKTÖR MEDYANI</span>
-            <span class="block text-[9px] text-emerald-400 font-light">Eş Düzey Referans</span>
+            <span class="text-white">GRUP MEDYANI</span>
+            <span class="block text-[9px] text-emerald-400 font-light">Bu ${allList.length} hisse</span>
           </div>
         </td>
-        <td class="py-2.5 px-2 text-right text-emerald-400">${medFk.toFixed(1)}x</td>
-        <td class="py-2.5 px-2 text-right text-emerald-400">${medPd.toFixed(2)}x</td>
-        <td class="py-2.5 px-2 text-right text-emerald-400">${medFd.toFixed(1)}x</td>
-        <td class="py-2.5 px-2 text-right text-emerald-400">%${medRoe.toFixed(1)}</td>
-        <td class="py-2.5 px-2 text-right text-emerald-400">${medDebt.toFixed(2)}x</td>
-        <td class="py-2.5 px-2 text-right text-emerald-400">${medScore === null ? '—' : medScore.toFixed(1)}</td>
+        <td class="py-2.5 px-2 text-right text-emerald-400">${fmtMed(medFk, v => `${v.toFixed(1)}x`)}</td>
+        <td class="py-2.5 px-2 text-right text-emerald-400">${fmtMed(medPd, v => `${v.toFixed(2)}x`)}</td>
+        <td class="py-2.5 px-2 text-right text-emerald-400">${fmtMed(medFd, v => `${v.toFixed(1)}x`)}</td>
+        <td class="py-2.5 px-2 text-right text-emerald-400">${fmtMed(medRoe, v => `%${v.toFixed(1)}`)}</td>
+        <td class="py-2.5 px-2 text-right text-emerald-400">${fmtMed(medDebt, v => `${v.toFixed(2)}x`)}</td>
+        <td class="py-2.5 px-2 text-right text-emerald-400">${fmtMed(medScore, v => v.toFixed(1))}</td>
         <td class="py-2.5 px-3 text-center">
           <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950/70 border border-red-800/40 text-red-300">
             BAZ DÜZEY
@@ -4427,11 +3010,9 @@ function renderPeerComparisonModule(fin) {
         </td>
       </tr>
     `;
-
     tbody.innerHTML = rowsHtml;
   }
 
-  // Initialize Radar Chart
   initPeerRadarChart(activeFin, selectedFin, medRadar);
 }
 
@@ -4456,8 +3037,10 @@ function selectPeerStock(ticker) {
   const t = ticker.toUpperCase().trim();
   if (t === window.currentPeerState.activeTicker) return;
 
-  if (!window.currentPeerState.peers.includes(t)) {
-    window.currentPeerState.peers[2] = t; // replace third slot
+  const peers = window.currentPeerState.peers;
+  if (!peers.includes(t)) {
+    if (peers.length < 3) peers.push(t);
+    else peers[2] = t; // replace third slot
   }
   window.currentPeerState.selectedPeer = t;
 
@@ -4528,7 +3111,6 @@ function populatePeerStockDatalist() {
    - Bedelsiz Sermaye Artırımı Potansiyeli ((Özkaynaklar - Ödenmiş Sermaye) / Ödenmiş Sermaye)
    - Geçmiş Temettü Verimi (Dividend Yield %)
    - Temettü Dağıtım Oranı (Payout Ratio %)
-   - Fiili Dolaşımdaki Pay Oranı (Free Float Ratio %)
    ============================================================================== */
 
 /**
@@ -4540,99 +3122,65 @@ function renderCapitalAndDividendIntelligence(symbolOrFin) {
     : (appState.currentCompanyData || getOrGenerateStockFinancials(symbolOrFin || appState.currentStock || 'THYAO'));
   if (!fin) return;
   const code = fin.code || 'THYAO';
-  const seed = getStockHash(code);
-  const paidCapRaw = (fin.paidCapitalRaw && fin.paidCapitalRaw > 0) ? fin.paidCapitalRaw : 1380000000;
+  const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
 
-  // Extract or calculate total equity
-  let totalEquity = 0;
-  if (fin.balanceSheet && fin.balanceSheet.summary && fin.balanceSheet.summary.totalEquity) {
-    totalEquity = parseKapItemTRY(fin.balanceSheet.summary.totalEquity);
+  // 1. Bonus issue potential: (equity - paid-in capital) / paid-in capital, from the real balance sheet
+  // (statements.js sets fin.equityRaw: undefined while loading, null when there is no balance sheet)
+  const paidCapRaw = fin.paidCapitalRaw > 0 ? fin.paidCapitalRaw : null;
+  const totalEquity = fin.equityRaw > 0 ? fin.equityRaw : null;
+  const commEl = document.getElementById('capitalDividendCommentary');
+  const flexBadge = document.getElementById('capitalFlexibilityBadge');
+  set('capitalCeilingComparisonBadge', `Tavan: ${fin.capitalCeiling}`);
+
+  if (!paidCapRaw || !totalEquity) {
+    ['bonusPotentialPct', 'bonusTotalEquityDisplay', 'bonusFreeReservesDisplay', 'bonusPaidRatioDisplay', 'bonusReservesRatioDisplay'].forEach(id => set(id, '—'));
+    set('bonusPaidCapitalDisplay', paidCapRaw ? formatKapMoney(paidCapRaw) : '—');
+    set('bonusPotentialRatio', fin.equityRaw === undefined ? 'Bilanço yükleniyor' : 'Bilanço verisi yok');
+    ['bonusPaidBar', 'bonusReservesBar'].forEach(id => { const b = document.getElementById(id); if (b) b.style.width = '0%'; });
+    if (flexBadge) { flexBadge.textContent = '—'; flexBadge.className = 'text-slate-400 font-bold uppercase'; }
+    if (commEl) {
+      commEl.textContent = fin.equityRaw === undefined
+        ? 'Gerçek bilanço verisi yükleniyor...'
+        : 'Bu şirketin bilançosu veri kaynağında bulunmadığı için bedelsiz potansiyeli hesaplanamadı.';
+    }
+  } else {
+    const freeReserves = Math.max(0, totalEquity - paidCapRaw);
+    const bonusPotentialPct = Math.round(((totalEquity - paidCapRaw) / paidCapRaw) * 100);
+    const bonusRatio = Math.round(bonusPotentialPct / 100);
+    set('bonusPotentialPct', `${bonusPotentialPct >= 0 ? '+' : ''}%${bonusPotentialPct.toLocaleString('tr-TR')}`);
+    set('bonusPotentialRatio', `${bonusRatio} Kat Potansiyel Bedelsiz İhraç`);
+    set('bonusTotalEquityDisplay', formatKapMoney(totalEquity));
+    set('bonusPaidCapitalDisplay', formatKapMoney(paidCapRaw));
+    set('bonusFreeReservesDisplay', formatKapMoney(freeReserves));
+
+    const paidCapShare = Math.min(100, Math.max(0.1, (paidCapRaw / totalEquity) * 100));
+    const reservesShare = Math.max(0, 100 - paidCapShare);
+    set('bonusPaidRatioDisplay', `%${paidCapShare.toFixed(2).replace('.', ',')}`);
+    set('bonusReservesRatioDisplay', `%${reservesShare.toFixed(2).replace('.', ',')}`);
+    const paidBar = document.getElementById('bonusPaidBar');
+    const resBar = document.getElementById('bonusReservesBar');
+    if (paidBar) paidBar.style.width = `${paidCapShare.toFixed(1)}%`;
+    if (resBar) resBar.style.width = `${reservesShare.toFixed(1)}%`;
+
+    // A plain bucket of the computed potential, not a rating
+    if (flexBadge) {
+      const [text, cls] = bonusPotentialPct > 1000 ? ['ÇOK YÜKSEK İÇ KAYNAK', 'text-emerald-400']
+        : bonusPotentialPct > 300 ? ['YÜKSEK İÇ KAYNAK', 'text-red-400'] : ['SINIRLI İÇ KAYNAK', 'text-slate-300'];
+      flexBadge.textContent = text;
+      flexBadge.className = `${cls} font-bold uppercase`;
+    }
+    if (commEl) {
+      commEl.innerHTML = `
+        <strong class="text-white">${fin.name}</strong>: ${formatKapMoney(totalEquity)} özkaynak ve ${formatKapMoney(paidCapRaw)} ödenmiş sermayeye göre iç kaynaklar ${formatKapMoney(freeReserves)}. İç kaynakların ödenmiş sermayeye oranı (teorik bedelsiz kapasitesi) <strong class="text-emerald-400">%${bonusPotentialPct.toLocaleString('tr-TR')}</strong>. Bedelsiz sermaye artırımı yönetim kurulu kararı ve SPK onayı gerektirir; potansiyel, gerçekleşeceği anlamına gelmez.
+      `;
+    }
   }
-  if (!totalEquity || totalEquity <= 0) {
-    const pb = parseFloat(fin.pddd) || 1.3;
-    const p = fin.priceNum || 50;
-    totalEquity = Math.round((paidCapRaw * p) / Math.max(0.4, pb));
-  }
-
-  // Official Bonus Issue Potential Formula: ((Özkaynaklar - Ödenmiş Sermaye) / Ödenmiş Sermaye) * 100
-  const freeReserves = Math.max(0, totalEquity - paidCapRaw);
-  const bonusPotentialPct = Math.round(((totalEquity - paidCapRaw) / paidCapRaw) * 100);
-  const bonusRatio = Math.round(bonusPotentialPct / 100);
-
-  // DOM Elements
-  const bonusPctEl = document.getElementById('bonusPotentialPct');
-  const bonusRatioEl = document.getElementById('bonusPotentialRatio');
-  const totalEqEl = document.getElementById('bonusTotalEquityDisplay');
-  const paidCapEl = document.getElementById('bonusPaidCapitalDisplay');
-  const freeResEl = document.getElementById('bonusFreeReservesDisplay');
-  const paidRatioEl = document.getElementById('bonusPaidRatioDisplay');
-  const resRatioEl = document.getElementById('bonusReservesRatioDisplay');
-  const paidBar = document.getElementById('bonusPaidBar');
-  const resBar = document.getElementById('bonusReservesBar');
-
-  if (bonusPctEl) bonusPctEl.textContent = `+%${bonusPotentialPct.toLocaleString('tr-TR')}`;
-  if (bonusRatioEl) bonusRatioEl.textContent = `${bonusRatio} Kat Potansiyel Bedelsiz İhraç`;
-  if (totalEqEl) totalEqEl.textContent = formatKapMoney(totalEquity);
-  if (paidCapEl) paidCapEl.textContent = formatKapMoney(paidCapRaw);
-  if (freeResEl) freeResEl.textContent = formatKapMoney(freeReserves);
-
-  // Proportions
-  const paidCapShare = Math.min(100, Math.max(0.1, (paidCapRaw / totalEquity) * 100));
-  const reservesShare = Math.max(0, 100 - paidCapShare);
-
-  if (paidRatioEl) paidRatioEl.textContent = `%${paidCapShare.toFixed(2).replace('.', ',')}`;
-  if (resRatioEl) resRatioEl.textContent = `%${reservesShare.toFixed(2).replace('.', ',')}`;
-
-  if (paidBar) paidBar.style.width = `${paidCapShare.toFixed(1)}%`;
-  if (resBar) resBar.style.width = `${reservesShare.toFixed(1)}%`;
 
   // 2. Dividend Yield: real cash dividends (assets/data/dividends.json via dividends.js)
   renderDividendYieldCard(code);
 
   // 3. Payout Ratio: real cash flow statement figures (statements.js sets fin.payout)
   renderPayoutCard(fin);
-
-  // 4. Free Float Ratio (Halka Açıklık Oranı %)
-  let freeFloat = 50.4;
-  if (code !== 'THYAO') {
-    freeFloat = +(20.0 + ((seed % 55) * 0.9)).toFixed(1);
-  }
-  const freeFloatEl = document.getElementById('freeFloatDisplay');
-  const liquidityBadge = document.getElementById('freeFloatLiquidityBadge');
-  if (freeFloatEl) freeFloatEl.textContent = `%${freeFloat.toFixed(1).replace('.', ',')}`;
-  if (liquidityBadge) {
-    liquidityBadge.textContent = freeFloat >= 40 ? 'YÜKSEK LİKİDİTE' : 'DENGELİ DOLAŞIM';
-  }
-
-  // Flexibility Badge
-  const flexBadge = document.getElementById('capitalFlexibilityBadge');
-  if (flexBadge) {
-    if (bonusPotentialPct > 1000) {
-      flexBadge.textContent = 'A+ REKOR KAPASİTE';
-      flexBadge.className = 'text-emerald-400 font-bold uppercase';
-    } else if (bonusPotentialPct > 300) {
-      flexBadge.textContent = 'A GÜÇLÜ KAPASİTE';
-      flexBadge.className = 'text-red-400 font-bold uppercase';
-    } else {
-      flexBadge.textContent = 'B DENGELİ SERMAYE';
-      flexBadge.className = 'text-slate-300 font-bold uppercase';
-    }
-  }
-
-  // Ceiling comparison & commentary
-  const ceilBadge = document.getElementById('capitalCeilingComparisonBadge');
-  if (ceilBadge) ceilBadge.textContent = `Tavan: ${fin.capitalCeiling || '₺5.000 Mn'}`;
-
-  const commEl = document.getElementById('capitalDividendCommentary');
-  if (commEl) {
-    const isEnormous = bonusPotentialPct > 1000;
-    commEl.innerHTML = `
-      <strong class="text-white">${fin.name}</strong>, ${formatKapMoney(totalEquity)} tutarındaki özkaynak gücü ve ${formatKapMoney(freeReserves)} seviyesindeki kâr yedekleri/iç kaynakları ile ödenmiş sermayesine (${fin.paidCapital}) oranla <strong class="text-emerald-400">+%${bonusPotentialPct.toLocaleString('tr-TR')} (${bonusRatio} kat)</strong> bedelsiz sermaye artırımı potansiyeli taşımaktadır. ${isEnormous ? 'İç kaynaklar kayıtlı sermaye tavanının oldukça üzerinde olup yönetim kurulu ve genel kurul kararıyla güçlü bir bedelsiz ihraç esnekliği sağlamaktadır.' : 'Bedelsiz sermaye artırımı yönetim kurulu kararı ve SPK onayı gerektirir; potansiyel, gerçekleşeceği anlamına gelmez.'}
-    `;
-  }
-
-  const regCodeEl = document.getElementById('kapCompanyRegCode');
-  if (regCodeEl) regCodeEl.textContent = `BIST-${code}-MKK`;
 }
 
 /** Payout ratio card: last-twelve-months dividends paid / net profit from the cash flow statement. */
@@ -4676,23 +3224,29 @@ async function renderDividendYieldCard(code) {
   const prevEl = document.getElementById('dividendPrevYield');
   const noteEl = document.getElementById('dividendYieldNote');
   if (!yieldEl) return;
+  const historyEl = document.getElementById('dividendContinuityBadge');
+  const setHistory = text => { if (historyEl) historyEl.textContent = text; };
   const pct = v => `%${v.toFixed(2).replace('.', ',')}`;
   yieldEl.textContent = '—';
   if (prevEl) prevEl.textContent = '—';
   if (noteEl) noteEl.textContent = 'Temettü verisi yükleniyor...';
+  setHistory('Temettü geçmişi yükleniyor');
 
   const s = window.Dividends ? await Dividends.statsFor(code).catch(() => null) : null;
   if ((appState.currentStock || code) !== code) return;      // user moved on to another stock
   if (!s) {
     if (noteEl) noteEl.textContent = 'Temettü verisi şu an alınamadı.';
+    setHistory('Temettü geçmişi alınamadı');
     return;
   }
   if (!s.paid) {
     yieldEl.textContent = '%0,00';
     if (prevEl) prevEl.textContent = '%0,00';
     if (noteEl) noteEl.textContent = 'Son iki yılda nakit temettü dağıtımı kaydı yok (Yahoo Finance).';
+    setHistory('Son 2 yılda nakit temettü yok');
     return;
   }
+  setHistory(`Son 2 yılda ${s.count24} nakit temettü`);
   yieldEl.textContent = pct(s.yield12);
   if (prevEl) prevEl.textContent = pct(s.yieldPrev);
   if (noteEl) {
@@ -5351,7 +3905,7 @@ function initSearch() {
             const s = m.stock;
             const fin = getOrGenerateStockFinancials(s.code);
             const isUp = fin.isPositive;
-            const priceDisplay = fin.price.includes('₺') ? fin.price : `₺${fin.price}`;
+            const priceDisplay = !fin.liveTime ? '—' : fin.price.includes('₺') ? fin.price : `₺${fin.price}`;
 
             return `
               <div onclick="selectStock('${s.code}')" class="p-2.5 hover:bg-[#2F6BFF]/15 rounded-lg cursor-pointer flex items-center justify-between transition-colors border-b border-[#162238] last:border-0 group">
@@ -5468,19 +4022,6 @@ function initClock() {
   }
   updateTime();
   setInterval(updateTime, 1000);
-}
-
-function initTickerAnimation() {
-  setInterval(() => {
-    if (document.hidden) return;
-    const tickerItems = document.querySelectorAll('.ticker-price-jiggle');
-    if (!tickerItems.length) return;
-    const item = tickerItems[Math.floor(Math.random() * tickerItems.length)];
-    const isUp = Math.random() > 0.4;
-    const animClass = isUp ? 'jiggle-up' : 'jiggle-down';
-    item.classList.add(animClass);
-    setTimeout(() => item.classList.remove(animClass), 600);
-  }, 5000);
 }
 
 function showToast(message) {
@@ -5902,7 +4443,7 @@ function exportOverviewTableToCsv() {
       `"${(s.name || '').replace(/"/g, '""')}"`,
       `"${(s.sector || '').replace(/"/g, '""')}"`,
       s.isBist30 ? 'BIST 30' : 'BIST TÜM',
-      fin.priceNum.toFixed(2).replace('.', ','),
+      fin.priceNum > 0 ? fin.priceNum.toFixed(2).replace('.', ',') : '',
       (fin.change || '').replace('%', '').trim(),
       fin.fk.replace('.', ','),
       fin.pddd.replace('.', ','),
@@ -6123,11 +4664,11 @@ function renderOverviewStockTable() {
               </div>
             </div>
           </td>
-          <td class="text-right font-mono font-bold text-white font-tradingview-nums">${priceDisplay} TL${fin.liveTime ? '' : '<br><i class="data-badge sample" title="Canlı fiyat alınamadı veya yükleniyor; gösterilen değer örnektir">ÖRNEK</i>'}</td>
+          <td class="text-right font-mono font-bold text-white font-tradingview-nums">${fin.liveTime ? `${priceDisplay} TL` : '<span class="text-slate-500" title="Fiyat yükleniyor veya alınamadı">—</span>'}</td>
           <td class="text-right">
-            <span class="inline-flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded font-tradingview-nums ${isUp ? 'tv-pill-up' : 'tv-pill-down'}">
+            ${fin.liveTime && fin.change ? `<span class="inline-flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded font-tradingview-nums ${isUp ? 'tv-pill-up' : 'tv-pill-down'}">
               ${isUp ? '▲ +' : '▼ -'}${chgStr}%
-            </span>
+            </span>` : '<span class="text-slate-500 font-mono text-xs">—</span>'}
           </td>
           <td class="text-right font-mono text-slate-300 font-tradingview-nums${fin.fundamentalsLive ? ' is-real' : ''}">${fin.fk}</td>
           <td class="text-right font-mono text-slate-300 font-tradingview-nums${fin.fundamentalsLive ? ' is-real' : ''}">${fin.pddd}</td>
@@ -6241,18 +4782,9 @@ function resetNewsFilters() { if (window.NewsFeed) NewsFeed.reset(); }
    ============================================================================== */
 window.switchView = switchView;
 window.selectStock = selectStock;
-window.updateSimulation = updateSimulation;
-window.resetSimulation = resetSimulation;
-window.updateDcfMatrix = updateDcfMatrix;
-window.resetDcfSliders = resetDcfSliders;
-window.selectDcfCell = selectDcfCell;
 window.setBalanceCurrency = setBalanceCurrency;
 window.setBalancePeriod = setBalancePeriod;
 window.filterBalanceTable = filterBalanceTable;
-window.renderOrderBookDepth = renderOrderBookDepth;
-window.renderAkdAndForeignCustody = renderAkdAndForeignCustody;
-window.renderBrokerageDistribution = renderBrokerageDistribution;
-window.renderForeignCustodyAnalysis = renderForeignCustodyAnalysis;
 window.renderPeerComparison = renderPeerComparison;
 window.renderPeerComparisonModule = renderPeerComparisonModule;
 window.selectPeerStock = selectPeerStock;
@@ -6709,10 +5241,10 @@ function renderCommandPaletteResults(query) {
       const fin = getOrGenerateStockFinancials(stock.code);
       actions.push({
         title: `${stock.code} &bull; ${stock.name}`,
-        desc: `${stock.sector || fin.sector} &bull; Fiyat: ₺${fin.price} (${fin.change})`,
+        desc: fin.liveTime ? `${stock.sector || fin.sector} &bull; Fiyat: ₺${fin.price} (${fin.change})` : (stock.sector || fin.sector),
         icon: null,
         ticker: stock.code,
-        price: `₺${fin.price}`,
+        price: fin.liveTime ? `₺${fin.price}` : '—',
         change: fin.change,
         isPositive: fin.isPositive,
         badge: 'HİSSE',
@@ -7046,7 +5578,7 @@ function openSetAlertModal(ticker) {
   if (sub) sub.textContent = `${t} için canlı fiyat ve RSI alarmı`;
 
   const fin = getOrGenerateStockFinancials(t);
-  if (valInput) valInput.value = (fin.priceNum * 1.04).toFixed(2); // %4 yukarı hedef hazırla
+  if (valInput) valInput.value = fin.priceNum > 0 ? (fin.priceNum * 1.04).toFixed(2) : ''; // %4 yukarı hedef hazırla
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');

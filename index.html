@@ -319,70 +319,38 @@
           </div>
         </div>
 
-        <!-- 4 Key Financial Metric Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <!-- Market Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           
           <!-- Card 1: BIST 100 ENDEKSİ -->
           <div class="utl-card p-5 space-y-3">
             <div class="flex items-center justify-between text-xs text-slate-400">
               <span class="font-bold tracking-wider uppercase text-[10px]">BIST 100 GÖSTERGESİ</span>
-              <span id="bistCardChange" class="font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded text-[11px] font-bold">▲ +%1,42</span>
+              <span id="bistCardChange" class="font-mono text-slate-400 bg-[#070B14] border border-[#1A2540] px-2 py-0.5 rounded text-[11px] font-bold">—</span>
             </div>
             <div class="flex items-baseline justify-between">
-              <div id="bistCardPrice" class="text-2xl sm:text-3xl font-bold font-mono text-white">9.428,50</div>
-              <span id="bistCardPoints" class="text-xs text-slate-500 font-mono">+132,10 Puan</span>
+              <div id="bistCardPrice" class="text-2xl sm:text-3xl font-bold font-mono text-white">—</div>
+              <span id="bistCardPoints" class="text-xs text-slate-500 font-mono"></span>
             </div>
             <div class="pt-2 border-t border-[#1A2540] flex items-center justify-between text-[11px] text-slate-400">
-              <span id="bistCardExtraLabel">Günlük Hacim:</span>
-              <span id="bistCardExtraValue" class="font-mono font-bold text-slate-200">₺114,8 Mlr</span>
+              <span id="bistCardExtraLabel">Gün Aralığı:</span>
+              <span id="bistCardExtraValue" class="font-mono font-bold text-slate-200">—</span>
             </div>
           </div>
 
-          <!-- Card 2: BIST 30 HACİM LİDERİ -->
+          <!-- Card 2: USD/TRY (live-data.js) -->
           <div class="utl-card p-5 space-y-3">
             <div class="flex items-center justify-between text-xs text-slate-400">
-              <span class="font-bold tracking-wider uppercase text-[10px]">PİYASA HACİM LİDERİ <i class="data-badge sample">ÖRNEK</i></span>
-              <span class="font-mono text-red-400 bg-red-950/40 border border-red-800/40 px-2 py-0.5 rounded text-[11px] font-bold">THYAO</span>
+              <span class="font-bold tracking-wider uppercase text-[10px]">DOLAR / TL</span>
+              <span id="usdCardChange" class="font-mono text-slate-400 bg-[#070B14] border border-[#1A2540] px-2 py-0.5 rounded text-[11px] font-bold">—</span>
             </div>
             <div class="flex items-baseline justify-between">
-              <div class="text-2xl sm:text-3xl font-bold font-mono text-white">₺312,50</div>
-              <span class="text-xs text-emerald-400 font-mono font-bold">▲ +%3,82</span>
+              <div id="usdCardPrice" class="text-2xl sm:text-3xl font-bold font-mono text-white">—</div>
+              <span id="eurCardPrice" class="text-xs text-slate-500 font-mono">EUR/TL —</span>
             </div>
             <div class="pt-2 border-t border-[#1A2540] flex items-center justify-between text-[11px] text-slate-400">
-              <span>Konsensüs:</span>
-              <span class="font-mono font-bold text-emerald-400">Güçlü AL (%+34 Hedef)</span>
-            </div>
-          </div>
-
-          <!-- Card 3: PİYASA RİSKİ ve Volatilite -->
-          <div class="utl-card p-5 space-y-3">
-            <div class="flex items-center justify-between text-xs text-slate-400">
-              <span class="font-bold tracking-wider uppercase text-[10px]">TÜRKİYE 5Y CDS ve RİSK <i class="data-badge sample">ÖRNEK</i></span>
-              <span class="font-mono text-slate-300 bg-slate-800/60 border border-slate-700/40 px-2 py-0.5 rounded text-[11px]">DENGELİ</span>
-            </div>
-            <div class="flex items-baseline justify-between">
-              <div class="text-2xl sm:text-3xl font-bold font-mono text-white">262 bps</div>
-              <span class="text-xs text-emerald-400 font-mono font-bold">▼ -4 bps</span>
-            </div>
-            <div class="pt-2 border-t border-[#1A2540] flex items-center justify-between text-[11px] text-slate-400">
-              <span>TCMB Politika Faizi:</span>
-              <span class="font-mono font-bold text-slate-200">%50,00</span>
-            </div>
-          </div>
-
-          <!-- Card 4: Verity ALFA MODELİ -->
-          <div class="utl-card p-5 space-y-3">
-            <div class="flex items-center justify-between text-xs text-slate-400">
-              <span class="font-bold tracking-wider uppercase text-[10px]">Verity MODEL PORTFÖY <i class="data-badge sample">ÖRNEK</i></span>
-              <span class="font-mono text-red-300 bg-red-950/40 border border-red-800/40 px-2 py-0.5 rounded text-[11px] font-bold">BIST+ %18.4</span>
-            </div>
-            <div class="flex items-baseline justify-between">
-              <div class="text-2xl sm:text-3xl font-bold font-mono text-white">%124,6</div>
-              <span class="text-xs text-emerald-400 font-mono font-bold">Yıllık Getiri</span>
-            </div>
-            <div class="pt-2 border-t border-[#1A2540] flex items-center justify-between text-[11px] text-slate-400">
-              <span>Sharpe Oranı:</span>
-              <span class="font-mono font-bold text-slate-200">2.14 (Yüksek)</span>
+              <span>Kaynak:</span>
+              <span class="font-mono font-bold text-slate-200">Yahoo Finance (gecikmeli)</span>
             </div>
           </div>
 
@@ -392,13 +360,13 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           <!-- BIST 100 Area Chart (Col span 2) -->
-          <div class="lg:col-span-2 utl-card p-6 flex flex-col justify-between space-y-4">
+          <div class="lg:col-span-3 utl-card p-6 flex flex-col justify-between space-y-4">
             <div>
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#1A2540]">
                 <div>
                   <div class="flex items-center gap-2">
                     <h2 class="font-serif font-bold text-white text-lg">BIST 100 Performans ve Derinlik Grafiği</h2>
-                    <i id="bistChartBadge" class="data-badge sample">ÖRNEK VERİ</i>
+                    <i id="bistChartBadge" class="data-badge live">YÜKLENİYOR</i>
                     <span class="text-[10px] bg-red-950/40 border border-red-800/40 text-red-300 px-2 py-0.5 rounded font-mono font-bold">BIST100</span>
                   </div>
                   <p class="text-xs text-slate-400 mt-0.5">Mum grafiği, hacim ağırlıklı ortalama ve teknik direnç koridoru</p>
@@ -419,19 +387,19 @@
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
                 <div class="bg-[#070B14] border border-[#1A2540] rounded-xl p-3">
                   <div class="text-[10px] text-slate-500 font-semibold uppercase font-mono">20 GÜNLÜK DİP (DESTEK)</div>
-                  <div id="bistLvlSupport" class="text-sm font-bold font-mono text-slate-200 mt-0.5">9.250 TL</div>
+                  <div id="bistLvlSupport" class="text-sm font-bold font-mono text-slate-200 mt-0.5">—</div>
                 </div>
                 <div class="bg-[#070B14] border border-[#1A2540] rounded-xl p-3">
                   <div class="text-[10px] text-slate-500 font-semibold uppercase font-mono">20 GÜNLÜK ZİRVE (DİRENÇ)</div>
-                  <div id="bistLvlResistance" class="text-sm font-bold font-mono text-slate-200 mt-0.5">9.680 TL</div>
+                  <div id="bistLvlResistance" class="text-sm font-bold font-mono text-slate-200 mt-0.5">—</div>
                 </div>
                 <div class="bg-[#070B14] border border-[#1A2540] rounded-xl p-3">
                   <div class="text-[10px] text-slate-500 font-semibold uppercase font-mono">20 GÜNLÜK HO</div>
-                  <div id="bistLvlMa20" class="text-sm font-bold font-mono text-slate-200 mt-0.5">9.314 TL</div>
+                  <div id="bistLvlMa20" class="text-sm font-bold font-mono text-slate-200 mt-0.5">—</div>
                 </div>
                 <div class="bg-[#070B14] border border-[#1A2540] rounded-xl p-3">
                   <div class="text-[10px] text-slate-500 font-semibold uppercase font-mono">200 GÜNLÜK HO</div>
-                  <div id="bistLvlMa200" class="text-sm font-bold font-mono text-slate-200 mt-0.5">8.940 TL</div>
+                  <div id="bistLvlMa200" class="text-sm font-bold font-mono text-slate-200 mt-0.5">—</div>
                 </div>
               </div>
 
@@ -448,10 +416,6 @@
                   <span class="w-2.5 h-2.5 rounded-full bg-[#2F6BFF]"></span>
                   <span class="text-slate-300">BIST 100 Ana Akış</span>
                 </div>
-                <div class="flex items-center gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                  <span class="text-slate-300">Yabancı Girişi</span>
-                </div>
               </div>
               <div class="text-[11px] text-slate-500 font-mono">
                 Kaynak: Yahoo Finance (gecikmeli)
@@ -459,78 +423,6 @@
             </div>
           </div>
 
-          <!-- Sektörel Isı Haritası and AI Signal (Col span 1) -->
-          <div class="utl-card p-6 flex flex-col justify-between space-y-4">
-            <div>
-              <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
-                <div>
-                  <h3 class="font-serif font-bold text-white text-base">Sektörel Sermaye Akışı</h3>
-                  <p class="text-xs text-slate-400">Günlük ağırlıklı sermaye yönü</p>
-                </div>
-                <button onclick="switchView('reports')" class="text-xs text-red-400 hover:text-red-300 font-semibold transition-colors">
-                  Tümü &rarr;
-                </button>
-              </div>
-
-              <!-- Sector Cards -->
-              <div class="grid grid-cols-2 gap-3 my-4">
-                <div class="p-3 bg-emerald-950/40 border border-emerald-800/50 rounded-xl space-y-1">
-                  <div class="flex items-center justify-between text-xs text-emerald-300 font-bold">
-                    <span>XULAS (Ulaştırma)</span>
-                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
-                  </div>
-                  <div class="text-lg font-bold font-mono text-emerald-400">+3.45%</div>
-                  <div class="text-[10px] text-emerald-500 font-mono text-right">%23.5 Hacim</div>
-                </div>
-
-                <div class="p-3 bg-emerald-950/40 border border-emerald-800/50 rounded-xl space-y-1">
-                  <div class="flex items-center justify-between text-xs text-emerald-300 font-bold">
-                    <span>XBANK (Bankacılık)</span>
-                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
-                  </div>
-                  <div class="text-lg font-bold font-mono text-emerald-400">+1.82%</div>
-                  <div class="text-[10px] text-emerald-500 font-mono text-right">%26.1 Hacim</div>
-                </div>
-
-                <div class="p-3 bg-red-950/40/40 border border-red-800/50 rounded-xl space-y-1">
-                  <div class="flex items-center justify-between text-xs text-red-300 font-bold">
-                    <span>XMANA (Metal Sanayi)</span>
-                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
-                  </div>
-                  <div class="text-lg font-bold font-mono text-red-400">+1.15%</div>
-                  <div class="text-[10px] text-red-400 font-mono text-right">%14.2 Hacim</div>
-                </div>
-
-                <div class="p-3 bg-rose-950/40 border border-rose-800/50 rounded-xl space-y-1">
-                  <div class="flex items-center justify-between text-xs text-rose-300 font-bold">
-                    <span>XBLSM (Bilişim)</span>
-                    <i class="fa-solid fa-arrow-trend-down text-[10px]"></i>
-                  </div>
-                  <div class="text-lg font-bold font-mono text-rose-400">-0.65%</div>
-                  <div class="text-[10px] text-rose-400 font-mono text-right">%8.4 Hacim</div>
-                </div>
-              </div>
-
-              <!-- Institutional Insight Box -->
-              <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-1.5 mt-2">
-                <div class="text-[10px] font-mono text-red-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <i class="fa-solid fa-brain"></i>
-                  <span>Verity MAKRO SİNYAL</span>
-                </div>
-                <p class="text-xs text-slate-300 leading-relaxed font-light">
-                  Ulaştırma ve Bankacılık sektörlerindeki net yabancı takas girişi, BIST 100 için 9.680 direncinin aşılma olasılığını %78 olarak modellemektedir.
-                </p>
-              </div>
-            </div>
-
-            <div class="pt-3 border-t border-[#1A2540] flex items-center justify-between text-xs text-slate-400">
-              <span class="text-[11px]">Güncelleme: Canlı BIST Feed</span>
-              <button onclick="switchView('reports')" class="text-red-400 hover:text-red-300 font-bold text-xs flex items-center gap-1">
-                <span>Raporları İncele</span>
-                <i class="fa-solid fa-arrow-right text-[10px]"></i>
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- ==================================================================
@@ -930,12 +822,12 @@
                 <!-- Score Pill -->
                 <div class="flex items-center gap-3 p-3.5 bg-[#070B14] border border-[#1A2540] rounded-xl">
                   <div id="stockDetailScore" class="w-11 h-11 rounded-xl bg-[#2F6BFF] text-white font-bold font-mono text-lg flex items-center justify-center shadow-md shadow-red-600/30">
-                    9.1
+                    —
                   </div>
                   <div>
                     <div class="text-[10px] text-red-400 font-bold uppercase tracking-wider font-mono">Verity BİLANÇO SKORU &rarr;</div>
-                    <div id="stockDetailScoreStatus" class="text-xs font-bold text-white">Mükemmel Finansal Sağlık</div>
-                    <div id="stockDetailScorePercentile" class="text-[10px] text-slate-400">BIST Ulaştırma: %90 Diliminde</div>
+                    <div id="stockDetailScoreStatus" class="text-xs font-bold text-white">Yükleniyor</div>
+                    <div id="stockDetailScorePercentile" class="text-[10px] text-slate-400"></div>
                   </div>
                 </div>
 
@@ -1017,19 +909,7 @@
                 class="stock-subtab-btn flex-shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-[#111A2E] font-mono"
               >
                 <i class="fa-solid fa-file-invoice-dollar text-xs"></i>
-                <span>Bilanço, İNA ve Temettü</span>
-              </button>
-
-              <button 
-                type="button" 
-                id="btnSubtab-microstructure" 
-                data-stock-tab="microstructure" 
-                onclick="switchStockSubTab('microstructure')" 
-                class="stock-subtab-btn flex-shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-[#111A2E] font-mono"
-              >
-                <i class="fa-solid fa-layer-group text-xs text-red-400"></i>
-                <span>BIST Derinlik ve AKD</span>
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Bilanço ve Temettü</span>
               </button>
 
               <button 
@@ -1068,38 +948,38 @@
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             <div class="utl-card p-4 space-y-1">
               <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">F/K ORANI</div>
-              <div id="stockDetailFK" class="text-xl font-bold font-mono text-red-400">3.84</div>
-              <div class="text-[10px] text-slate-400">Sektör Ort: 6.20</div>
+              <div id="stockDetailFK" class="text-xl font-bold font-mono text-red-400">—</div>
+              <div class="text-[10px] text-slate-400">Piyasa değeri / 12A net kâr</div>
             </div>
 
             <div class="utl-card p-4 space-y-1">
               <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">PD/DD</div>
-              <div id="stockDetailPDDD" class="text-xl font-bold font-mono text-red-400">0.98</div>
-              <div class="text-[10px] text-slate-400">Defter Değeri Altı</div>
+              <div id="stockDetailPDDD" class="text-xl font-bold font-mono text-red-400">—</div>
+              <div class="text-[10px] text-slate-400">Piyasa değeri / özkaynak</div>
             </div>
 
             <div class="utl-card p-4 space-y-1">
               <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">FD/FAVÖK</div>
-              <div id="stockDetailFDFavok" class="text-xl font-bold font-mono text-red-400">4.12</div>
-              <div class="text-[10px] text-slate-400">Sektör Ort: 5.80</div>
+              <div id="stockDetailFDFavok" class="text-xl font-bold font-mono text-red-400">—</div>
+              <div class="text-[10px] text-slate-400">Firma değeri / 12A FAVÖK</div>
             </div>
 
             <div class="utl-card p-4 space-y-1">
               <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">NET BORÇ/FAVÖK</div>
-              <div id="stockDetailNetDebt" class="text-xl font-bold font-mono text-emerald-400">1.15x</div>
-              <div class="text-[10px] text-slate-400">Düşük Kaldıraç</div>
+              <div id="stockDetailNetDebt" class="text-xl font-bold font-mono text-emerald-400">—</div>
+              <div class="text-[10px] text-slate-400">Net borç / 12A FAVÖK</div>
             </div>
 
             <div class="utl-card p-4 space-y-1">
               <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">ÖZSERMAYE KÂRLILIĞI</div>
-              <div id="stockDetailROE" class="text-xl font-bold font-mono text-emerald-400">%38,4</div>
-              <div class="text-[10px] text-slate-400">Yüksek Verimlilik</div>
+              <div id="stockDetailROE" class="text-xl font-bold font-mono text-emerald-400">—</div>
+              <div class="text-[10px] text-slate-400">12A net kâr / özkaynak</div>
             </div>
 
             <div class="utl-card p-4 space-y-1">
               <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">AKTİF KÂRLILIK</div>
-              <div id="stockDetailROA" class="text-xl font-bold font-mono text-emerald-400">%14,2</div>
-              <div class="text-[10px] text-slate-400">Güçlü Aktif Getiri</div>
+              <div id="stockDetailROA" class="text-xl font-bold font-mono text-emerald-400">—</div>
+              <div class="text-[10px] text-slate-400">12A net kâr / toplam aktif</div>
             </div>
           </div>
 
@@ -1218,19 +1098,6 @@
                 </div>
               </div>
 
-              <!-- Analyst Institutional Note -->
-              <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-2">
-                <div class="flex items-center justify-between text-[10px] font-mono">
-                  <span class="text-red-400 font-bold uppercase tracking-wider">Verity DEĞERLEME NOTU</span>
-                  <span id="analystNoteDate" class="text-slate-500">17 Ekim 2026</span>
-                </div>
-                <p id="analystNoteSummary" class="text-xs text-slate-300 leading-relaxed font-light">
-                  Şirket güçlü pazar payı, transit yolcu talebi ve kargo operasyonlarının sağladığı döviz gelirleri ile BIST 30 içerisinde en yüksek nakit üretim kapasitesine sahip amiral gemisidir.
-                </p>
-                <div id="analystNoteRiskOpp" class="text-[11px] text-red-300/90 font-light border-t border-[#1A2540] pt-2">
-                  Katalizör: Küresel havacılık toparlanması ve filo büyümesi marjları genişletmektedir.
-                </div>
-              </div>
             </div>
 
             <!-- Live KAP Disclosures Feed (Col 5) -->
@@ -1262,7 +1129,7 @@
           </div>
 
           <!-- ================================================================
-               SUBTAB 2: BİLANÇO, İNA and TEMETTÜ
+               SUBTAB 2: BİLANÇO and TEMETTÜ
                ================================================================ -->
           <div id="stockSubtab-financials" data-stock-subtab="financials" class="stock-subtab-pane space-y-6 hidden">
           <!-- ================================================================
@@ -1420,122 +1287,6 @@
             </div>
 
           <!-- ================================================================
-               Section: İnteraktif İNA Duyarlılık Matrisi (Interactive DCF Sensitivity Matrix)
-               ================================================================ -->
-          <div class="utl-card p-6 space-y-5">
-            <!-- Header with Title and Quantitative KPI Badges -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#1A2540]">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-red-950/40/80 border border-red-800/50 text-red-400 flex items-center justify-center text-base">
-                  <i class="fa-solid fa-table-cells-large"></i>
-                </div>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <h3 class="font-serif font-bold text-white text-lg tracking-tight">İnteraktif İNA Duyarlılık Matrisi (DCF Sensitivity Matrix)</h3>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950/40 border border-red-800/40 text-red-300">Kantitatif Model</span>
-                  </div>
-                  <p class="text-xs text-slate-400 font-light mt-0.5">WACC ve Uç Değer Büyüme Oranına duyarlı 5x5 dinamik içsel değer (Fair Value) ve prim/iskonto analizi</p>
-                </div>
-              </div>
-
-              <!-- Output KPI Box -->
-              <div class="flex items-center gap-3 bg-[#070B14] p-2.5 rounded-xl border border-[#1A2540] text-xs font-mono">
-                <div>
-                  <span class="text-slate-500 text-[10px] block uppercase font-bold">GÜNCEL FİYAT</span>
-                  <span id="dcfCurrentPriceDisplay" class="font-bold text-white">₺312,50</span>
-                </div>
-                <div class="w-px h-7 bg-[#1E2B45]"></div>
-                <div>
-                  <span class="text-slate-500 text-[10px] block uppercase font-bold">İÇSEL DEĞER</span>
-                  <span id="dcfIntrinsicVal" class="font-bold text-red-400 text-sm">₺420,15</span>
-                </div>
-                <div class="w-px h-7 bg-[#1E2B45]"></div>
-                <div>
-                  <span class="text-slate-500 text-[10px] block uppercase font-bold">GETİRİ POTANSİYELİ</span>
-                  <span id="dcfUpsideVal" class="font-bold text-emerald-400 text-sm">+%34,4</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Two Interactive Sliders -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Slider 1: WACC (%15 - %35) -->
-              <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-2.5">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-percent text-red-400 text-xs"></i>
-                    <label for="dcfWaccSlider" class="font-mono text-xs font-bold text-slate-200 uppercase">WACC (Sermaye Maliyeti)</label>
-                  </div>
-                  <span id="dcfWaccVal" class="px-2.5 py-0.5 rounded-lg bg-red-950/40/80 border border-red-800/50 text-red-300 font-mono text-xs font-bold">%22.0</span>
-                </div>
-                <input type="range" id="dcfWaccSlider" min="15" max="35" step="0.5" value="22" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#2F6BFF]" oninput="updateDcfMatrix()">
-                <div class="flex justify-between text-[10px] font-mono text-slate-500">
-                  <span>%15.0 (Düşük İskonto)</span>
-                  <span class="text-red-400/80">Baz: %22.0</span>
-                  <span>%35.0 (Yüksek İskonto)</span>
-                </div>
-                <p class="text-[11px] text-slate-400 font-light">Ağırlıklı Ortalama Sermaye Maliyeti arttıkça gelecekteki nakit akışlarının bugünkü değeri iskonto edilir.</p>
-              </div>
-
-              <!-- Slider 2: Terminal Growth Rate (%2 - %10) -->
-              <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-2.5">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-arrow-up-right-dots text-emerald-400 text-xs"></i>
-                    <label for="dcfTerminalSlider" class="font-mono text-xs font-bold text-slate-200 uppercase">Uç Değer Büyüme Oranı (Terminal Growth - g)</label>
-                  </div>
-                  <span id="dcfTerminalVal" class="px-2.5 py-0.5 rounded-lg bg-emerald-950/80 border border-emerald-800/50 text-emerald-300 font-mono text-xs font-bold">%5.50</span>
-                </div>
-                <input type="range" id="dcfTerminalSlider" min="2" max="10" step="0.25" value="5.5" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" oninput="updateDcfMatrix()">
-                <div class="flex justify-between text-[10px] font-mono text-slate-500">
-                  <span>%2.0 (Konservatif)</span>
-                  <span class="text-emerald-400/80">Baz: %5.50</span>
-                  <span>%10.0 (Yüksek Büyüme)</span>
-                </div>
-                <p class="text-[11px] text-slate-400 font-light">Projeksiyon sonrası sonsuz vadeli yıllık nakit akışı reel büyüme varsayımı.</p>
-              </div>
-            </div>
-
-            <!-- Dynamic 5x5 Sensitivity Table -->
-            <div class="space-y-2">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-slate-300">5x5 Duyarlılık Matrisi (Sensitivity Grid):</span>
-                  <span class="text-[11px] text-slate-500">Yatay = Uç Büyüme (g) &bull; Dikey = WACC</span>
-                </div>
-                <div class="flex items-center gap-3 text-[10px] font-mono flex-wrap">
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-950/80 border border-emerald-700/60 inline-block"></span> +%25 Üstü</span>
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-red-950/70 border border-red-700/60 inline-block"></span> %0 - %25 Prim</span>
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-950/80 border border-rose-700/60 inline-block"></span> İskonto / Negatif</span>
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded border-2 border-red-400 bg-[#2F6BFF] inline-block"></span> Seçili Baz Senaryo</span>
-                </div>
-              </div>
-
-              <div class="overflow-x-auto rounded-xl border border-[#1A2540]">
-                <table class="w-full text-center text-xs">
-                  <thead id="dcfMatrixThead" class="bg-[#070B14] text-slate-400 font-mono text-[11px]">
-                    <!-- Dynamically populated columns -->
-                  </thead>
-                  <tbody id="dcfMatrixTbody" class="divide-y divide-[#162238] bg-[#070B14]">
-                    <!-- Dynamically populated 5x5 cells -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Sensitivity Analysis Insight Footer -->
-            <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 pt-1 gap-2 font-mono">
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-circle-nodes text-red-400"></i>
-                <span id="dcfMatrixInsight">WACC %1,0 arttığında içsel değer -%6,2 duyarlılık sergilemektedir.</span>
-              </div>
-              <button onclick="resetDcfSliders()" class="px-2.5 py-1 rounded-lg bg-[#070B14] hover:bg-[#111A2E] border border-[#1A2540] text-slate-300 hover:text-white transition-colors text-[11px] flex items-center gap-1">
-                <i class="fa-solid fa-rotate-left text-[10px]"></i> Varsayılanlara Sıfırla
-              </button>
-            </div>
-          </div>
-
-          <!-- ================================================================
                Section: Official KAP Consolidated Balance Sheet and Financial Statements
                ================================================================ -->
           <div class="utl-card p-6 space-y-6">
@@ -1687,17 +1438,16 @@
                 <div>
                   <div class="flex items-center gap-2">
                     <h3 class="font-serif font-bold text-white text-lg tracking-tight">Sermaye Artırımı ve Temettü İstihbaratı</h3>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 border border-emerald-800/40 text-emerald-300">SPK ve KAP Tescilli</span>
                   </div>
-                  <p class="text-xs text-slate-400 font-light mt-0.5">İç kaynaklardan bedelsiz sermaye potansiyeli, geçmiş temettü verimi ve dolaşımdaki pay dinamiği</p>
+                  <p class="text-xs text-slate-400 font-light mt-0.5">İç kaynaklardan bedelsiz sermaye potansiyeli, temettü verimi ve dağıtım oranı (gerçek bilanço ve temettü verisi)</p>
                 </div>
               </div>
 
               <!-- Rating / Status Pill -->
               <div class="flex items-center gap-2 bg-[#070B14] px-3 py-1.5 rounded-xl border border-[#1A2540] text-xs font-mono">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="text-slate-400 text-[11px]">Sermaye Esnekliği:</span>
-                <span id="capitalFlexibilityBadge" class="text-emerald-400 font-bold uppercase">A+ REKOR KAPASİTE</span>
+                <span class="text-slate-400 text-[11px]">İç Kaynak:</span>
+                <span id="capitalFlexibilityBadge" class="text-slate-400 font-bold uppercase">—</span>
               </div>
             </div>
 
@@ -1712,7 +1462,7 @@
                       <i class="fa-solid fa-arrow-up-right-dots"></i> BEDELSİZ SERMAYE POTANSİYELİ
                     </span>
                     <span class="text-[10px] font-mono text-slate-500 bg-[#0C1322] px-2 py-0.5 rounded border border-[#1A2540]">
-                      SPK Formülü
+                      Basit oran
                     </span>
                   </div>
 
@@ -1720,22 +1470,22 @@
                   <div class="pt-4 pb-2 text-center">
                     <div class="text-[10px] text-slate-400 uppercase font-mono font-semibold tracking-wider">HESAPLANAN BEDELSİZ POTANSİYELİ</div>
                     <div id="bonusPotentialPct" class="text-4xl sm:text-5xl font-mono font-bold text-emerald-400 tracking-tight my-1">
-                      +%34.784
+                      —
                     </div>
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-800/50 text-emerald-300 text-xs font-mono font-bold">
-                      <span id="bonusPotentialRatio">348 Kat Potansiyel Bedelsiz İhraç</span>
+                      <span id="bonusPotentialRatio">Bilanço yükleniyor</span>
                     </div>
                   </div>
 
                   <!-- Visual Capacity Progress Bar -->
                   <div class="space-y-1.5 pt-3">
                     <div class="flex items-center justify-between text-[11px] font-mono">
-                      <span class="text-slate-400">Ödenmiş Sermaye: <strong id="bonusPaidRatioDisplay" class="text-white">%0,29</strong></span>
-                      <span class="text-emerald-400">İç Kaynaklar: <strong id="bonusReservesRatioDisplay" class="text-emerald-400">%99,71</strong></span>
+                      <span class="text-slate-400">Ödenmiş Sermaye: <strong id="bonusPaidRatioDisplay" class="text-white">—</strong></span>
+                      <span class="text-emerald-400">İç Kaynaklar: <strong id="bonusReservesRatioDisplay" class="text-emerald-400">—</strong></span>
                     </div>
                     <div class="w-full h-2.5 rounded-full bg-[#162238] overflow-hidden flex border border-[#1A2540]">
-                      <div id="bonusPaidBar" class="h-full bg-[#2F6BFF] transition-all duration-500" style="width: 1.5%;"></div>
-                      <div id="bonusReservesBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500" style="width: 98.5%;"></div>
+                      <div id="bonusPaidBar" class="h-full bg-[#2F6BFF] transition-all duration-500" style="width: 0%;"></div>
+                      <div id="bonusReservesBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500" style="width: 0%;"></div>
                     </div>
                   </div>
                 </div>
@@ -1744,15 +1494,15 @@
                 <div class="grid grid-cols-3 gap-2 pt-3 border-t border-[#1A2540] text-center font-mono">
                   <div class="p-2 bg-[#0C1322] rounded-lg border border-[#1A2540]">
                     <span class="text-[9px] text-slate-500 block uppercase">ÖZKAYNAKLAR</span>
-                    <span id="bonusTotalEquityDisplay" class="text-xs font-bold text-slate-200">₺481,4 Mlr</span>
+                    <span id="bonusTotalEquityDisplay" class="text-xs font-bold text-slate-200">—</span>
                   </div>
                   <div class="p-2 bg-[#0C1322] rounded-lg border border-[#1A2540]">
                     <span class="text-[9px] text-slate-500 block uppercase">ÖDENMİŞ SERMAYE</span>
-                    <span id="bonusPaidCapitalDisplay" class="text-xs font-bold text-red-400">₺1.380 Mn</span>
+                    <span id="bonusPaidCapitalDisplay" class="text-xs font-bold text-red-400">—</span>
                   </div>
                   <div class="p-2 bg-[#0C1322] rounded-lg border border-[#1A2540]">
                     <span class="text-[9px] text-slate-500 block uppercase">İÇ KAYNAK FARKI</span>
-                    <span id="bonusFreeReservesDisplay" class="text-xs font-bold text-emerald-400">₺480,0 Mlr</span>
+                    <span id="bonusFreeReservesDisplay" class="text-xs font-bold text-emerald-400">—</span>
                   </div>
                 </div>
 
@@ -1765,8 +1515,8 @@
               <!-- Right Side: 3 Key Cards (Col 7) -->
               <div class="lg:col-span-7 space-y-4 flex flex-col justify-between">
                 
-                <!-- Top 3 Grid Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Top Grid Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   
                   <!-- Card 1: Geçmiş Temettü Verimi (Dividend Yield %) -->
                   <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-2 hover:border-emerald-500/40 transition-colors">
@@ -1800,21 +1550,6 @@
                     </div>
                   </div>
 
-                  <!-- Card 3: Halka Açıklık Oranı (Free Float Ratio %) -->
-                  <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-2 hover:border-amber-500/40 transition-colors">
-                    <div class="flex items-center justify-between text-xs text-slate-400">
-                      <span class="font-mono text-[10px] uppercase font-bold text-amber-400 tracking-wider">HALKA AÇIKLIK ORANI</span>
-                      <i class="fa-solid fa-users text-amber-400"></i>
-                    </div>
-                    <div id="freeFloatDisplay" class="text-2xl font-mono font-bold text-amber-300 tracking-tight">%50,4</div>
-                    <div class="flex items-center justify-between text-[10px] font-mono pt-1.5 border-t border-[#1A2540]">
-                      <span class="text-slate-500">MKK Saklama Statüsü:</span>
-                      <span id="freeFloatLiquidityBadge" class="font-bold text-red-300">YÜKSEK LİKİDİTE</span>
-                    </div>
-                    <div class="text-[10px] text-slate-400 leading-tight">
-                      Merkezi Kayıt Kuruluşu (MKK) fiili dolaşımdaki pay oranı.
-                    </div>
-                  </div>
 
                 </div>
 
@@ -1824,293 +1559,19 @@
                     <span class="text-red-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                       <i class="fa-solid fa-building-shield"></i> KURUMSAL SERMAYE VE TEMETTÜ YORUMU
                     </span>
-                    <span id="capitalCeilingComparisonBadge" class="text-slate-400 font-mono">Tavan: ₺5.000 Mn</span>
+                    <span id="capitalCeilingComparisonBadge" class="text-slate-400 font-mono">Tavan: —</span>
                   </div>
                   <p id="capitalDividendCommentary" class="text-slate-300 text-xs leading-relaxed font-light">
                     <!-- Dynamically populated via renderCapitalAndDividendIntelligence() -->
                   </p>
                   <div class="pt-2 border-t border-[#1A2540] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-400">
-                    <span class="flex items-center gap-1 text-emerald-400"><i class="fa-solid fa-check"></i> <span id="dividendContinuityBadge">Son 5 Yılda 4 Kez Nakit Temettü</span></span>
-                    <span class="text-slate-500">KAP Kayıt No: <strong id="kapCompanyRegCode" class="text-slate-400">BIST-THYAO-MKK</strong></span>
+                    <span class="flex items-center gap-1 text-emerald-400"><i class="fa-solid fa-coins"></i> <span id="dividendContinuityBadge">Temettü geçmişi yükleniyor</span></span>
                   </div>
                 </div>
 
               </div>
 
             </div>
-          </div>
-          </div>
-
-          <!-- ================================================================
-               SUBTAB 3: BIST DERİNLİK and AKD (MİKRO-YAPI)
-               ================================================================ -->
-          <div id="stockSubtab-microstructure" data-stock-subtab="microstructure" class="stock-subtab-pane space-y-6 hidden">
-          <!-- ================================================================
-               Section: Borsa İstanbul Piyasa Mikro-Yapısı (Market Microstructure)
-               1. 10 Kademe Canlı Emir Defteri Derinliği (Level 2 Order Book Depth)
-               2. Aracı Kurum Dağılımı (Brokerage Distribution - AKD)
-               3. Yabancı Takas and MKK Saklama Analizi (Foreign Custody Analysis)
-               ================================================================ -->
-          <div class="space-y-6">
-            
-            <!-- Upper Dual Grid: Level 2 Depth (Col 5) and AKD (Col 7) -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-              <!-- Component 1: 10 Kademe Canlı Emir Defteri Derinliği (Col 5) -->
-              <div class="lg:col-span-5 utl-card p-5 space-y-3.5 flex flex-col justify-between">
-                <div>
-                  <!-- Header -->
-                  <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-8 h-8 rounded-lg bg-red-950/40/80 border border-red-800/50 text-red-400 flex items-center justify-center text-sm">
-                        <i class="fa-solid fa-layer-group"></i>
-                      </div>
-                      <div>
-                        <div class="flex items-center gap-2">
-                          <h4 class="font-serif font-bold text-white text-sm sm:text-base">10 Kademe Emir Defteri</h4>
-                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-950/80 border border-emerald-800/50 text-emerald-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> CANLI L2
-                          </span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 font-light">BIST resmi kademeli derinlik ve bekleyen emirler</p>
-                      </div>
-                    </div>
-                    <span id="depthSpreadBadge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950/40 border border-red-800/40 text-red-300">
-                      Makas: ₺0,10 (%0,03)
-                    </span>
-                  </div>
-
-                  <!-- Order Book Imbalance Gauge (Alış / Satış Dengesizliği) -->
-                  <div class="pt-2.5 pb-1 space-y-1.5">
-                    <div class="flex items-center justify-between text-[11px] font-mono">
-                      <span class="text-emerald-400 font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-caret-up"></i> ALIŞ: %<span id="depthBidImbalancePct">58,4</span>
-                        <span class="text-slate-500 text-[10px]">(<span id="depthTotalBidVolume">1.842.150</span> Lot)</span>
-                      </span>
-                      <span class="text-rose-400 font-bold flex items-center gap-1">
-                        SATIŞ: %<span id="depthAskImbalancePct">41,6</span>
-                        <span class="text-slate-500 text-[10px]">(<span id="depthTotalAskVolume">1.312.400</span> Lot)</span>
-                        <i class="fa-solid fa-caret-down"></i>
-                      </span>
-                    </div>
-                    <div class="w-full h-2 rounded-full bg-rose-950/60 overflow-hidden flex border border-[#1A2540]">
-                      <div id="depthImbalanceBar" class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-300" style="width: 58.4%;"></div>
-                      <div class="h-full bg-gradient-to-r from-rose-400 to-rose-500 flex-1"></div>
-                    </div>
-                  </div>
-
-                  <!-- 10 Level Depth Table -->
-                  <div class="overflow-x-auto rounded-xl border border-[#1A2540] my-2">
-                    <table class="w-full text-xs font-mono select-none">
-                      <thead>
-                        <tr class="bg-[#070B14] text-[10px] text-slate-400 uppercase border-b border-[#1A2540]">
-                          <th class="py-1.5 px-2 text-left text-slate-500">Emir</th>
-                          <th class="py-1.5 px-2 text-right text-emerald-400">Alış Lot</th>
-                          <th class="py-1.5 px-2 text-right text-emerald-300 font-bold">Alış</th>
-                          <th class="py-1.5 px-2 text-left text-rose-300 font-bold">Satış</th>
-                          <th class="py-1.5 px-2 text-left text-rose-400">Satış Lot</th>
-                          <th class="py-1.5 px-2 text-right text-slate-500">Emir</th>
-                        </tr>
-                      </thead>
-                      <tbody id="depthTableBody" class="divide-y divide-[#141E33] bg-[#070B14]">
-                        <!-- Dynamically populated 10 bid and 10 ask rows with live depth bars -->
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- Footer Summary -->
-                <div class="pt-2 border-t border-[#1A2540] flex items-center justify-between text-[11px] font-mono text-slate-400">
-                  <span id="depthSummaryBids" class="text-emerald-400 font-bold truncate">Top. Alış: 1.84M Lot</span>
-                  <span id="depthTickStepBadge" class="text-slate-500 text-[10px]">Adım: ₺0,10</span>
-                  <span id="depthSummaryAsks" class="text-rose-400 font-bold truncate">Top. Satış: 1.31M Lot</span>
-                </div>
-              </div>
-
-              <!-- Component 2: Aracı Kurum Dağılımı (AKD) (Col 7) -->
-              <div class="lg:col-span-7 utl-card p-5 space-y-3.5 flex flex-col justify-between">
-                <div>
-                  <!-- Header -->
-                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#1A2540]">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-800/50 text-emerald-400 flex items-center justify-center text-sm">
-                        <i class="fa-solid fa-building-columns"></i>
-                      </div>
-                      <div>
-                        <div class="flex items-center gap-2">
-                          <h4 class="font-serif font-bold text-white text-sm sm:text-base">Aracı Kurum Dağılımı (AKD)</h4>
-                          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950/40 border border-red-800/40 text-red-300">Gün İçi Takas</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 font-light">İlk 5 net alıcı ve ilk 5 net satıcı kurum pozisyonları</p>
-                      </div>
-                    </div>
-                    <span id="akdCr5Badge" class="px-2.5 py-1 rounded-lg bg-red-950/40/80 border border-red-800/50 text-red-300 font-mono text-xs font-bold self-start sm:self-auto">
-                      CR5 Yoğunlaşma: %81,4
-                    </span>
-                  </div>
-
-                  <!-- Dual Columns: Buyers vs Sellers Tables -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-2">
-                    
-                    <!-- Left: İlk 5 Net Alıcı -->
-                    <div class="space-y-1.5">
-                      <div class="flex items-center justify-between text-[11px] font-mono pb-1 border-b border-emerald-900/40">
-                        <span class="text-emerald-400 font-bold flex items-center gap-1">
-                          <i class="fa-solid fa-arrow-down-left"></i> İLK 5 NET ALICI
-                        </span>
-                        <span id="akdBuyersTotalShare" class="text-emerald-400/90 font-bold">%81,4 Pay</span>
-                      </div>
-                      <div class="overflow-x-auto rounded-lg border border-[#1A2540] bg-[#070B14]">
-                        <table class="w-full text-[11px] font-mono">
-                          <thead>
-                            <tr class="text-[9px] text-slate-500 uppercase bg-[#070B14] border-b border-[#1A2540]">
-                              <th class="py-1 px-2 text-left">Kurum</th>
-                              <th class="py-1 px-1.5 text-right text-emerald-400">Net Lot</th>
-                              <th class="py-1 px-1.5 text-right text-slate-400">Maliyet</th>
-                              <th class="py-1 px-1.5 text-right text-emerald-300">Pay %</th>
-                            </tr>
-                          </thead>
-                          <tbody id="akdBuyersTbody" class="divide-y divide-[#141E33]">
-                            <!-- Dynamically populated Top 5 Buyers + Diğer -->
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    <!-- Right: İlk 5 Net Satıcı -->
-                    <div class="space-y-1.5">
-                      <div class="flex items-center justify-between text-[11px] font-mono pb-1 border-b border-rose-900/40">
-                        <span class="text-rose-400 font-bold flex items-center gap-1">
-                          <i class="fa-solid fa-arrow-up-right"></i> İLK 5 NET SATICI
-                        </span>
-                        <span id="akdSellersTotalShare" class="text-rose-400/90 font-bold">%76,8 Pay</span>
-                      </div>
-                      <div class="overflow-x-auto rounded-lg border border-[#1A2540] bg-[#070B14]">
-                        <table class="w-full text-[11px] font-mono">
-                          <thead>
-                            <tr class="text-[9px] text-slate-500 uppercase bg-[#070B14] border-b border-[#1A2540]">
-                              <th class="py-1 px-2 text-left">Kurum</th>
-                              <th class="py-1 px-1.5 text-right text-rose-400">Net Lot</th>
-                              <th class="py-1 px-1.5 text-right text-slate-400">Maliyet</th>
-                              <th class="py-1 px-1.5 text-right text-rose-300">Pay %</th>
-                            </tr>
-                          </thead>
-                          <tbody id="akdSellersTbody" class="divide-y divide-[#141E33]">
-                            <!-- Dynamically populated Top 5 Sellers + Diğer -->
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-
-                <!-- Net Cash Flow and Concentration Footer -->
-                <div class="pt-2 border-t border-[#1A2540] flex flex-col sm:flex-row sm:items-center justify-between text-[11px] font-mono gap-1 text-slate-400">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-slate-500">Piyasa Net Para Dengesi:</span>
-                    <strong id="akdNetCashFlow" class="text-emerald-400 font-bold">+₺142,5 Mn (Net Para Girişi)</strong>
-                  </div>
-                  <span id="akdTopBrokerLeader" class="text-red-400 font-semibold truncate">Lider Alıcı: Bank of America (%34,2)</span>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Component 3: Yabancı Takas and MKK Saklama Analizi (Full Width Card) -->
-            <div class="utl-card p-6 space-y-4">
-              <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#1A2540]">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-xl bg-sky-950/80 border border-sky-800/50 text-sky-400 flex items-center justify-center text-base">
-                    <i class="fa-solid fa-earth-americas"></i>
-                  </div>
-                  <div>
-                    <div class="flex items-center gap-2">
-                      <h4 class="font-serif font-bold text-white text-base">Yabancı Takas ve MKK Saklama Dağılımı</h4>
-                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-950 border border-sky-800/40 text-sky-300">MKK Saklama</span>
-                    </div>
-                    <p class="text-xs text-slate-400 font-light mt-0.5">Citibank Yabancı ve Deutsche Bank saklama oranları, 30 günlük değişim ve yabancı payı trendi</p>
-                  </div>
-                </div>
-                <span id="foreignTrendBadge" class="px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-800/50 text-emerald-400 font-mono text-xs font-bold flex items-center gap-1 self-start md:self-auto">
-                  <i class="fa-solid fa-arrow-trend-up"></i> YABANCI GİRİŞİ GÜÇLÜ (+%2,15)
-                </span>
-              </div>
-
-              <!-- 4 Foreign Metrics Cards -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                
-                <!-- Card 1: Toplam Yabancı Payı -->
-                <div class="p-3.5 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-1">
-                  <div class="flex items-center justify-between text-[11px] text-slate-400">
-                    <span class="font-mono uppercase font-bold text-sky-400">TOPLAM YABANCI PAYI</span>
-                    <i class="fa-solid fa-globe text-sky-400 text-xs"></i>
-                  </div>
-                  <div id="foreignTotalRatio" class="text-2xl font-mono font-bold text-white tracking-tight">%38,45</div>
-                  <div class="flex items-center justify-between text-[10px] font-mono pt-1 border-t border-[#1A2540]">
-                    <span class="text-slate-500">Son 30 Gün</span>
-                    <span id="foreignMonthlyDelta" class="font-bold text-emerald-400">+%2,15 Artış</span>
-                  </div>
-                </div>
-
-                <!-- Card 2: Citibank Yabancı A.Ş. -->
-                <div class="p-3.5 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-1">
-                  <div class="flex items-center justify-between text-[11px] text-slate-400">
-                    <span class="font-mono uppercase font-bold text-red-400">CITIBANK YABANCI A.Ş.</span>
-                    <span class="text-[9px] font-mono text-slate-500">MKK Saklama</span>
-                  </div>
-                  <div id="foreignCitiRatio" class="text-2xl font-mono font-bold text-red-300 tracking-tight">%24,80</div>
-                  <div class="flex items-center justify-between text-[10px] font-mono pt-1 border-t border-[#1A2540]">
-                    <span id="foreignCitiLots" class="text-slate-400 truncate">342.240.000 Lot</span>
-                    <span id="foreignCitiDelta" class="font-bold text-emerald-400">+%1,40 (30G)</span>
-                  </div>
-                </div>
-
-                <!-- Card 3: Deutsche Bank A.Ş. (Yabancı) -->
-                <div class="p-3.5 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-1">
-                  <div class="flex items-center justify-between text-[11px] text-slate-400">
-                    <span class="font-mono uppercase font-bold text-amber-400">DEUTSCHE BANK (YABANCI)</span>
-                    <span class="text-[9px] font-mono text-slate-500">MKK Saklama</span>
-                  </div>
-                  <div id="foreignDeutRatio" class="text-2xl font-mono font-bold text-amber-300 tracking-tight">%10,15</div>
-                  <div class="flex items-center justify-between text-[10px] font-mono pt-1 border-t border-[#1A2540]">
-                    <span id="foreignDeutLots" class="text-slate-400 truncate">140.070.000 Lot</span>
-                    <span id="foreignDeutDelta" class="font-bold text-emerald-400">+%0,65 (30G)</span>
-                  </div>
-                </div>
-
-                <!-- Card 4: Net Fon Akışı (Haftalık and Aylık) -->
-                <div class="p-3.5 bg-[#070B14] border border-[#1A2540] rounded-xl space-y-1">
-                  <div class="flex items-center justify-between text-[11px] text-slate-400">
-                    <span class="font-mono uppercase font-bold text-emerald-400">NET YABANCI AKIŞI</span>
-                    <i class="fa-solid fa-money-bill-trend-up text-emerald-400 text-xs"></i>
-                  </div>
-                  <div id="foreignMonthlyFlow" class="text-2xl font-mono font-bold text-emerald-400 tracking-tight">+₺1,42 Mlr</div>
-                  <div class="flex items-center justify-between text-[10px] font-mono pt-1 border-t border-[#1A2540]">
-                    <span class="text-slate-500">Son 1 Hafta:</span>
-                    <span id="foreignWeeklyFlow" class="font-bold text-emerald-400">+₺385,4 Mn</span>
-                  </div>
-                </div>
-
-              </div>
-
-              <!-- 30 Days Trend Visual Track and Commentary -->
-              <div class="p-3.5 bg-[#070B14] border border-[#1A2540] rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-                <div class="flex items-center gap-2">
-                  <i class="fa-solid fa-chart-line text-sky-400"></i>
-                  <span id="foreignAnalysisCommentary" class="text-slate-300">
-                    <strong class="text-white">Takas Yorumu:</strong> Citibank ve Deutsche Bank son 30 işlem gününde istikrarlı net alıcı konumundadır. Yabancı takas oranı %36,30 dip bölgesinden %38,45 seviyesine toparlanarak güçlü kurumsal birikime işaret etmektedir.
-                  </span>
-                </div>
-                <div class="flex items-center gap-3 font-mono text-[11px] flex-shrink-0 text-slate-500">
-                  <span>52H Zirve: <strong class="text-slate-300">%42,10</strong></span>
-                  <span>52H Dip: <strong class="text-slate-300">%31,20</strong></span>
-                  <span class="px-2 py-0.5 rounded bg-red-950/40 text-red-300 border border-red-800/40">MKK TEYİTLİ</span>
-                </div>
-              </div>
-
-            </div>
-
           </div>
           </div>
 
@@ -2126,10 +1587,10 @@
                 <div>
                   <h4 class="font-serif font-bold text-white text-base">Mum Grafiği (OHLC) ve Hareketli Ortalamalar</h4>
                   <div class="flex items-center gap-2 mt-0.5">
-                    <span id="techCurrentPriceLabel" class="text-xs font-mono font-bold text-red-400">₺312,50</span>
-                    <span id="techCurrentChangeLabel" class="text-[11px] font-mono text-emerald-400">+%3,82</span>
+                    <span id="techCurrentPriceLabel" class="text-xs font-mono font-bold text-red-400">—</span>
+                    <span id="techCurrentChangeLabel" class="text-[11px] font-mono text-emerald-400"></span>
                     <span class="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/60 text-slate-300 text-[9px] font-mono font-bold" title="Açılış, Yüksek, Düşük, Kapanış mum grafiği">MUM • OHLC</span>
-                    <i id="techDataNote" class="data-badge sample">ÖRNEK VERİ</i>
+                    <i id="techDataNote" class="data-badge live">YÜKLENİYOR</i>
                   </div>
                 </div>
 
@@ -2252,9 +1713,9 @@
                 <div>
                   <div class="flex items-center gap-2">
                     <h3 class="font-serif font-bold text-white text-lg tracking-tight">Başabaş Rakip Kıyaslama (Head-to-Head Peer Comparison)</h3>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-950 border border-purple-800/40 text-purple-300">6 Eksenli Radar Modeli</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-950 border border-purple-800/40 text-purple-300">5 Eksenli Radar</span>
                   </div>
-                  <p class="text-xs text-slate-400 font-light mt-0.5">Sektörün en yakın 3 rakibi ve serbest seçilen BIST hissesiyle temel çarpan ve operasyonel başabaş analizi</p>
+                  <p class="text-xs text-slate-400 font-light mt-0.5">Aynı sektörden 3 rakip (bilinen hisselerde elle seçilmiş liste) ya da seçtiğin bir hisseyle gerçek bilanço ve fiyat kıyaslaması</p>
                 </div>
               </div>
 
@@ -2305,7 +1766,7 @@
                 <div class="flex items-center justify-between pb-2 border-b border-[#1A2540]">
                   <div class="flex items-center gap-2">
                     <i class="fa-solid fa-spider text-purple-400 text-sm"></i>
-                    <span class="font-serif font-bold text-white text-sm">6 Eksenli Çok Faktörlü Radar</span>
+                    <span class="font-serif font-bold text-white text-sm">Çok Faktörlü Radar</span>
                   </div>
                   <div class="flex items-center gap-3 text-[11px] font-mono">
                     <span class="flex items-center gap-1 text-red-400 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-[#2F6BFF]"></span> <span id="radarActiveTickerLabel">THYAO</span></span>
@@ -2323,7 +1784,7 @@
                 <div class="p-3 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs space-y-1">
                   <div class="flex items-center justify-between text-[10px] font-mono">
                     <span class="text-purple-400 font-bold uppercase tracking-wider">FAKTÖR AYRIŞMA TEŞHİSİ</span>
-                    <span id="peerRadarScoreAdvantage" class="text-emerald-400 font-bold">+14 Puan Avantaj</span>
+                    <span id="peerRadarScoreAdvantage" class="text-slate-400 font-bold">—</span>
                   </div>
                   <p id="peerRadarCommentary" class="text-slate-300 text-[11px] leading-relaxed font-light">
                     Hisse ve seçili rakip çok faktörlü eksende kıyaslanıyor...
@@ -2335,7 +1796,7 @@
               <div class="lg:col-span-7 bg-[#070B14] border border-[#1A2540] rounded-xl p-5 space-y-4 flex flex-col justify-between">
                 <div class="flex items-center justify-between pb-2 border-b border-[#1A2540]">
                   <div>
-                    <span class="font-serif font-bold text-white text-sm">Temel Çarpanlar ve Sektör Medyan Farkı</span>
+                    <span class="font-serif font-bold text-white text-sm">Temel Çarpanlar ve Grup Medyanı Farkı</span>
                     <p class="text-[11px] text-slate-400 font-light">Fiyat kazanç, piyasa/defter değeri ve kârlılık rasyoları medyan kıyaslaması</p>
                   </div>
                   <span id="peerSectorBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-950/40 border border-red-800/40 text-red-300">
@@ -3194,10 +2655,10 @@ DuPont ayrıştırması, Altman Z'' ve Piotroski F-skoru şirketin KAP'a bildird
                 <div class="p-4 sm:p-5 rounded-xl bg-oa-subtle border border-oa-border space-y-2.5 hover:border-red-500/50 transition-all">
                   <div class="flex items-center gap-2 text-red-400 font-bold text-xs font-mono uppercase">
                     <i class="fa-solid fa-chart-line text-sm"></i>
-                    <span>3. Dinamik İNA (DCF) Değerleme Matrisi</span>
+                    <span>3. Temettü ve Sermaye Analizi</span>
                   </div>
                   <p class="text-xs text-slate-400 leading-relaxed font-sans">
-DCF duyarlılık matrisi, seçilen WACC ve uç büyüme girdileriyle çalışan bir hesaplama aracıdır; girdiler örnek değerlerdir ve gerçek bir adil değer iddiası taşımaz.
+Temettü verimi ve takvimi gerçek temettü geçmişinden, dağıtım oranı ve bedelsiz potansiyeli şirketin nakit akış tablosu ve bilançosundan hesaplanır.
 </p>
                 </div>
 
@@ -3240,10 +2701,10 @@ Bilançolar TMS 29 enflasyon düzeltmeli olarak ve İş Yatırım’ın dönem s
                 </div>
 
                 <div class="p-4 rounded-xl bg-oa-subtle border border-oa-border space-y-1.5">
-                  <span class="text-red-400 font-mono font-bold text-xs uppercase block">03 &bull; DERİNLİK (ÖRNEK)</span>
-                  <h4 class="font-serif font-bold text-white text-sm">Derinlik ve AKD (Örnek)</h4>
+                  <span class="text-red-400 font-mono font-bold text-xs uppercase block">03 &bull; UYDURMA VERİ YOK</span>
+                  <h4 class="font-serif font-bold text-white text-sm">Olmayan Veriyi Göstermeyiz</h4>
                   <p class="text-[11.5px] text-slate-400 leading-relaxed font-sans">
-10 kademe emir defteri, aracı kurum dağılımı (AKD) ve yabancı takas ekranları gösterim amaçlı örnek veridir; gerçek veri için lisanslı bir veri kaynağı gerekir.
+Emir defteri, aracı kurum dağılımı (AKD) ve yabancı takas verisi lisanslı kaynak gerektirdiği için gösterilmez. Bir değer hesaplanamıyorsa yerine tahmin değil “—” yazılır.
 </p>
                 </div>
               </div>
@@ -3259,8 +2720,8 @@ Bilançolar TMS 29 enflasyon düzeltmeli olarak ve İş Yatırım’ın dönem s
                   <span class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-wider">GERÇEK BİLANÇOLU</span>
                 </div>
                 <div class="p-3 bg-oa-subtle rounded-xl border border-oa-border">
-                  <span class="block text-xl font-serif font-black text-red-400 font-mono">5x5</span>
-                  <span class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-wider">İNA MATRİSİ</span>
+                  <span class="block text-xl font-serif font-black text-red-400 font-mono">166</span>
+                  <span class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-wider">TEMETTÜ DAĞITAN</span>
                 </div>
                 <div class="p-3 bg-oa-subtle rounded-xl border border-oa-border">
                   <span class="block text-xl font-serif font-black text-white font-mono">4 ADET</span>
@@ -3802,7 +3263,6 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
        APPLICATION SCRIPTS
        ====================================================================== -->
   <script src="assets/js/kap-database.js"></script>
-  <script src="assets/js/stocks-data.js"></script>
   <script src="assets/js/company-about.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/app.js"></script>
