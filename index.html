@@ -63,6 +63,60 @@
 <body class="bg-oa-base text-slate-100 antialiased">
   <noscript><div style="padding:16px;background:#0A101D;color:#E6EDF8;font-family:sans-serif">Bu uygulama JavaScript gerektirir.</div></noscript>
 
+  <!-- Giriş animasyonu: sütunlar tek tek yükselir, ok çizilir, logo sola kayar ve VERITY belirir -->
+  <div id="introSplash" class="intro-splash" aria-hidden="true">
+    <div class="intro-lockup">
+      <svg class="intro-mark" viewBox="0 0 100 100" width="132" height="132">
+        <defs>
+          <linearGradient id="introBlue" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2468FF"/>
+            <stop offset="1" stop-color="#0A2FD0"/>
+          </linearGradient>
+          <filter id="introGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="1.1" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#introGlow)" stroke="url(#introBlue)" stroke-width="2.1" stroke-linejoin="round">
+          <rect class="intro-bar" style="--i:0" x="23.6" y="61.8" width="11.4" height="18.3" rx="1.3"/>
+          <rect class="intro-bar" style="--i:1" x="38.3" y="56.4" width="11.6" height="23.7" rx="1.3"/>
+          <rect class="intro-bar" style="--i:2" x="53.1" y="48.3" width="11.5" height="31.8" rx="1.3"/>
+          <rect class="intro-bar" style="--i:3" x="67.4" y="38.2" width="11.8" height="41.9" rx="1.3"/>
+        </g>
+        <g filter="url(#introGlow)" fill="none" stroke="url(#introBlue)" stroke-linecap="round" stroke-linejoin="round">
+          <path class="intro-line" pathLength="1" d="M22 55.6 C 42 50.4, 62 40.4, 72.4 27.6" stroke-width="2.8"/>
+          <path class="intro-line intro-line-2" pathLength="1" d="M32.2 57.6 C 52 49.6, 67 40.6, 73.6 31.4" stroke-width="1.5"/>
+          <path class="intro-head" d="M78.2 19.8 L65.2 25.2 L69.4 28.1 L76.6 33.6 Z" stroke-width="1.4" fill="url(#introBlue)"/>
+        </g>
+      </svg>
+      <div class="intro-word"><span style="--i:0">V</span><span style="--i:1">E</span><span style="--i:2">R</span><span style="--i:3">I</span><span style="--i:4">T</span><span style="--i:5">Y</span></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var splash = document.getElementById('introSplash');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { splash.remove(); return; }
+      document.documentElement.classList.add('intro-active');
+      var word = splash.querySelector('.intro-word');
+      var lockup = splash.querySelector('.intro-lockup');
+      // Logo starts centred: shift the lockup right by half of the wordmark it will reveal
+      function measure() { lockup.style.setProperty('--shift', (word.offsetWidth + parseFloat(getComputedStyle(lockup).columnGap || 0)) / 2 + 'px'); }
+      measure();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        splash.classList.add('intro-out');
+        document.documentElement.classList.remove('intro-active');
+        setTimeout(function () { splash.remove(); }, 700);
+      }
+      splash.addEventListener('click', finish);
+      document.addEventListener('keydown', finish, { once: true });
+      setTimeout(finish, 4200);
+    })();
+  </script>
+
 
 
   <!-- ======================================================================
