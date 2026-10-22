@@ -30,6 +30,30 @@ for (const [dir, loader] of [['assets/js', 'js'], ['assets/css', 'css']]) {
   }
 }
 
+// Font Awesome: keep only the icon rules the site actually references, and ship woff2 only
+// (every browser we support picks woff2 first, so the .ttf and v4-compat files are dead weight).
+{
+  const sources = [readFileSync('index.html', 'utf8')];
+  for (const name of readdirSync('assets/js')) {
+    if (name.endsWith('.js')) sources.push(readFileSync(`assets/js/${name}`, 'utf8'));
+  }
+  const used = new Set(sources.join('\n').match(/fa-[a-z0-9-]+/g));
+  const faCss = `${OUT}/assets/lib/fa/all.min.css`;
+  let css = readFileSync(faCss, 'utf8');
+  css = css.replace(/([^{}]+?)\{content:"[^"]*"\}/g, (rule, selectors) => {
+    if (!selectors.includes(':before')) return rule;
+    const keep = selectors.split(',').filter((s) => used.has(s.replace(':before', '').slice(1)));
+    return keep.length ? rule.replace(selectors, keep.join(',')) : '';
+  });
+  css = css
+    .replace(/@font-face\{[^}]*fa-v4compatibility[^}]*\}/g, '')
+    .replace(/,url\([^)]*\.ttf\) format\("truetype"\)/g, '');
+  writeFileSync(faCss, css);
+  for (const name of readdirSync(`${OUT}/assets/lib/fa/webfonts`)) {
+    if (!name.endsWith('.woff2') || name.includes('v4compat')) rmSync(`${OUT}/assets/lib/fa/webfonts/${name}`);
+  }
+}
+
 execSync(
   `npx tailwindcss -c tailwind.config.js -i assets/css/tailwind.input.css -o ${OUT}/assets/css/tailwind.css --minify`,
   { stdio: 'inherit' }
