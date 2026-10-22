@@ -6,7 +6,7 @@
    - Libraries and icons (versioned, immutable): cache first.
    ========================================================================== */
 
-const CACHE_NAME = 'oa-terminal-cache-v6';
+const CACHE_NAME = 'oa-terminal-cache-v7';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -42,14 +42,24 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;     // third-party requests go straight to the network
   if (url.pathname.startsWith('/api/')) return;        // live data: always the network
 
-  const immutable = url.pathname.startsWith('/assets/lib/') || url.pathname.startsWith('/assets/icons/');
+  // Our own JS/CSS carry a content hash (?v=...) from the build, so they can be cache-first too
+  const fingerprinted = /^\/assets\/(js|css)\//.test(url.pathname) && url.searchParams.has('v');
+  const immutable = fingerprinted || url.pathname.startsWith('/assets/lib/') || url.pathname.startsWith('/assets/icons/');
 
   if (immutable) {
     event.respondWith(
       caches.match(event.request).then((cached) => cached || fetch(event.request).then((res) => {
         if (res && res.status === 200 && res.type === 'basic') {
           const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          caches.open(CACHE_NAME).then(async (cache) => {
+            if (fingerprinted) {
+              // Drop older builds of the same file so the cache doesn't grow with every deploy
+              for (const old of await cache.keys()) {
+                if (new URL(old.url).pathname === url.pathname) await cache.delete(old);
+              }
+            }
+            return cache.put(event.request, copy);
+          });
         }
         return res;
       }))

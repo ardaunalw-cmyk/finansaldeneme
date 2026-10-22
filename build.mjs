@@ -2,6 +2,7 @@
 // and copy the static site into dist/.
 import { execSync } from 'node:child_process';
 import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { transformSync } from 'esbuild';
 
 const OUT = 'dist';
@@ -58,3 +59,14 @@ execSync(
   `npx tailwindcss -c tailwind.config.js -i assets/css/tailwind.input.css -o ${OUT}/assets/css/tailwind.css --minify`,
   { stdio: 'inherit' }
 );
+
+// Fingerprint our own JS/CSS in index.html (?v=<content hash>) so they can be cached "forever":
+// a changed file gets a new URL, an unchanged one is never downloaded again.
+{
+  const html = readFileSync(`${OUT}/index.html`, 'utf8');
+  const stamped = html.replace(/((?:src|href)="assets\/(?:js|css)\/[^"?]+)"/g, (match, ref) => {
+    const hash = createHash('sha256').update(readFileSync(`${OUT}/${ref.split('"')[1]}`)).digest('hex').slice(0, 10);
+    return `${ref}?v=${hash}"`;
+  });
+  writeFileSync(`${OUT}/index.html`, stamped);
+}
