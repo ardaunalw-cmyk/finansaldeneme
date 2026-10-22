@@ -10,7 +10,7 @@
     // [heading text, badge, note shown at the top of the card (optional)]
     ['Sektörel Sermaye Akışı', 'ÖRNEK', 'Sektör getirileri ve sermaye payları sabit örnek değerlerdir.'],
     ['İnteraktif İNA Duyarlılık Matrisi', 'ÖRNEK GİRDİLER', 'Matris, örnek nakit akışı ve hedef fiyat girdileriyle çalışır; adil değer tahmini değildir.'],
-    ['Sermaye Artırımı ve Temettü İstihbaratı', 'KISMEN ÖRNEK', 'Bedelsiz potansiyeli bilançodaki özkaynaktan hesaplanır (bilançosu olmayan şirketlerde örnektir). Temettü verimi, halka açıklık ve esneklik derecesi örnektir.'],
+    ['Sermaye Artırımı ve Temettü İstihbaratı', 'KISMEN ÖRNEK', 'Bedelsiz potansiyeli bilançodaki özkaynaktan hesaplanır (bilançosu olmayan şirketlerde örnektir). Temettü verimi gerçek nakit temettü geçmişinden (Yahoo Finance) hesaplanır. Dağıtım oranı, halka açıklık ve esneklik derecesi örnektir.'],
     ['10 Kademe Emir Defteri', 'ÖRNEK', 'Gerçek emir defteri verisi lisanslı veri gerektirir; gösterilen kademeler örnektir.'],
     ['Aracı Kurum Dağılımı (AKD)', 'ÖRNEK', 'Gerçek AKD verisi lisanslı veri gerektirir; kurumlar ve oranlar örnektir.'],
     ['Yabancı Takas ve MKK Saklama Dağılımı', 'ÖRNEK', 'Gerçek takas verisi MKK’dan lisanslı alınır; gösterilen oranlar örnektir.'],

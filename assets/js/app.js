@@ -4586,17 +4586,8 @@ function renderCapitalAndDividendIntelligence(symbolOrFin) {
   if (paidBar) paidBar.style.width = `${paidCapShare.toFixed(1)}%`;
   if (resBar) resBar.style.width = `${reservesShare.toFixed(1)}%`;
 
-  // 2. Dividend Yield (Geçmiş Temettü Verimi %)
-  let divYield = 4.85;
-  let div3YrAvg = 5.20;
-  if (code !== 'THYAO') {
-    divYield = +(2.0 + ((seed % 42) * 0.14)).toFixed(2);
-    div3YrAvg = +(divYield * 1.05).toFixed(2);
-  }
-  const divYieldEl = document.getElementById('dividendYieldDisplay');
-  const div3YrEl = document.getElementById('dividend3YrAvg');
-  if (divYieldEl) divYieldEl.textContent = `%${divYield.toFixed(2).replace('.', ',')}`;
-  if (div3YrEl) div3YrEl.textContent = `%${div3YrAvg.toFixed(2).replace('.', ',')}`;
+  // 2. Dividend Yield: real cash dividends (assets/data/dividends.json via dividends.js)
+  renderDividendYieldCard(code);
 
   // 3. Payout Ratio (Temettü Dağıtım Oranı %)
   let payoutRatio = 34.2;
@@ -4651,12 +4642,44 @@ function renderCapitalAndDividendIntelligence(symbolOrFin) {
   if (commEl) {
     const isEnormous = bonusPotentialPct > 1000;
     commEl.innerHTML = `
-      <strong class="text-white">${fin.name}</strong>, ${formatKapMoney(totalEquity)} tutarındaki özkaynak gücü ve ${formatKapMoney(freeReserves)} seviyesindeki kâr yedekleri/iç kaynakları ile ödenmiş sermayesine (${fin.paidCapital}) oranla <strong class="text-emerald-400">+%${bonusPotentialPct.toLocaleString('tr-TR')} (${bonusRatio} kat)</strong> bedelsiz sermaye artırımı potansiyeli taşımaktadır. ${isEnormous ? 'İç kaynaklar kayıtlı sermaye tavanının oldukça üzerinde olup yönetim kurulu ve genel kurul kararıyla güçlü bir bedelsiz ihraç esnekliği sağlamaktadır.' : 'Sermaye yapısı ve nakit kâr dağıtım rasyoları SPK temettü endeksi kriterlerini karşılamaktadır.'}
+      <strong class="text-white">${fin.name}</strong>, ${formatKapMoney(totalEquity)} tutarındaki özkaynak gücü ve ${formatKapMoney(freeReserves)} seviyesindeki kâr yedekleri/iç kaynakları ile ödenmiş sermayesine (${fin.paidCapital}) oranla <strong class="text-emerald-400">+%${bonusPotentialPct.toLocaleString('tr-TR')} (${bonusRatio} kat)</strong> bedelsiz sermaye artırımı potansiyeli taşımaktadır. ${isEnormous ? 'İç kaynaklar kayıtlı sermaye tavanının oldukça üzerinde olup yönetim kurulu ve genel kurul kararıyla güçlü bir bedelsiz ihraç esnekliği sağlamaktadır.' : 'Bedelsiz sermaye artırımı yönetim kurulu kararı ve SPK onayı gerektirir; potansiyel, gerçekleşeceği anlamına gelmez.'}
     `;
   }
 
   const regCodeEl = document.getElementById('kapCompanyRegCode');
   if (regCodeEl) regCodeEl.textContent = `BIST-${code}-MKK`;
+}
+
+/** Fills the dividend yield card from real dividend history; keeps a dash while loading or missing. */
+async function renderDividendYieldCard(code) {
+  const yieldEl = document.getElementById('dividendYieldDisplay');
+  const prevEl = document.getElementById('dividendPrevYield');
+  const noteEl = document.getElementById('dividendYieldNote');
+  if (!yieldEl) return;
+  const pct = v => `%${v.toFixed(2).replace('.', ',')}`;
+  yieldEl.textContent = '—';
+  if (prevEl) prevEl.textContent = '—';
+  if (noteEl) noteEl.textContent = 'Temettü verisi yükleniyor...';
+
+  const s = window.Dividends ? await Dividends.statsFor(code).catch(() => null) : null;
+  if ((appState.currentStock || code) !== code) return;      // user moved on to another stock
+  if (!s) {
+    if (noteEl) noteEl.textContent = 'Temettü verisi şu an alınamadı.';
+    return;
+  }
+  if (!s.paid) {
+    yieldEl.textContent = '%0,00';
+    if (prevEl) prevEl.textContent = '%0,00';
+    if (noteEl) noteEl.textContent = 'Son iki yılda nakit temettü dağıtımı kaydı yok (Yahoo Finance).';
+    return;
+  }
+  yieldEl.textContent = pct(s.yield12);
+  if (prevEl) prevEl.textContent = pct(s.yieldPrev);
+  if (noteEl) {
+    const amount = s.last.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    const head = s.count12 ? `Son 12 aydaki ${s.count12} nakit temettünün toplamı / fiyat.` : 'Son 12 ayda nakit temettü dağıtılmadı.';
+    noteEl.textContent = `${head} Son dağıtım: ${s.last.label}, hisse başı ₺${amount}. Fiyat ${new Date(s.asOf).toLocaleDateString('tr-TR')} tarihli.`;
+  }
 }
 window.renderCapitalAndDividendIntelligence = renderCapitalAndDividendIntelligence;
 window.renderPeerComparison = renderPeerComparison;

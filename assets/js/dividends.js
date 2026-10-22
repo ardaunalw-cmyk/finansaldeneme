@@ -257,7 +257,30 @@ const Dividends = (() => {
     if (typeof switchView === 'function') switchView('stock-detail', code);
   }
 
-  return { render, setTab, search, sortBy, openStock };
+  /**
+   * One company's cash dividends for the stock page: yield over the last 12 months and the 12
+   * months before, both against the price at data generation. null when the file is unavailable.
+   */
+  async function statsFor(code) {
+    const j = await load();
+    if (!j) return null;
+    const row = j.data[code];
+    const asOf = j.generatedAt.slice(0, 10);
+    if (!row) return { asOf, paid: false };
+    const today = iso(Date.now());
+    const y1 = iso(time(today) - 365 * DAY), y2 = iso(time(today) - 730 * DAY);
+    const sum = (from, to) => row.d.filter(([dt]) => dt > from && dt <= to).reduce((a, [, amt]) => a + amt, 0);
+    const recent = row.d.filter(([dt]) => dt > y1);
+    const last = row.d[row.d.length - 1];
+    return {
+      asOf, paid: true, price: row.p, count12: recent.length,
+      yield12: sum(y1, today) / row.p * 100,
+      yieldPrev: sum(y2, y1) / row.p * 100,
+      last: { date: last[0], amount: last[1], label: fullDate(last[0]) }
+    };
+  }
+
+  return { render, setTab, search, sortBy, openStock, statsFor };
 })();
 
 window.Dividends = Dividends;
