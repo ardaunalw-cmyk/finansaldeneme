@@ -70,6 +70,24 @@ function send(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
+// Per-IP limit, kept in memory per serverless instance: not airtight across instances,
+// but enough to stop a single client from burning API credits in a loop.
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_REQUESTS = 12;
+const hits = new Map();
+
+function rateLimited(req) {
+  const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  const now = Date.now();
+  const recent = (hits.get(ip) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  recent.push(now);
+  hits.set(ip, recent);
+  if (hits.size > 5000) {
+    for (const [key, times] of hits) if (now - times[times.length - 1] >= RATE_WINDOW_MS) hits.delete(key);
+  }
+  return recent.length > RATE_MAX_REQUESTS;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -81,6 +99,11 @@ export default async function handler(req, res) {
   const origin = req.headers.origin;
   if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
     return send(res, 403, { error: 'Forbidden' });
+  }
+
+  if (rateLimited(req)) {
+    res.setHeader('Retry-After', '60');
+    return send(res, 429, { error: 'rate_limited', reply: 'Çok fazla istek gönderdin. Lütfen bir dakika sonra tekrar dene.' });
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {

@@ -55,3 +55,8 @@ finansaldeneme/
 # Node build (Vercel generates these)
 node_modules/
 assets/css/tailwind.css
+
+# Local reference material (not part of the site)
+*.pdf
+chat asistan.jpg
+.claude/
