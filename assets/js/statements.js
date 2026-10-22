@@ -485,6 +485,17 @@ const Statements = (() => {
       },
       items: []
     };
+    // Payout: cash dividends paid (cash flow statement, incl. to minorities) / net profit for the
+    // period incl. minorities, both last twelve months. Many companies report dividends inside
+    // "other financing" without a separate line; those get null rather than a guessed 0.
+    if (rowMap(d).has('4CBB')) {
+      const paid = Math.abs(ttm(d, '4CBB'));
+      const profit = rowMap(d).has('3L') ? ttm(d, '3L') : ttm(d, '3Z');
+      fin.payout = { paid, profit, ratio: profit > 0 ? paid / profit * 100 : null, period: d.periods[0] };
+    } else {
+      fin.payout = { missing: bank || ins ? 'financial' : 'no-line' };
+    }
+
     // Captions of the two annual figures differ for banks
     const lbl = (id, text) => { const n = document.getElementById(id); if (n && n.previousSibling) n.previousSibling.textContent = text; };
     lbl('stockAnnualRevenue', bank ? 'Son 12 Ay Faaliyet Geliri: ' : ins ? 'Son 12 Ay Prim: ' : 'Son 12 Ay Satış: ');
@@ -640,6 +651,7 @@ const Statements = (() => {
     state.data = state.usd = null;
     state.reason = null;
     fin.quarterlyLive = false;
+    fin.payout = undefined;
     setCurrencyButtons();
     renderUnavailable();
 
@@ -650,6 +662,8 @@ const Statements = (() => {
       state.status = 'unavailable';
       state.reason = d.reason;
       renderUnavailable();
+      fin.payout = { missing: 'no-data' };
+      if (typeof renderPayoutCard === 'function') renderPayoutCard(fin);
       return;
     }
 
@@ -711,8 +725,14 @@ const Statements = (() => {
 
   /** Entry point used by the stock page: render what we have, or start loading. */
   function show(fin) {
-    if (state.code === fin.code && state.status === 'ready') { renderIncome(fin); renderBalance(fin); renderHealth(); return; }
-    if (state.code === fin.code && state.status === 'unavailable') { renderUnavailable(); return; }
+    const payoutCard = () => { if (typeof renderPayoutCard === 'function') renderPayoutCard(fin); };
+    if (state.code === fin.code && state.status === 'ready') {
+      // A freshly built company object has none of the derived figures yet
+      if (fin.payout === undefined) { applyDerived(fin, state.data); payoutCard(); }
+      renderIncome(fin); renderBalance(fin); renderHealth();
+      return;
+    }
+    if (state.code === fin.code && state.status === 'unavailable') { renderUnavailable(); fin.payout = { missing: 'no-data' }; payoutCard(); return; }
     ensure(fin);
   }
 

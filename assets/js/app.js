@@ -4589,23 +4589,8 @@ function renderCapitalAndDividendIntelligence(symbolOrFin) {
   // 2. Dividend Yield: real cash dividends (assets/data/dividends.json via dividends.js)
   renderDividendYieldCard(code);
 
-  // 3. Payout Ratio (Temettü Dağıtım Oranı %)
-  let payoutRatio = 34.2;
-  if (code !== 'THYAO') {
-    payoutRatio = +(22.0 + ((seed % 35) * 1.1)).toFixed(1);
-  }
-  const payoutEl = document.getElementById('payoutRatioDisplay');
-  const payoutBadge = document.getElementById('payoutSafetyBadge');
-  if (payoutEl) payoutEl.textContent = `%${payoutRatio.toFixed(1).replace('.', ',')}`;
-  if (payoutBadge) {
-    if (payoutRatio > 60) {
-      payoutBadge.textContent = 'YÜKSEK DAĞITIM';
-      payoutBadge.className = 'font-bold text-amber-400';
-    } else {
-      payoutBadge.textContent = 'GÜVENLİ MARJ';
-      payoutBadge.className = 'font-bold text-emerald-400';
-    }
-  }
+  // 3. Payout Ratio: real cash flow statement figures (statements.js sets fin.payout)
+  renderPayoutCard(fin);
 
   // 4. Free Float Ratio (Halka Açıklık Oranı %)
   let freeFloat = 50.4;
@@ -4649,6 +4634,41 @@ function renderCapitalAndDividendIntelligence(symbolOrFin) {
   const regCodeEl = document.getElementById('kapCompanyRegCode');
   if (regCodeEl) regCodeEl.textContent = `BIST-${code}-MKK`;
 }
+
+/** Payout ratio card: last-twelve-months dividends paid / net profit from the cash flow statement. */
+function renderPayoutCard(fin) {
+  const valueEl = document.getElementById('payoutRatioDisplay');
+  const badge = document.getElementById('payoutSafetyBadge');
+  const note = document.getElementById('payoutRatioNote');
+  if (!valueEl) return;
+  const p = fin && fin.payout;
+  const setBadge = (text, cls) => { if (badge) { badge.textContent = text; badge.className = `font-bold ${cls}`; } };
+  const setNote = text => { if (note) note.textContent = text; };
+
+  if (!p || p.missing) {
+    valueEl.textContent = '—';
+    setBadge(p ? 'HESAPLANAMADI' : 'YÜKLENİYOR', 'text-slate-400');
+    setNote(!p ? 'Gerçek bilanço verisi yükleniyor...'
+      : p.missing === 'financial' ? 'Banka ve sigorta nakit akış tablolarında temettü ödemesi ayrı satır olarak yer almıyor.'
+        : p.missing === 'no-line' ? 'Şirketin nakit akış tablosunda temettü ödemesi ayrı satır olarak raporlanmamış.'
+          : 'Bu şirket için bilanço verisi bulunamadı.');
+    return;
+  }
+  const money = v => formatKapMoney(v);
+  if (p.ratio == null) {
+    valueEl.textContent = '—';
+    setBadge(p.paid > 0 ? 'ZARARA RAĞMEN DAĞITIM' : 'DAĞITIM YOK', p.paid > 0 ? 'text-rose-400' : 'text-slate-400');
+    setNote(`Son 12 ay net kâr negatif (${money(p.profit)}); oran hesaplanamaz. Ödenen temettü: ${p.paid > 0 ? money(p.paid) : 'yok'}.`);
+    return;
+  }
+  valueEl.textContent = `%${p.ratio.toFixed(1).replace('.', ',')}`;
+  if (p.paid === 0) setBadge('DAĞITIM YOK', 'text-slate-400');
+  else if (p.ratio > 100) setBadge('KÂRDAN FAZLA', 'text-rose-400');
+  else if (p.ratio > 60) setBadge('YÜKSEK DAĞITIM', 'text-amber-400');
+  else setBadge('GÜVENLİ MARJ', 'text-emerald-400');
+  setNote(`Son 12 ayda ödenen nakit temettü ${p.paid > 0 ? money(p.paid) : '₺0'} / dönem net kârı ${money(p.profit)} (${p.period}, nakit akış tablosu).`);
+}
+window.renderPayoutCard = renderPayoutCard;
 
 /** Fills the dividend yield card from real dividend history; keeps a dash while loading or missing. */
 async function renderDividendYieldCard(code) {
