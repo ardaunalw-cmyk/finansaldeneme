@@ -171,10 +171,7 @@ table th.font-mono,
 #depthTableBody td,
 #akdBuyersTbody td:nth-child(n+2),
 #akdSellersTbody td:nth-child(n+2),
-#peerComparisonTbody td:nth-child(n+2),
-#portfolioHoldingsTableBody td:nth-child(n+3),
-#macroEarningsCalendarTbody td:nth-child(2),
-#macroEarningsCalendarTbody td:nth-child(5) {
+#peerComparisonTbody td:nth-child(n+2) {
   font-family: var(--font-mono) !important;
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: 'tnum' 1, 'zero' 1;
@@ -900,7 +897,6 @@ button, a, [role="button"] {
 @media (max-width: 768px) {
   #masterOverviewStockTable,
   #peerComparisonTable,
-  #portfolioHoldingsTable,
   #correlationHeatmapTable {
     border-collapse: separate !important;
     border-spacing: 0 !important;
@@ -912,9 +908,6 @@ button, a, [role="button"] {
   table:has(#stockBalanceSheetTbody) tbody td:first-child,
   #peerComparisonTable thead th:first-child,
   #peerComparisonTable tbody td:first-child,
-  #portfolioHoldingsTable thead th:first-child,
-  #portfolioHoldingsTable tbody td:first-child,
-  #portfolioHoldingsTable tfoot td:first-child,
   #correlationHeatmapTable thead th:first-child,
   #correlationHeatmapTable tbody td:first-child,
   #dcfMatrixThead th:first-child,
@@ -929,7 +922,6 @@ button, a, [role="button"] {
   #masterOverviewStockTable thead th:first-child,
   table:has(#stockBalanceSheetTbody) thead th:first-child,
   #peerComparisonTable thead th:first-child,
-  #portfolioHoldingsTable thead th:first-child,
   #correlationHeatmapTable thead th:first-child,
   #dcfMatrixThead th:first-child {
     z-index: 25 !important;
@@ -939,7 +931,6 @@ button, a, [role="button"] {
   #masterOverviewStockTable tbody td:first-child [title] { max-width: 100% !important; }
   table:has(#stockBalanceSheetTbody) tbody td:first-child { min-width: 155px !important; max-width: 210px !important; }
   #peerComparisonTable tbody td:first-child { min-width: 100px !important; }
-  #portfolioHoldingsTable tbody td:first-child { min-width: 110px !important; }
   #correlationHeatmapTable tbody td:first-child { min-width: 78px !important; }
   #dcfMatrixTbody td:first-child { min-width: 72px !important; }
 
@@ -1532,8 +1523,6 @@ body.is-home #headerSearch { display: none; }
 
 .stmt-msg { display:flex; align-items:center; justify-content:center; height:100%; min-height:12rem; padding:1rem; text-align:center; font-size:12px; font-family:'JetBrains Mono',monospace; color:#7C8BA6; }
 
-.sample-banner { display:flex; align-items:center; gap:8px; margin:-4px 0 12px; padding:8px 12px; border-radius:10px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.25); font-size:11px; line-height:1.45; color:#C9A45A; }
-.sample-banner > span { flex:1; }
 
 /* Marka: hareketli logo */
 .brand-logo { width: 44px; height: 44px; flex-shrink: 0; display: block; filter: drop-shadow(0 0 8px rgba(36, 104, 255, 0.45)); }

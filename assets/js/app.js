@@ -4,9 +4,7 @@
  * ==============================================================================
  * Market and balance-sheet figures come only from real sources (live-data.js,
  * statements.js, technicals.js, dividends.js). Where a figure cannot be fetched or
- * computed, the page shows '—' instead of a generated value. The model portfolio,
- * sector reports and macro calendar views are demo content and say so on screen
- * (sample-flags.js).
+ * computed, the page shows '—' instead of a generated value.
  * ==============================================================================
  */
 
@@ -582,7 +580,6 @@ async function initApp() {
     switchView(initialHash);
 
     initSearch();
-    initModals();
     initStockTableFilters();
     initIncomeStatementFilter();
     initSectorFilters();
@@ -593,9 +590,6 @@ async function initApp() {
 
     // Initialize Persistent Watchlist & Price Alerts Engine
     if (typeof initWatchlistAndAlerts === 'function') initWatchlistAndAlerts();
-
-    // Initialize Macroeconomic & Earnings Calendar
-    if (typeof initMacroEarningsCalendar === 'function') initMacroEarningsCalendar();
 
     // Only the overview chart is built up front; every other view builds its
     // charts and tables the first time it is opened (see switchView).
@@ -769,38 +763,6 @@ const MockFinancialApi = {
   },
 
   /**
-   * Model Portfolio vs BIST 100 historical benchmark data.
-   */
-  async fetchPortfolioPerformance() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
-          labels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
-          portfolio: [100, 108, 115, 124, 138, 142, 155, 164, 172, 178, 182, 184.6],
-          benchmark: [100, 103, 106, 112, 119, 122, 128, 134, 140, 144, 148, 151.2]
-        });
-      }, 50);
-    });
-  },
-
-  /**
-   * Sektörel Varlık Dağılımı Donut Data.
-   */
-  async fetchSectorAllocation() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve([
-          { name: 'Ulaştırma ve Lojistik', weight: 25, value: '₺312.500', color: '#2F6BFF' },
-          { name: 'Bankacılık ve Finans', weight: 20, value: '₺250.000', color: '#F43F5E' },
-          { name: 'Sanayi ve Holding', weight: 20, value: '₺250.000', color: '#1D4ED8' },
-          { name: 'Savunma ve Teknoloji', weight: 20, value: '₺250.000', color: '#10B981' },
-          { name: 'Perakende ve Tüketim', weight: 15, value: '₺187.500', color: '#D97706' }
-        ]);
-      }, 50);
-    });
-  },
-
-  /**
    * Real sector median P/E and P/B (assets/data/sector-multiples.json), cheapest P/E first.
    * Sectors with fewer than SECTOR_CHART_MIN_N companies are left out: a median of a handful
    * of companies says little about the sector.
@@ -829,8 +791,6 @@ const SECTOR_CHART_MIN_N = 8;
 function initAllMasterCharts() {
   initBistChart();
   initStockIncomeChart();
-  initPortfolioPerformanceChart();
-  initPortfolioDonutChart();
   initSectorComparisonChart();
   initTechnicalCharts(appState.currentStock);
   initProjectionChart();
@@ -1769,128 +1729,6 @@ async function initStockIncomeChart() {
 }
 
 /**
- * 5. portfolioPerformanceChart: UTL Model Portfolio vs BIST 100
- */
-async function initPortfolioPerformanceChart() {
-  const canvas = document.getElementById('portfolioPerformanceChart');
-  if (!canvas) return;
-
-  const data = await MockFinancialApi.fetchPortfolioPerformance();
-  const ctx = canvas.getContext('2d');
-
-  const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-  gradient.addColorStop(0, 'rgba(47, 107, 255, 0.30)');
-  gradient.addColorStop(1, 'rgba(47, 107, 255, 0.00)');
-
-  if (appState.charts.portfolio) {
-    appState.charts.portfolio.destroy();
-  }
-
-  appState.charts.portfolio = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: data.labels,
-      datasets: [
-        {
-          label: 'Verity Model Portföy',
-          data: data.portfolio,
-          borderColor: '#2F6BFF',
-          backgroundColor: gradient,
-          fill: true,
-          tension: 0.4,
-          borderWidth: 3,
-          pointRadius: 3,
-          pointHoverRadius: 6
-        },
-        {
-          label: 'BIST 100 Gösterge Endeksi',
-          data: data.benchmark,
-          borderColor: '#64748B', // slate-500
-          borderDash: [4, 4],
-          backgroundColor: 'transparent',
-          fill: false,
-          tension: 0.4,
-          borderWidth: 2,
-          pointRadius: 0
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0E1626',
-          borderColor: '#1E2B45',
-          borderWidth: 1,
-          titleColor: '#F8FAFC',
-          bodyColor: '#38BDF8',
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            label: ctx => `${ctx.dataset.label}: %${(ctx.parsed.y - 100).toFixed(1)} Kümülatif Getiri`
-          }
-        }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: '#94A3B8', font: { size: 10 } } },
-        y: {
-          grid: { color: '#1E2B45' },
-          ticks: { color: '#94A3B8', font: { size: 10 }, callback: v => `%${v - 100}` }
-        }
-      }
-    }
-  });
-}
-
-/**
- * 6. portfolioDonutChart: Sektörel Varlık Dağılımı Donut
- */
-async function initPortfolioDonutChart() {
-  const canvas = document.getElementById('portfolioDonutChart');
-  if (!canvas) return;
-
-  const sectors = await MockFinancialApi.fetchSectorAllocation();
-
-  if (appState.charts.donut) {
-    appState.charts.donut.destroy();
-  }
-
-  appState.charts.donut = new Chart(canvas.getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: sectors.map(s => s.name),
-      datasets: [
-        {
-          data: sectors.map(s => s.weight),
-          backgroundColor: sectors.map(s => s.color),
-          borderWidth: 3,
-          borderColor: '#FFFFFF',
-          hoverOffset: 6
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '72%',
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0F172A',
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            label: context => `Ağırlık: %${context.parsed} (${sectors[context.dataIndex].value})`
-          }
-        }
-      }
-    }
-  });
-}
-
-/**
  * 7. stockProjectionChart: Multi-Year DCF Growth & Projected Curve
  */
 async function initProjectionChart() {
@@ -2079,6 +1917,9 @@ function switchView(viewName, stockCode = null) {
   if (viewName === 'hakkimizda' || viewName === 'hakkımızda') {
     viewName = 'about';
   }
+  // The model portfolio view was removed; its correlation heatmap now lives in the reports view
+  if (viewName === 'portfolio') viewName = 'reports';
+  if (!document.getElementById(`view-${viewName}`)) viewName = 'home';
 
   if (stockCode) {
     appState.currentStock = stockCode.toUpperCase();
@@ -2137,7 +1978,6 @@ function switchView(viewName, stockCode = null) {
       if (typeof renderOverviewNewsPreview === 'function') renderOverviewNewsPreview();
     } else if (viewName === 'news') {
       if (typeof renderNewsCenter === 'function') renderNewsCenter();
-      if (typeof renderMacroEarningsCalendar === 'function') renderMacroEarningsCalendar();
     } else if (viewName === 'stock-detail') {
       if (appState.loadedStock !== appState.currentStock) {
         // First visit (or a different stock): loadStockDetails renders the view and its charts
@@ -2157,14 +1997,6 @@ function switchView(viewName, stockCode = null) {
 
         if (appState.charts.peerRadar) appState.charts.peerRadar.resize();
       }
-    } else if (viewName === 'portfolio') {
-      if (appState.charts.portfolio) appState.charts.portfolio.resize();
-      else initPortfolioPerformanceChart();
-
-      if (appState.charts.donut) appState.charts.donut.resize();
-      else initPortfolioDonutChart();
-
-      if (typeof initQuantPortfolioDesk === 'function') initQuantPortfolioDesk();
     } else if (viewName === 'compare') {
       if (window.Compare) Compare.render();
     } else if (viewName === 'dividends') {
@@ -2172,6 +2004,7 @@ function switchView(viewName, stockCode = null) {
     } else if (viewName === 'reports') {
       if (appState.charts.sector) appState.charts.sector.resize();
       else initSectorComparisonChart();
+      renderCorrelationHeatmap();
     }
   }, 60);
 
@@ -3272,271 +3105,17 @@ window.renderPeerComparison = renderPeerComparison;
 window.renderPeerComparisonModule = renderPeerComparisonModule;
 
 /* ==============================================================================
-   6.2. Quantitative Portfolio & Risk Management Desk (Quant Desk)
-   - 6'lı Kantitatif Risk Metrikleri Grid (VaR, CVaR, MDD, Sharpe, Sortino, Beta)
-   - Portföy Varlıkları ve Risk Katkı Tablosu (Holdings & MCTR)
-   - 8x8 Çok Varlıklı Korelasyon Matrisi Isı Haritası (Correlation Heatmap)
-   - Makroekonomik Stres Testi Simülatörü (4 Senaryo & Sektörel Etki)
+   6.2. Correlation heatmap (sector & correlation view)
    ============================================================================== */
 
-const quantPortfolioDeskData = {
-  holdings: [
-    {
-      code: 'THYAO',
-      name: 'Türk Hava Yolları',
-      sector: 'Ulaştırma & Lojistik',
-      weight: 25.0,
-      cost: 242.50,
-      currentPrice: 312.50,
-      lots: 1000,
-      totalValue: 312500,
-      totalCost: 242500,
-      pnlNominal: 70000,
-      pnlPct: 28.87,
-      beta: 1.05,
-      mctr: 28.2,
-      role: 'Büyüme & Döviz Girişi',
-      roleBadgeClass: 'bg-red-950/80 text-red-300 border-red-800/40'
-    },
-    {
-      code: 'AKBNK',
-      name: 'Akbank T.A.Ş.',
-      sector: 'Bankacılık & Finans',
-      weight: 20.0,
-      cost: 42.20,
-      currentPrice: 58.40,
-      lots: 4280,
-      totalValue: 250000,
-      totalCost: 180616,
-      pnlNominal: 69384,
-      pnlPct: 38.39,
-      beta: 1.12,
-      mctr: 22.4,
-      role: 'Yüksek ROE & Faiz Kârı',
-      roleBadgeClass: 'bg-sky-950/80 text-sky-300 border-sky-800/40'
-    },
-    {
-      code: 'FROTO',
-      name: 'Ford Otosan',
-      sector: 'Sanayi & Otomotiv',
-      weight: 15.0,
-      cost: 920.00,
-      currentPrice: 1140.00,
-      lots: 165,
-      totalValue: 187500,
-      totalCost: 151800,
-      pnlNominal: 35700,
-      pnlPct: 23.91,
-      beta: 0.88,
-      mctr: 14.8,
-      role: 'İhracatçı / Temettü Şampiyonu',
-      roleBadgeClass: 'bg-indigo-950/80 text-indigo-300 border-indigo-800/40'
-    },
-    {
-      code: 'ASELS',
-      name: 'Aselsan Elektronik',
-      sector: 'Savunma & Teknoloji',
-      weight: 15.0,
-      cost: 48.50,
-      currentPrice: 64.20,
-      lots: 2920,
-      totalValue: 187500,
-      totalCost: 141620,
-      pnlNominal: 45880,
-      pnlPct: 32.37,
-      beta: 0.72,
-      mctr: 12.6,
-      role: 'Bakiye Sipariş & Ar-Ge',
-      roleBadgeClass: 'bg-emerald-950/80 text-emerald-300 border-emerald-800/40'
-    },
-    {
-      code: 'BIMAS',
-      name: 'BİM Mağazalar',
-      sector: 'Perakende & Tüketim',
-      weight: 15.0,
-      cost: 410.00,
-      currentPrice: 520.00,
-      lots: 360,
-      totalValue: 187500,
-      totalCost: 147600,
-      pnlNominal: 39900,
-      pnlPct: 26.83,
-      beta: 0.65,
-      mctr: 10.5,
-      role: 'Defansif Nakit & Enflasyon Koruması',
-      roleBadgeClass: 'bg-purple-950/80 text-purple-300 border-purple-800/40'
-    },
-    {
-      code: 'TUPRS',
-      name: 'Tüpraş Rafinerileri',
-      sector: 'Enerji & Rafineri',
-      weight: 10.0,
-      cost: 138.00,
-      currentPrice: 172.50,
-      lots: 725,
-      totalValue: 125000,
-      totalCost: 100050,
-      pnlNominal: 24950,
-      pnlPct: 25.00,
-      beta: 0.94,
-      mctr: 11.5,
-      role: 'Rafinaj Marjı & Temettü',
-      roleBadgeClass: 'bg-amber-950/80 text-amber-300 border-amber-800/40'
-    }
-  ],
-  correlationMatrix: {
-    assets: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'XU100', 'USDTRY'],
-    // Symbols for /api/history; values are computed from one year of real daily closes
-    symbols: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'BIST100', 'USDTRY'],
-    labels: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'BIST 100', 'USD/TRY']
-  },
-  stressScenarios: {
-    fx: {
-      name: 'Kur Şoku (USD/TRY +%15 Sıçrama)',
-      totalPct: 6.26,
-      totalTRY: 78250,
-      badgeText: 'NET POZİTİF ALFA',
-      badgeClass: 'bg-emerald-950/80 border-emerald-800/50 text-emerald-300',
-      commentary: 'Portföyün %55\'ini oluşturan ihracatçı ve döviz zengini küresel şirketler (THYAO, FROTO, ASELS), bankacılık sektöründeki kur baskısını fazlasıyla dengeleyerek net +%6,26 (+₺78.250) kâr yaratmaktadır.',
-      sectors: [
-        { name: 'Ulaştırma (THYAO)', pct: 11.0, tryVal: 34375, isPositive: true },
-        { name: 'Sanayi (FROTO)', pct: 9.0, tryVal: 16875, isPositive: true },
-        { name: 'Savunma (ASELS)', pct: 7.5, tryVal: 14062, isPositive: true },
-        { name: 'Enerji (TUPRS)', pct: 5.5, tryVal: 6875, isPositive: true },
-        { name: 'Perakende (BIMAS)', pct: 2.0, tryVal: 3750, isPositive: true },
-        { name: 'Bankacılık (AKBNK)', pct: -3.0, tryVal: -7500, isPositive: false }
-      ]
-    },
-    rate: {
-      name: 'TCMB Faiz Şoku (+500 bps Sıkılaşma)',
-      totalPct: -4.33,
-      totalTRY: -54125,
-      badgeText: 'KONTROLLÜ DEFANSİF GERİLEME',
-      badgeClass: 'bg-amber-950/80 border-amber-800/50 text-amber-300',
-      commentary: 'Portföyün düşük betası (0,78) ve yüksek nakit akışına sahip defansif şirketleri (BIMAS, ASELS), genel endeksteki (tahmini BIST 100: -%7,50) değer kaybını 317 baz puan sınırlayarak sermayeyi korumaktadır.',
-      sectors: [
-        { name: 'Savunma (ASELS)', pct: -1.2, tryVal: -2250, isPositive: false },
-        { name: 'Perakende (BIMAS)', pct: -1.8, tryVal: -3375, isPositive: false },
-        { name: 'Enerji (TUPRS)', pct: -3.1, tryVal: -3875, isPositive: false },
-        { name: 'Ulaştırma (THYAO)', pct: -3.4, tryVal: -10625, isPositive: false },
-        { name: 'Sanayi (FROTO)', pct: -5.2, tryVal: -9750, isPositive: false },
-        { name: 'Bankacılık (AKBNK)', pct: -6.8, tryVal: -17000, isPositive: false }
-      ]
-    },
-    recession: {
-      name: 'Küresel Resesyon & CDS Artışı (+100 bps)',
-      totalPct: -5.88,
-      totalTRY: -73500,
-      badgeText: 'PİYASADAN %47 DAHA GÜÇLÜ',
-      badgeClass: 'bg-rose-950/80 border-rose-800/50 text-rose-300',
-      commentary: 'BIMAS ve ASELS\'in anti-döngüsel (counter-cyclical) karakteri güvenli liman işlevi görerek toplam düşüşü küresel resesyon endeks projeksiyonunun (%11,20) çok altında tutmaktadır.',
-      sectors: [
-        { name: 'Perakende (BIMAS)', pct: -1.2, tryVal: -2250, isPositive: false },
-        { name: 'Savunma (ASELS)', pct: -1.8, tryVal: -3375, isPositive: false },
-        { name: 'Enerji (TUPRS)', pct: -4.5, tryVal: -5625, isPositive: false },
-        { name: 'Sanayi (FROTO)', pct: -6.8, tryVal: -12750, isPositive: false },
-        { name: 'Ulaştırma (THYAO)', pct: -7.2, tryVal: -22500, isPositive: false },
-        { name: 'Bankacılık (AKBNK)', pct: -8.5, tryVal: -21250, isPositive: false }
-      ]
-    },
-    energy: {
-      name: 'Enerji Fiyat Şoku (Brent +$20 / Varil)',
-      totalPct: -1.85,
-      totalTRY: -23125,
-      badgeText: 'RAFİNAJ DOĞAL HEDGE ETKİSİ',
-      badgeClass: 'bg-red-950/80 border-red-800/50 text-red-300',
-      commentary: 'Portföydeki %10 TUPRS ağırlığı (+₺13.750 stok kârı), THYAO\'nun yaşadığı jet yakıtı maliyet şokuna karşı doğrudan fiziksel emtia hedge\'i sağlayarak net etkiyi sadece -%1,85 düzeyinde tutmuştur.',
-      sectors: [
-        { name: 'Enerji (TUPRS)', pct: 11.0, tryVal: 13750, isPositive: true },
-        { name: 'Savunma (ASELS)', pct: 0.0, tryVal: 0, isPositive: true },
-        { name: 'Perakende (BIMAS)', pct: -2.0, tryVal: -3750, isPositive: false },
-        { name: 'Bankacılık (AKBNK)', pct: -2.0, tryVal: -5000, isPositive: false },
-        { name: 'Sanayi (FROTO)', pct: -3.0, tryVal: -5625, isPositive: false },
-        { name: 'Ulaştırma (THYAO)', pct: -7.0, tryVal: -21875, isPositive: false }
-      ]
-    }
-  }
+const correlationMatrix = {
+  // Symbols for /api/history; values are computed from one year of real daily closes
+  symbols: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'BIST100', 'USDTRY'],
+  labels: ['THYAO', 'AKBNK', 'FROTO', 'ASELS', 'BIMAS', 'TUPRS', 'BIST 100', 'USD/TRY']
 };
 
 /**
- * 1. Renders the Portfolio Holdings & Risk Contribution (MCTR) Table
- */
-function renderPortfolioHoldingsTable() {
-  const tbody = document.getElementById('portfolioHoldingsTbody');
-  if (!tbody) return;
-
-  tbody.innerHTML = quantPortfolioDeskData.holdings.map(h => {
-    const isPnlPositive = h.pnlPct >= 0;
-    const pnlSign = isPnlPositive ? '+' : '';
-    const logoHtml = (typeof getStockLogoHtml === 'function')
-      ? getStockLogoHtml(h.code, 26, 'flex-shrink-0 shadow')
-      : `<span class="w-6.5 h-6.5 rounded bg-[#2F6BFF] text-white font-bold flex items-center justify-center text-[10px]">${h.code.slice(0, 2)}</span>`;
-
-    return `
-      <tr class="hover:bg-[#121C30]/60 transition-colors border-b border-[#141E33]">
-        <td class="py-2.5 px-3 text-left">
-          <div class="flex items-center gap-2.5">
-            ${logoHtml}
-            <div>
-              <div class="flex items-center gap-1.5">
-                <span class="font-bold text-red-200 bg-red-950/60 px-2 py-0.5 rounded-md border border-red-800/50 tracking-wide text-xs font-mono">${h.code}</span>
-                <span class="px-1.5 py-px rounded text-[9px] font-mono border ${h.roleBadgeClass} hidden md:inline-block">${h.role}</span>
-              </div>
-              <span class="inline-block text-[10px] text-slate-300 font-medium truncate max-w-[130px] mt-0.5" title="${h.name}">${h.name}</span>
-            </div>
-          </div>
-        </td>
-
-        <td class="py-2.5 px-2 text-left text-slate-400 text-[11px]">${h.sector}</td>
-
-        <td class="py-2.5 px-2 text-right">
-          <div class="space-y-1">
-            <span class="font-bold text-red-400 font-mono text-xs">%${h.weight.toFixed(1).replace('.', ',')}</span>
-            <div class="w-14 ml-auto h-1 rounded-full bg-red-950/40 overflow-hidden">
-              <div class="h-full bg-[#2F6BFF]" style="width: ${(h.weight / 25) * 100}%"></div>
-            </div>
-          </div>
-        </td>
-
-        <td class="py-2.5 px-2 text-right text-slate-300 font-mono">₺${h.cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-
-        <td class="py-2.5 px-2 text-right text-white font-bold font-mono">₺${h.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-
-        <td class="py-2.5 px-2 text-right font-mono">
-          <div class="text-white font-bold text-xs">₺${h.totalValue.toLocaleString('tr-TR')}</div>
-          <div class="text-[10px] text-slate-500">${h.lots.toLocaleString('tr-TR')} Lot</div>
-        </td>
-
-        <td class="py-2.5 px-2 text-right font-mono">
-          <div class="font-bold ${isPnlPositive ? 'text-emerald-400' : 'text-rose-400'} text-xs">
-            ${pnlSign}%${h.pnlPct.toFixed(2).replace('.', ',')}
-          </div>
-          <div class="text-[10px] ${isPnlPositive ? 'text-emerald-300' : 'text-rose-300'}">
-            ${pnlSign}₺${h.pnlNominal.toLocaleString('tr-TR')}
-          </div>
-        </td>
-
-        <td class="py-2.5 px-2 text-center font-mono">
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold ${h.beta < 0.85 ? 'bg-indigo-950 text-indigo-300 border border-indigo-800/40' : 'bg-slate-800 text-slate-200'}">
-            ${h.beta.toFixed(2).replace('.', ',')}
-          </span>
-        </td>
-
-        <td class="py-2.5 px-3 text-right">
-          <div class="space-y-1">
-            <span class="font-bold text-sky-300 font-mono text-xs">%${h.mctr.toFixed(1).replace('.', ',')}</span>
-            <div class="w-16 ml-auto h-1 rounded-full bg-sky-950 overflow-hidden">
-              <div class="h-full bg-sky-400" style="width: ${(h.mctr / 30) * 100}%"></div>
-            </div>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
-
-/**
- * 2. Renders the 8x8 Correlation Heatmap: correlations of daily log returns over the last year,
+ * Renders the 8x8 Correlation Heatmap: correlations of daily log returns over the last year,
  *    from real Yahoo Finance closes (/api/history). Computed once per page load.
  */
 let correlationLoad = null;
@@ -3545,7 +3124,7 @@ async function renderCorrelationHeatmap() {
   const tbody = document.getElementById('correlationHeatmapTbody');
   if (!tbody) return;
 
-  const m = quantPortfolioDeskData.correlationMatrix;
+  const m = correlationMatrix;
   const badge = document.getElementById('correlationAvgBadge');
   const insight = document.getElementById('correlationInsight');
   const message = (text, cls) => {
@@ -3635,105 +3214,7 @@ async function renderCorrelationHeatmap() {
   }).join('');
 }
 
-/**
- * 3. Runs a Macroeconomic Stress Scenario and updates the entire stress panel
- */
-function runMacroStressScenario(scenarioKey) {
-  const scenario = quantPortfolioDeskData.stressScenarios[scenarioKey] || quantPortfolioDeskData.stressScenarios.fx;
-
-  // A. Update button active states
-  ['rate', 'fx', 'recession', 'energy'].forEach(key => {
-    const btn = document.getElementById(`stressBtn-${key}`);
-    if (!btn) return;
-    if (key === scenarioKey) {
-      btn.className = 'stress-scenario-btn p-2.5 rounded-xl border border-red-600 bg-red-950/80 text-red-300 text-left transition-all space-y-1 shadow-md';
-      const label = btn.querySelector('.font-bold');
-      if (label) label.className = 'font-bold text-white';
-    } else {
-      btn.className = 'stress-scenario-btn p-2.5 rounded-xl border border-[#1E2B45] bg-[#090D18] hover:border-red-600 hover:bg-[#121D33] text-left transition-all space-y-1';
-      const label = btn.querySelector('.font-bold');
-      if (label) label.className = 'font-bold text-slate-200';
-    }
-  });
-
-  // B. Update KPI values
-  const totalPctEl = document.getElementById('stressTotalImpactPct');
-  const totalTryEl = document.getElementById('stressTotalImpactTRY');
-  const badgeEl = document.getElementById('stressImpactBadge');
-  const titleEl = document.getElementById('stressScenarioTitle');
-  const commentaryEl = document.getElementById('stressCommentary');
-
-  const isPositive = scenario.totalPct >= 0;
-  const sign = isPositive ? '+' : '';
-
-  if (totalPctEl) {
-    totalPctEl.textContent = `${sign}%${Math.abs(scenario.totalPct).toFixed(2).replace('.', ',')}`;
-    totalPctEl.className = `text-2xl font-bold font-mono ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`;
-  }
-
-  if (totalTryEl) {
-    totalTryEl.textContent = `(${sign}₺${Math.abs(scenario.totalTRY).toLocaleString('tr-TR')})`;
-    totalTryEl.className = `text-sm font-semibold font-mono ${isPositive ? 'text-emerald-300' : 'text-rose-300'}`;
-  }
-
-  if (badgeEl) {
-    badgeEl.textContent = scenario.badgeText;
-    badgeEl.className = `px-2.5 py-1 rounded-lg border font-mono text-xs font-bold ${scenario.badgeClass}`;
-  }
-
-  if (titleEl) {
-    titleEl.textContent = `${scenario.name} Analizi:`;
-  }
-
-  if (commentaryEl) {
-    commentaryEl.textContent = scenario.commentary;
-  }
-
-  // C. Render Sector Sensitivity Bars
-  const barsContainer = document.getElementById('stressSectorBars');
-  if (barsContainer) {
-    const maxAbsPct = Math.max(...scenario.sectors.map(s => Math.abs(s.pct)), 1);
-
-    barsContainer.innerHTML = scenario.sectors.map(s => {
-      const isSecPos = s.pct >= 0;
-      const secSign = isSecPos ? '+' : '';
-      const barWidthPct = Math.min(100, Math.max(8, (Math.abs(s.pct) / maxAbsPct) * 100));
-      const barColor = isSecPos ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-rose-500 to-rose-400';
-      const textColor = isSecPos ? 'text-emerald-400' : 'text-rose-400';
-
-      return `
-        <div class="space-y-1">
-          <div class="flex items-center justify-between text-[11px] font-mono">
-            <span class="text-slate-300 font-medium">${s.name}</span>
-            <div class="flex items-center gap-1.5">
-              <span class="${textColor} font-bold">${secSign}%${Math.abs(s.pct).toFixed(1).replace('.', ',')}</span>
-              <span class="text-slate-500 text-[10px]">(${secSign}₺${Math.abs(s.tryVal).toLocaleString('tr-TR')})</span>
-            </div>
-          </div>
-          <div class="w-full h-1.5 rounded-full bg-[#121A2A] overflow-hidden flex">
-            <div class="h-full ${barColor} rounded-full transition-all duration-500" style="width: ${barWidthPct}%;"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-}
-
-/**
- * 4. Initializes the Quantitative Portfolio Desk
- */
-function initQuantPortfolioDesk() {
-  renderPortfolioHoldingsTable();
-  renderCorrelationHeatmap();
-  runMacroStressScenario('fx');
-}
-
-// Global exposure
-window.quantPortfolioDeskData = quantPortfolioDeskData;
-window.renderPortfolioHoldingsTable = renderPortfolioHoldingsTable;
 window.renderCorrelationHeatmap = renderCorrelationHeatmap;
-window.runMacroStressScenario = runMacroStressScenario;
-window.initQuantPortfolioDesk = initQuantPortfolioDesk;
 
 /* ==============================================================================
    7. Technical Layer & Oscillator Toggles
@@ -4091,125 +3572,6 @@ function showToast(message) {
   setTimeout(() => {
     toast.classList.add('opacity-0', 'translate-y-3');
   }, 3000);
-}
-
-function initModals() {
-  const closeBtn = document.getElementById('closeReportReader');
-  const modal = document.getElementById('reportReaderModal');
-  if (closeBtn && modal) {
-    closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
-    modal.addEventListener('click', e => {
-      if (e.target === modal) modal.classList.add('hidden');
-    });
-  }
-
-  // PDF download mock
-  document.querySelectorAll('.download-pdf-btn').forEach(b => {
-    b.onclick = () => showToast('Kurumsal PDF raporu oluşturuluyor ve indiriliyor...');
-  });
-
-  // Rebalance modal wire-up
-  const rebModal = document.getElementById('rebalanceModal');
-  const rebClose = document.getElementById('closeRebalanceModal');
-  const rebExec = document.getElementById('executeRebalanceBtn');
-
-  document.querySelectorAll('.open-rebalance-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (rebModal) rebModal.classList.remove('hidden');
-    });
-  });
-
-  if (rebClose && rebModal) {
-    rebClose.addEventListener('click', () => rebModal.classList.add('hidden'));
-    rebModal.addEventListener('click', e => {
-      if (e.target === rebModal) rebModal.classList.add('hidden');
-    });
-  }
-
-  if (rebExec && rebModal) {
-    rebExec.addEventListener('click', () => {
-      rebModal.classList.add('hidden');
-      showToast('İsviçre Risk Paritesi dengeleme emirleri aracı kuruma iletildi.');
-    });
-  }
-}
-
-function openReportModal(reportId) {
-  if (reportId && String(reportId).startsWith('news-')) {
-    if (typeof openNewsModal === 'function') {
-      return openNewsModal(reportId);
-    }
-  }
-
-  const modal = document.getElementById('reportReaderModal');
-  const catEl = document.getElementById('readerModalCategory');
-  const titleEl = document.getElementById('readerModalTitle');
-  const dateEl = document.getElementById('readerModalDate');
-  const bodyEl = document.getElementById('readerModalBody');
-  if (!modal) return;
-
-  const reports = {
-    'rep-1': {
-      category: 'Bankacılık ve Finans',
-      title: 'Bankacılık Sektöründe Net Faiz Marjı (NIM) İyileşme Döngüsü',
-      date: '12 Ocak 2025 • Verity Araştırma',
-      body: `
-        <p class="text-sm text-slate-300 leading-relaxed">
-          TCMB parasal aktarım mekanizmasının sıkılaşma adımları doğrultusunda, mevduat maliyetlerinin zirve yapmasıyla birlikte BIST Bankacılık (XBANK) endeksi için marj toparlanması ivme kazanmıştır.
-        </p>
-        <div class="p-3 bg-red-950/40 rounded-xl border border-red-800/40 text-xs text-red-200 font-medium">
-          <strong>Öne Çıkan Varlık:</strong> Garanti BBVA (GARAN) ve Akbank (AKBNK) güçlü sermaye yeterlilik oranları (%18.4) ve vadesiz mevduat üstünlüğü ile pozitif ayrışmaktadır.
-        </div>
-        <p class="text-sm text-slate-300 leading-relaxed">
-          12 aylık hedef fiyat revizyonumuz bankacılık endeksi için ortalama %45 yukarı yönlü potansiyele işaret etmektedir.
-        </p>
-      `
-    },
-    'rep-2': {
-      category: 'Çeşitlilik and Enerji',
-      title: 'Yenilenebilir Enerji Şirketlerinde Kapasite Artışı ve Çarpan Analizi',
-      date: '08 Ocak 2025 • Sektörel Rapor',
-      body: `
-        <p class="text-sm text-slate-300 leading-relaxed">
-          YEKA ihaleleri ve depolamalı RES/GES yatırımlarının 2025 ilk çeyreğinde devreye girmesiyle enerji üretim şirketlerinin FAVÖK büyümesinde %50'nin üzerinde artış beklenmektedir.
-        </p>
-        <p class="text-sm text-slate-300 leading-relaxed">
-          Döviz bazlı YEKDEM gelir garantileri, kur oynaklığına karşı güçlü bir koruma kalkanı sağlamaktadır.
-        </p>
-      `
-    },
-    'rep-3': {
-      category: 'Havacılık',
-      title: 'Küresel Yolcu Talebi ve Kargo Hacimlerinde 2025 Projeksiyonu',
-      date: '03 Ocak 2025 • Strateji Notu',
-      body: `
-        <p class="text-sm text-slate-300 leading-relaxed">
-          Türk Hava Yolları (THYAO) ve Pegasus (PGSUS) filo genişleme programları, transit yolcu pazar payını %14 artırmıştır. Akaryakıt hedge oranlarının %40 seviyesine çıkarılması kâr marjlarını güvenceye almaktadır.
-        </p>
-        <div class="p-3 bg-emerald-950/60 rounded-xl border border-emerald-800/50 text-xs text-emerald-300 font-medium">
-          <strong>Kantitatif Karar:</strong> Güçlü AL • 12 Aylık Hedef: ₺420,00 (%+34,4 Potansiyel)
-        </div>
-      `
-    },
-    'rep-4': {
-      category: 'Makroekonomi',
-      title: 'TCMB Enflasyon Patikası ve BIST Değerlemelerine Etkisi',
-      date: '28 Aralık 2024 • Makro Bülten',
-      body: `
-        <p class="text-sm text-slate-300 leading-relaxed">
-          Dezenflasyon sürecinin başlamasıyla birlikte BIST 100 ileriye dönük F/K çarpanının tarihsel ortalama olan 7.5x seviyelerine doğru genişlemesi öngörülmektedir.
-        </p>
-      `
-    }
-  };
-
-  const rep = reports[reportId] || reports['rep-1'];
-  if (catEl) catEl.textContent = rep.category;
-  if (titleEl) titleEl.textContent = rep.title;
-  if (dateEl) dateEl.textContent = rep.date;
-  if (bodyEl) bodyEl.innerHTML = rep.body;
-
-  modal.classList.remove('hidden');
 }
 
 async function refreshLiveKapDisclosures() {
@@ -4844,17 +4206,11 @@ window.renderPeerComparisonModule = renderPeerComparisonModule;
 window.selectPeerStock = selectPeerStock;
 window.handleCustomPeerSubmit = handleCustomPeerSubmit;
 window.renderCapitalAndDividendIntelligence = renderCapitalAndDividendIntelligence;
-window.quantPortfolioDeskData = quantPortfolioDeskData;
-window.renderPortfolioHoldingsTable = renderPortfolioHoldingsTable;
-window.renderCorrelationHeatmap = renderCorrelationHeatmap;
-window.runMacroStressScenario = runMacroStressScenario;
-window.initQuantPortfolioDesk = initQuantPortfolioDesk;
 window.toggleTechnicalLayer = toggleTechnicalLayer;
 window.setTechnicalOscillator = setTechnicalOscillator;
 window.setTechnicalTimeframe = setTechnicalTimeframe;
 window.showToast = showToast;
 window.loadStockDetails = loadStockDetails;
-window.openReportModal = openReportModal;
 window.refreshLiveKapDisclosures = refreshLiveKapDisclosures;
 window.renderOverviewStockTable = renderOverviewStockTable;
 window.getFullBistStockList = getFullBistStockList;
@@ -4887,7 +4243,7 @@ try {
 /* ==============================================================================
    11.1. Terminal Command Palette (Command Palette - Cmd+K / /)
    - Global Klavye Dinleyicisi (Ctrl+K, Cmd+K, '/')
-   - Hızlı Terminal Komutları: /bilanço, /kıyas, /tarayıcı, /stres-testi, /portföy, /takvim
+   - Hızlı Terminal Komutları: /bilanço, /kıyas, /tarayıcı, /gündem, /raporlar, /alarm
    - 1048 Hisselik Anlık Arama ve Klavye Ok Tuşlarıyla (ArrowUp/Down/Enter) Gezinme
    ============================================================================== */
 
@@ -5106,51 +4462,6 @@ function renderCommandPaletteResults(query) {
       });
     }
 
-    // D. /stres-testi
-    if ('stres-testi'.startsWith(cmd) || cmd === 'stres' || cmd === 'stress') {
-      actions.push({
-        title: '/stres-testi',
-        desc: 'Model Portföy: Makroekonomik Stres Testi Simülatörüne Git (Faiz, Kur, CDS Şokları)',
-        icon: 'fa-solid fa-shield-virus text-rose-400',
-        badge: 'RİSK YÖNETİMİ',
-        run: () => {
-          switchView('portfolio');
-          setTimeout(() => {
-            const el = document.getElementById('macroStressTestContainer');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }, 350);
-        }
-      });
-    }
-
-    // E. /portföy
-    if ('portföy'.startsWith(cmd) || cmd === 'portfoy' || cmd === 'portfolio') {
-      actions.push({
-        title: '/portföy',
-        desc: 'Kurumsal Kantitatif Risk ve Portföy Yönetim Masasını Aç (VaR, Korelasyon, MCTR)',
-        icon: 'fa-solid fa-briefcase text-amber-400',
-        badge: 'PORTFÖY',
-        run: () => switchView('portfolio')
-      });
-    }
-
-    // F. /takvim
-    if ('takvim'.startsWith(cmd) || cmd === 'calendar' || cmd === 'tcmb' || cmd === 'fed') {
-      actions.push({
-        title: '/takvim',
-        desc: 'Piyasa Gündemi: Makroekonomik Veri ve Bilanço Açıklama Takvimine Git',
-        icon: 'fa-regular fa-calendar-days text-cyan-400',
-        badge: 'TAKVİM',
-        run: () => {
-          switchView('news');
-          setTimeout(() => {
-            const el = document.getElementById('macroEarningsCalendarSection');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 350);
-        }
-      });
-    }
-
     // G. /gündem
     if ('gündem'.startsWith(cmd) || cmd === 'gundem' || cmd === 'haber' || cmd === 'news') {
       actions.push({
@@ -5166,7 +4477,7 @@ function renderCommandPaletteResults(query) {
     if ('raporlar'.startsWith(cmd) || cmd === 'rapor' || cmd === 'reports') {
       actions.push({
         title: '/raporlar',
-        desc: 'Sektörel Raporlar ve Çarpan Kıyaslama Sayfasını Aç',
+        desc: 'Sektör çarpanları ve korelasyon sayfasını aç',
         icon: 'fa-solid fa-chart-pie text-indigo-400',
         badge: 'ARAŞTIRMA',
         run: () => switchView('reports')
@@ -5262,19 +4573,6 @@ function renderCommandPaletteResults(query) {
             switchView('overview');
             setTimeout(() => {
               if (typeof toggleScreenerPanel === 'function') toggleScreenerPanel();
-            }, 300);
-          }
-        },
-        {
-          title: '/takvim',
-          desc: 'TCMB, TÜİK, Fed ve çeyreklik bilanço açıklama takvimini açar',
-          icon: 'fa-regular fa-calendar-days text-cyan-400',
-          badge: 'KOMUT',
-          run: () => {
-            switchView('news');
-            setTimeout(() => {
-              const el = document.getElementById('macroEarningsCalendarSection');
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 300);
           }
         }
@@ -5915,291 +5213,11 @@ function initWatchlistAndAlerts() {
   renderAlertsItems();
 }
 
-/* ==============================================================================
-   11.3. Macroeconomic & Earnings Calendar (Takvim & Canlı Geri Sayım)
-   - TCMB PPK, TÜİK Enflasyon, Fed FOMC Toplantıları
-   - BIST 30 / 100 Çeyreklik Bilanço Son Gönderim Tarihleri (Earnings Release Dates)
-   - Saniyelik Canlı Geri Sayım (Countdown) ve Kategori Filtreleme
-   ============================================================================== */
-
-const MACRO_EARNINGS_CALENDAR_DATA = [
-  {
-    id: 'cal_1',
-    date: '2026-10-22T14:00:00+03:00',
-    displayDate: '22 Ekim 2026',
-    displayTime: '14:00 TSİ',
-    country: 'TR',
-    countryName: 'Türkiye',
-    flag: '🇹🇷',
-    category: 'central_bank',
-    title: 'TCMB Para Politikası Kurulu (PPK) Faiz Kararı',
-    importance: 3,
-    consensus: '%50,00 (Sabit)',
-    previous: '%50,00',
-    impact: 'Piyasa Yapıcı: Türk Lirası, BIST Bankacılık ve Tahvil Piyasası doğrudan etkilenir.',
-    isEarnings: false
-  },
-  {
-    id: 'cal_2',
-    date: '2026-10-24T18:10:00+03:00',
-    displayDate: '24 Ekim 2026',
-    displayTime: '18:10 TSİ',
-    country: 'TR',
-    countryName: 'THYAO',
-    flag: '✈️',
-    category: 'earnings',
-    title: 'Türk Hava Yolları (THYAO) 2024/09 Konsolide Bilanço İlanı',
-    importance: 3,
-    consensus: '₺68.4 Mlr Net Kâr (+%24 YoY)',
-    previous: '₺55.0 Mlr (23/09)',
-    impact: 'BIST 30 ağırlığı %12; küresel yolcu getirisi ve kargo marjı endeks momentumunu belirleyecek.',
-    isEarnings: true,
-    ticker: 'THYAO'
-  },
-  {
-    id: 'cal_3',
-    date: '2026-10-28T18:00:00+03:00',
-    displayDate: '28 Ekim 2026',
-    displayTime: '18:00 TSİ',
-    country: 'TR',
-    countryName: 'GARAN',
-    flag: '🏦',
-    category: 'earnings',
-    title: 'Garanti BBVA (GARAN) 2024/09 Finansal Tablo Açıklaması',
-    importance: 3,
-    consensus: '₺24.8 Mlr Çeyreklik Kâr',
-    previous: '₺22.1 Mlr (23/09)',
-    impact: 'Net faiz marjı (NIM) ve kredi büyüme hızı bankacılık endeksini yönlendirecek.',
-    isEarnings: true,
-    ticker: 'GARAN'
-  },
-  {
-    id: 'cal_4',
-    date: '2026-11-04T10:00:00+03:00',
-    displayDate: '04 Kasım 2026',
-    displayTime: '10:00 TSİ',
-    country: 'TR',
-    countryName: 'TÜİK',
-    flag: '🇹🇷',
-    category: 'inflation',
-    title: 'TÜİK Ekim Ayı Tüketici Fiyat Endeksi (TÜFE)',
-    importance: 3,
-    consensus: 'Aylık +%2,45 &bull; Yıllık %48,2',
-    previous: 'Aylık +%2,97 &bull; Yıllık %49,4',
-    impact: 'Dezenflasyon patikası ve TCMB faiz indirim döngüsü beklentilerini şekillendirecek.',
-    isEarnings: false
-  },
-  {
-    id: 'cal_5',
-    date: '2026-11-06T22:00:00+03:00',
-    displayDate: '06 Kasım 2026',
-    displayTime: '22:00 TSİ',
-    country: 'US',
-    countryName: 'ABD Fed',
-    flag: '🇺🇸',
-    category: 'central_bank',
-    title: 'Fed FOMC Politika Faizi Kararı & Powell Basın Toplantısı',
-    importance: 3,
-    consensus: '-25 bps İndirim (%4.75)',
-    previous: '%5.00',
-    impact: 'Dolar endeksi (DXY), küresel risk iştahı ve gelişmekte olan ülke hisse senedi akımları.',
-    isEarnings: false
-  },
-  {
-    id: 'cal_6',
-    date: '2026-11-07T18:30:00+03:00',
-    displayDate: '07 Kasım 2026',
-    displayTime: '18:30 TSİ',
-    country: 'TR',
-    countryName: 'FROTO',
-    flag: '🚗',
-    category: 'earnings',
-    title: 'Ford Otosan (FROTO) 2024/09 Finansal Raporları',
-    importance: 2,
-    consensus: '₺11.2 Mlr Çeyreklik Net Kâr',
-    previous: '₺9.8 Mlr',
-    impact: 'Avrupa ihracat pazarları ve Romanya Craiova tesisinin marj katkısı izlenecek.',
-    isEarnings: true,
-    ticker: 'FROTO'
-  },
-  {
-    id: 'cal_7',
-    date: '2026-11-08T18:15:00+03:00',
-    displayDate: '08 Kasım 2026',
-    displayTime: '18:15 TSİ',
-    country: 'TR',
-    countryName: 'KCHOL',
-    flag: '🏛️',
-    category: 'earnings',
-    title: 'Koç Holding (KCHOL) Konsolide 3. Çeyrek Sonuçları',
-    importance: 3,
-    consensus: '₺28.4 Mlr Net Kâr',
-    previous: '₺24.2 Mlr',
-    impact: 'Holding Net Aktif Değeri (NAD) iskontosunu daraltma potansiyeli taşır.',
-    isEarnings: true,
-    ticker: 'KCHOL'
-  },
-  {
-    id: 'cal_8',
-    date: '2026-11-12T11:00:00+03:00',
-    displayDate: '12 Kasım 2026',
-    displayTime: '11:00 TSİ',
-    country: 'EU',
-    countryName: 'Euro Bölgesi',
-    flag: '🇪🇺',
-    category: 'inflation',
-    title: 'Euro Bölgesi İmalat PMI (Öncü Veri)',
-    importance: 2,
-    consensus: '46.8 Puan',
-    previous: '45.8 Puan',
-    impact: 'Türkiye ihracatının en büyük pazarı olan Avrupa\'da sanayi toparlanma dinamikleri.',
-    isEarnings: false
-  }
-];
-
-let currentCalendarCategory = 'all';
-let currentCalendarHighOnly = false;
-let calendarCountdownInterval = null;
-
-function computeCountdownString(targetIsoDate) {
-  const target = new Date(targetIsoDate).getTime();
-  const now = Date.now();
-  const diff = target - now;
-
-  if (diff <= 0) {
-    return '<span class="text-emerald-400 font-bold">GELDİ / AÇIKLANDI</span>';
-  }
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-  return `${days}G ${hours}S ${minutes}D ${seconds}Sn`;
-}
-
-function renderMacroEarningsCalendar() {
-  const tbody = document.getElementById('macroCalendarTbody');
-  if (!tbody) return;
-
-  let filtered = [...MACRO_EARNINGS_CALENDAR_DATA];
-
-  if (currentCalendarCategory !== 'all') {
-    filtered = filtered.filter(item => item.category === currentCalendarCategory);
-  }
-
-  if (currentCalendarHighOnly) {
-    filtered = filtered.filter(item => item.importance === 3);
-  }
-
-  // Update Hero Event in Header
-  const heroEvent = MACRO_EARNINGS_CALENDAR_DATA[0];
-  const heroTitle = document.getElementById('calendarHeroTitle');
-  const heroCountdown = document.getElementById('calendarHeroCountdown');
-  if (heroTitle && heroEvent) heroTitle.textContent = heroEvent.title;
-  if (heroCountdown && heroEvent) heroCountdown.innerHTML = computeCountdownString(heroEvent.date);
-
-  tbody.innerHTML = filtered.map(item => {
-    let impBadge = '<span class="text-rose-400 font-bold">★★★ YÜKSEK</span>';
-    if (item.importance === 2) impBadge = '<span class="text-amber-400 font-bold">★★ ORTA</span>';
-    else if (item.importance === 1) impBadge = '<span class="text-red-400">★ DÜŞÜK</span>';
-
-    const logoHtml = item.isEarnings && typeof getStockLogoHtml === 'function' ? getStockLogoHtml(item.ticker, 22) : '';
-
-    return `
-      <tr class="hover:bg-[#121C30]/50 transition-colors border-b border-[#162238]/60">
-        <td class="py-3 px-3 font-mono">
-          <div class="font-bold text-white text-xs">${item.displayDate}</div>
-          <div class="text-[11px] text-slate-400">${item.displayTime}</div>
-        </td>
-
-        <td class="py-3 px-3 text-center font-mono font-bold text-rose-400 text-xs tracking-tight cal-live-countdown" data-cal-date="${item.date}">
-          ${computeCountdownString(item.date)}
-        </td>
-
-        <td class="py-3 px-3">
-          <div class="flex items-center gap-2">
-            ${logoHtml || `<span class="text-base">${item.flag}</span>`}
-            <span class="font-bold text-slate-200 text-xs">${item.countryName}</span>
-          </div>
-        </td>
-
-        <td class="py-3 px-3">
-          <div class="font-bold text-slate-100 text-xs leading-snug">${item.title}</div>
-          ${item.isEarnings ? `<span class="inline-block mt-0.5 text-[9px] px-1.5 py-px rounded bg-purple-950 text-purple-300 border border-purple-800/40">KAP RESMİ BİLANÇO</span>` : ''}
-        </td>
-
-        <td class="py-3 px-2 text-center text-xs">
-          ${impBadge}
-        </td>
-
-        <td class="py-3 px-3 text-right font-mono font-bold text-emerald-400 text-xs">
-          ${item.consensus}
-        </td>
-
-        <td class="py-3 px-3 text-right font-mono text-slate-400 text-xs">
-          ${item.previous}
-        </td>
-
-        <td class="py-3 px-3 text-[11px] text-slate-400 font-light leading-relaxed max-w-xs">
-          ${item.impact}
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
-window.renderMacroEarningsCalendar = renderMacroEarningsCalendar;
-
-function filterCalendarCategory(cat) {
-  currentCalendarCategory = cat;
-  const btns = document.querySelectorAll('.cal-cat-btn');
-  btns.forEach(b => {
-    if (b.getAttribute('data-cal-cat') === cat) {
-      b.className = 'cal-cat-btn px-3 py-1.5 rounded-lg bg-[#2F6BFF] text-white font-bold border border-red-600 transition-colors shadow-sm';
-    } else {
-      b.className = 'cal-cat-btn px-3 py-1.5 rounded-lg bg-[#090D18] hover:bg-[#121C30] text-slate-300 border border-[#1E2B45] transition-colors';
-    }
-  });
-  renderMacroEarningsCalendar();
-}
-window.filterCalendarCategory = filterCalendarCategory;
-
-function toggleHighImportanceCalendar(checked) {
-  currentCalendarHighOnly = checked;
-  renderMacroEarningsCalendar();
-}
-window.toggleHighImportanceCalendar = toggleHighImportanceCalendar;
-
-function initMacroEarningsCalendar() {
-  renderMacroEarningsCalendar();
-
-  // Start live 1-second countdown interval
-  if (calendarCountdownInterval) clearInterval(calendarCountdownInterval);
-  calendarCountdownInterval = setInterval(() => {
-    // The calendar only lives in the news view; skip work while it is not on screen
-    if (document.hidden || appState.activeView !== 'news') return;
-
-    // Update all live countdown cells in view
-    const cells = document.querySelectorAll('.cal-live-countdown');
-    cells.forEach(c => {
-      const targetDate = c.getAttribute('data-cal-date');
-      if (targetDate) c.innerHTML = computeCountdownString(targetDate);
-    });
-
-    // Update hero banner countdown
-    const heroCountdown = document.getElementById('calendarHeroCountdown');
-    if (heroCountdown && MACRO_EARNINGS_CALENDAR_DATA.length > 0) {
-      heroCountdown.innerHTML = computeCountdownString(MACRO_EARNINGS_CALENDAR_DATA[0].date);
-    }
-  }, 1000);
-}
-
 // Window Global Exports for Terminal Modules
 window.switchStockSubTab = switchStockSubTab;
 window.resizeStockDetailCharts = resizeStockDetailCharts;
 window.initTerminalCommandPalette = initTerminalCommandPalette;
 window.initWatchlistAndAlerts = initWatchlistAndAlerts;
-window.initMacroEarningsCalendar = initMacroEarningsCalendar;
 window.copySupportEmail = copySupportEmail;
 
 /* ==============================================================================

@@ -20,11 +20,12 @@ Canlı site Vercel'de; `main` dalına her push otomatik yayınlanır.
 | | KAP bildirimleri | kap.org.tr |
 | Hisse karşılaştırma | En fazla 3 hisse yan yana | Fiyat + bilanço |
 | Temettü takvimi | Son 12 ayın dağıtımları, verim sıralaması | `dividends.json` |
+| Sektör ve korelasyon | Sektör medyan F/K ve PD/DD, 8 varlığın 1 yıllık getiri korelasyonu | `sector-multiples.json`, Yahoo Finance fiyat geçmişi |
 | Piyasa gündemi | Haber başlıkları | Google Haberler |
 
-**Örnek (demo) içerik:** Model portföy, sektörel raporlar ve makro takvim gerçek veri değildir;
-ekranda "ÖRNEK VERİ" etiketiyle gösterilir (`assets/js/sample-flags.js`). Emir defteri, AKD ve
-yabancı takas lisanslı veri gerektirdiği için sitede yoktur.
+Gerçek kaynağa bağlanamayan bölümler (model portföy, stres testi, makro takvim, araştırma
+raporları) siteden kaldırıldı. Emir defteri, AKD ve yabancı takas lisanslı veri gerektirdiği için
+sitede yoktur.
 
 ## Çalıştırma
 
