@@ -1,0 +1,54 @@
+# Weekly data refresh: statements, ratios, sector medians and dividends are regenerated and
+# committed to main (Vercel then deploys them). scripts/check-data.mjs blocks the commit when a
+# data source failed and a file shrank sharply. Can also be started by hand from the Actions tab.
+name: Data refresh
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'   # Sundays 04:00 UTC (07:00 Istanbul)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: Fundamentals
+        run: npm run data
+      - name: Statements
+        run: npm run data:statements -- --force
+      - name: Sector multiples
+        run: npm run data:multiples
+      - name: Dividends
+        run: npm run data:dividends
+
+      - name: Check that no dataset collapsed
+        run: node scripts/check-data.mjs
+      - name: Unit tests on the new data
+        run: npm test
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/data
+          if git diff --cached --quiet; then
+            echo "No data changes."
+          else
+            git commit -m "chore(data): weekly refresh $(date -u +%Y-%m-%d)"
+            git push
+          fi
