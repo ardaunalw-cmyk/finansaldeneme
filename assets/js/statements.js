@@ -177,6 +177,7 @@ const Statements = (() => {
     set('income5PeriodBadge', 'VERİ YOK');
     placeholder('stockIncomeChart');
     placeholder('stockProjectionChart');
+    renderHealth();
   }
 
   /* ---------- rendering ---------- */
@@ -494,6 +495,139 @@ const Statements = (() => {
     set('projGrowthBadge', `Son çeyrek YoY ${growth >= 1 ? '+' : '-'}%${pct1(Math.abs(growth - 1) * 100)}`);
   }
 
+  /* ---------- financial health: DuPont, Altman Z'', Piotroski F ---------- */
+  const nf2 = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const TONE = {
+    good: 'bg-emerald-950 border-emerald-800/50 text-emerald-400',
+    mid: 'bg-amber-950/40 border-amber-800/50 text-amber-300',
+    bad: 'bg-red-950/40 border-red-800/50 text-red-300',
+    none: 'bg-[#070B14] border-[#1A2540] text-slate-400'
+  };
+  const pill = (id, text, tone) => { set(id, text); cls(id, `text-xs px-2.5 py-0.5 rounded-full border font-bold font-mono ${TONE[tone]}`); };
+  const tag = (id, text, tone) => { set(id, text); cls(id, `text-xs font-mono font-bold border px-2.5 py-1 rounded-lg ${TONE[tone]}`); };
+  const pct = x => `%${pct1(x * 100)}`;
+
+  /** ROE = net margin x asset turnover x leverage; last-twelve-months profit over the latest balance sheet. */
+  function dupont(d) {
+    const bank = isBank(d), ins = isIns(d);
+    const ni = bank ? ttm(d, '3ZA') : ttm(d, '3Z');
+    const rev = bank ? ttm(d, '3CE') : ins ? ttm(d, '3AA') + ttm(d, '3DAA') : ttm(d, '3C');
+    const assets = bank || ins ? val(d, '1Z', 0) : val(d, '1BL', 0);
+    const eq = bank ? val(d, '2O', 0) - val(d, '2OVA', 0) : val(d, '2O', 0);
+    if (!(rev > 0 && assets > 0 && eq > 0)) return null;
+    return { margin: ni / rev, turnover: rev / assets, leverage: assets / eq, roe: ni / eq, revLabel: bank ? 'faaliyet geliri' : ins ? 'prim' : 'hasılat' };
+  }
+
+  /** Altman Z'' (non-manufacturing / emerging markets): book values only, no market price. */
+  function altman(d) {
+    const ta = val(d, '1BL', 0);
+    const liab = val(d, '2A', 0) + val(d, '2B', 0);
+    if (!(ta > 0 && liab > 0)) return null;
+    const x1 = (val(d, '1A', 0) - val(d, '2A', 0)) / ta;
+    const x2 = (val(d, '2OCD', 0) + val(d, '2OCE', 0) + val(d, '2OCF', 0)) / ta;
+    const x3 = ttm(d, '3DF') / ta;
+    const x4 = val(d, '2N', 0) / liab;
+    return { z: 6.56 * x1 + 3.26 * x2 + 6.72 * x3 + 1.05 * x4, x1, x2, x3, x4 };
+  }
+
+  /**
+   * Piotroski F: nine pass/fail tests. Changes compare the latest period with the same period a
+   * year earlier (equal year-to-date lengths, both in current purchasing power under TMS 29).
+   */
+  function piotroski(d) {
+    const v = (c, i) => val(d, c, i);
+    const has = c => rowMap(d).has(c);
+    const ta0 = v('1BL', 0), ta1 = v('1BL', LY);
+    const ratio = (a, b) => (b ? a / b : null);
+    const up = (a, b) => (a == null || b == null ? null : a > b);
+    const niTtm = ttm(d, '3Z'), cfoTtm = ttm(d, '4C');
+    const ltd0 = ratio(v('2BA', 0), ta0), ltd1 = ratio(v('2BA', LY), ta1);
+    const rev = has('3C') && v('3C', 0) && v('3C', LY);
+    const tests = [
+      ['Kârlılık', 'Son 12 ay net kâr pozitif', niTtm > 0],
+      ['Kârlılık', 'Son 12 ay işletme nakit akışı pozitif', has('4C') ? cfoTtm > 0 : null],
+      ['Kârlılık', 'Aktif kârlılığı (ROA) yükseldi', up(ratio(v('3Z', 0), ta0), ratio(v('3Z', LY), ta1))],
+      ['Kârlılık', 'Nakit akışı net kârdan büyük', has('4C') ? cfoTtm > niTtm : null],
+      ['Borçluluk', 'Uzun vadeli borç / aktif azaldı', !has('2BA') || (ltd0 === 0 && ltd1 === 0) ? true : ltd0 < ltd1],
+      ['Borçluluk', 'Cari oran yükseldi', up(ratio(v('1A', 0), v('2A', 0)), ratio(v('1A', LY), v('2A', LY)))],
+      ['Borçluluk', 'Ödenmiş sermaye artmadı', v('2OA', 0) <= v('2OA', LY)],
+      ['Verimlilik', 'Brüt kâr marjı yükseldi', rev && has('3D') ? up(v('3D', 0) / v('3C', 0), v('3D', LY) / v('3C', LY)) : null],
+      ['Verimlilik', 'Aktif devir hızı yükseldi', rev ? up(v('3C', 0) / ta0, v('3C', LY) / ta1) : null]
+    ];
+    return { tests, score: tests.filter(t => t[2] === true).length, known: tests.filter(t => t[2] != null).length };
+  }
+
+  function renderHealth() {
+    const d = state.data;
+    const ready = state.status === 'ready' && d && d.available;
+    const msg = ready ? '' : state.status === 'loading' || state.status === 'idle' ? 'Gerçek bilanço verisi yükleniyor...' : messageFor(state.reason);
+
+    // DuPont
+    const dp = ready ? dupont(d) : null;
+    set('dupontNetMargin', dp ? pct(dp.margin) : '—');
+    set('dupontAssetTurnover', dp ? `${nf2.format(dp.turnover)}x` : '—');
+    set('dupontLeverage', dp ? `${nf2.format(dp.leverage)}x` : '—');
+    const eqEl = document.getElementById('dupontEquation');
+    if (eqEl) {
+      eqEl.innerHTML = dp
+        ? `${pct(dp.margin)} (Net Marj) × ${nf2.format(dp.turnover)}x (Devir Hızı) × ${nf2.format(dp.leverage)}x (Kaldıraç) = <strong class="${dp.roe >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${pct(dp.roe)} ROE</strong>
+           <div class="text-[10px] text-slate-500 mt-1.5 font-sans">Son 12 ay ana ortaklık net kârı ve ${dp.revLabel}; ${d.periods[0]} bilançosundaki toplam aktif ve ana ortaklık özkaynağı.</div>`
+        : (ready ? 'Özkaynak veya gelir sıfır/negatif olduğu için ayrıştırma yapılamıyor.' : msg);
+    }
+    if (!dp) tag('dupontQualityBadge', ready ? 'HESAPLANAMADI' : 'VERİ YOK', 'none');
+    else if (dp.roe < 0) tag('dupontQualityBadge', 'KÂRLILIK: ZARAR', 'bad');
+    else if (dp.roe >= 0.25) tag('dupontQualityBadge', 'KÂRLILIK: YÜKSEK', 'good');
+    else if (dp.roe >= 0.10) tag('dupontQualityBadge', 'KÂRLILIK: ORTA', 'mid');
+    else tag('dupontQualityBadge', 'KÂRLILIK: DÜŞÜK', 'mid');
+
+    // Altman and Piotroski are built for operating companies, not banks or insurers
+    const financial = ready && (isBank(d) || isIns(d));
+    const naText = 'Bu model sanayi, ticaret ve hizmet şirketleri için tasarlanmıştır; banka ve sigorta bilançolarında anlamlı sonuç vermez.';
+    const list = document.getElementById('stockPiotroskiList');
+
+    const az = ready && !financial ? altman(d) : null;
+    if (az) {
+      set('stockAltmanZScore', nf2.format(az.z));
+      const zone = az.z > 2.6 ? ['GÜVENLİ BÖLGE', 'good', 'Model, yakın vadede finansal sıkıntı riskini düşük görüyor.']
+        : az.z >= 1.1 ? ['GRİ BÖLGE', 'mid', 'Model belirsiz bölgede; sonuç tek başına bir risk işareti değildir.']
+          : ['RİSKLİ BÖLGE', 'bad', 'Model, finansal sıkıntı riskinin yüksek olduğuna işaret ediyor.'];
+      pill('stockAltmanZStatus', zone[0], zone[1]);
+      set('stockAltmanZDesc', `${zone[2]} ${d.periods[0]} bilançosuna göre işletme sermayesi / aktif ${pct(az.x1)}, birikmiş kârlar / aktif ${pct(az.x2)}, son 12 ay faaliyet kârı / aktif ${pct(az.x3)}, özkaynak / yükümlülük ${nf2.format(az.x4)}x.`);
+    } else {
+      set('stockAltmanZScore', '—');
+      pill('stockAltmanZStatus', financial ? 'UYGULANMAZ' : ready ? 'HESAPLANAMADI' : 'VERİ YOK', 'none');
+      set('stockAltmanZDesc', financial ? naText : ready ? 'Bilançoda toplam aktif veya yükümlülük bulunamadı.' : msg);
+    }
+
+    const pf = ready && !financial ? piotroski(d) : null;
+    const scoreEl = document.getElementById('stockPiotroskiScore');
+    if (pf) {
+      if (scoreEl) scoreEl.innerHTML = `${pf.score} <span class="text-xs text-slate-500 font-normal">/ 9</span>`;
+      set('stockPiotroskiPassed', `Sağlanan kriter: ${pf.score} / 9${pf.known < 9 ? ` (${9 - pf.known} kriterde veri yok)` : ''}`);
+      const st = pf.score >= 7 ? ['GÜÇLÜ', 'good', 'Kârlılık, borçluluk ve verimlilik göstergelerinin çoğu iyileşiyor.']
+        : pf.score >= 4 ? ['ORTA', 'mid', 'Göstergelerin bir kısmı iyileşirken bir kısmı geriliyor.']
+          : ['ZAYIF', 'bad', 'Göstergelerin çoğu geçen yılın aynı dönemine göre zayıflamış.'];
+      pill('stockPiotroskiStatus', st[0], st[1]);
+      set('stockPiotroskiDesc', `${st[2]} ${d.periods[0]} dönemi ${d.periods[LY]} ile karşılaştırıldı (TMS 29 enflasyon düzeltmeli). Ödenmiş sermaye artışı bedelsiz ise sulandırma değildir.`);
+      if (list) {
+        list.innerHTML = pf.tests.map(([, label, ok]) => `
+          <li class="flex items-center gap-2 ${ok == null ? 'text-slate-500' : ok ? 'text-slate-200' : 'text-slate-400'}">
+            <i class="fa-solid ${ok == null ? 'fa-minus' : ok ? 'fa-check text-emerald-400' : 'fa-xmark text-rose-400'} w-3 text-center"></i><span>${label}</span>
+          </li>`).join('');
+        list.style.display = '';
+      }
+    } else {
+      if (scoreEl) scoreEl.innerHTML = '— <span class="text-xs text-slate-500 font-normal">/ 9</span>';
+      set('stockPiotroskiPassed', '');
+      pill('stockPiotroskiStatus', financial ? 'UYGULANMAZ' : 'VERİ YOK', 'none');
+      set('stockPiotroskiDesc', financial ? naText : msg);
+      if (list) { list.innerHTML = ''; list.style.display = 'none'; }
+    }
+    // Feeds the peer radar's solvency axis
+    const fin = appState.currentCompanyData;
+    if (fin && fin.code === state.code) fin.pio = pf ? pf.score : null;
+  }
+
   /* ---------- public flow ---------- */
   async function ensure(fin) {
     const code = fin.code;
@@ -526,6 +660,7 @@ const Statements = (() => {
     showCanvas('stockProjectionChart');
     renderIncome(fin);
     renderBalance(fin);
+    renderHealth();
     if (typeof initStockIncomeChart === 'function') initStockIncomeChart();
     if (typeof initProjectionChart === 'function') initProjectionChart();
     if (typeof renderCapitalAndDividendIntelligence === 'function') renderCapitalAndDividendIntelligence(fin);
@@ -576,7 +711,7 @@ const Statements = (() => {
 
   /** Entry point used by the stock page: render what we have, or start loading. */
   function show(fin) {
-    if (state.code === fin.code && state.status === 'ready') { renderIncome(fin); renderBalance(fin); return; }
+    if (state.code === fin.code && state.status === 'ready') { renderIncome(fin); renderBalance(fin); renderHealth(); return; }
     if (state.code === fin.code && state.status === 'unavailable') { renderUnavailable(); return; }
     ensure(fin);
   }

@@ -160,8 +160,8 @@
     [/sma|hareketli\s*ortalama/, 'SMA (Basit Hareketli Ortalama), belirli sayıda günün kapanış ortalamasıdır. Fiyatın 20/50/200 günlük ortalamaların üstünde olması genelde güçlü trend olarak yorumlanır.'],
     [/temettu|kar\s*payi/, 'Temettü (kâr payı), şirketin kârının ortaklara dağıttığı kısmıdır. Temettü verimi, hisse başına temettünün hisse fiyatına oranıdır.'],
     [/bedelsiz/, 'Bedelsiz sermaye artırımı, şirketin iç kaynaklarından (yedekler, birikmiş kâr) sermayesini artırıp mevcut ortaklara ek pay vermesidir; ortakların toplam değeri değişmez, pay sayısı artar.'],
-    [/altman/, 'Altman Z-skoru, bir şirketin iflas riskini bilanço oranlarıyla ölçmeye çalışan bir modeldir. Not: sitedeki Altman ve Piotroski skorları şu an örnek veridir.'],
-    [/piotroski/, 'Piotroski F-skoru, şirketin finansal gücünü 9 muhasebe kriteriyle puanlayan bir yöntemdir. Not: sitedeki bu skor şu an örnek veridir.']
+    [/altman/, 'Altman Z-skoru, bir şirketin iflas riskini bilanço oranlarıyla ölçmeye çalışan bir modeldir. Sitede, piyasa fiyatı gerektirmeyen Z\'\' sürümü şirketin gerçek bilançosundan hesaplanır (bankalar ve sigortacılar hariç).'],
+    [/piotroski/, 'Piotroski F-skoru, şirketin finansal gücünü 9 muhasebe kriteriyle puanlayan bir yöntemdir. Sitede, son dönem geçen yılın aynı dönemiyle karşılaştırılarak gerçek bilançodan hesaplanır.']
   ];
 
   async function indexAnswer() {

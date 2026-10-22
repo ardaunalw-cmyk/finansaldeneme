@@ -2986,31 +2986,7 @@ async function loadStockDetails(ticker) {
   if (elRoe) elRoe.textContent = fin.roe;
   if (elRoa) elRoa.textContent = fin.roa;
 
-  // 4. Solvency: Altman Z & Piotroski
-  const altStatus = document.getElementById('stockAltmanZStatus');
-  const altScore = document.getElementById('stockAltmanZScore');
-  const altDesc = document.getElementById('stockAltmanZDesc');
-  const pioStatus = document.getElementById('stockPiotroskiStatus');
-  const pioScore = document.getElementById('stockPiotroskiScore');
-  const pioDesc = document.getElementById('stockPiotroskiDesc');
-  if (altStatus) altStatus.textContent = fin.altZStatus;
-  if (altScore) altScore.textContent = fin.altZ;
-  if (altDesc) altDesc.textContent = fin.altZDesc;
-  if (pioStatus) pioStatus.textContent = fin.pioStatus;
-  if (pioScore) pioScore.innerHTML = `${fin.pio} <span class="text-xs text-slate-400">/ 9</span>`;
-  if (pioDesc) pioDesc.textContent = fin.pioDesc;
-
-  // 5. DuPont Components
-  const dupNetMargin = document.getElementById('dupontNetMargin');
-  const dupAssetTurnover = document.getElementById('dupontAssetTurnover');
-  const dupLeverage = document.getElementById('dupontLeverage');
-  const dupEq = document.getElementById('dupontEquation');
-  if (dupNetMargin && fin.dupont) dupNetMargin.textContent = fin.dupont.netMargin;
-  if (dupAssetTurnover && fin.dupont) dupAssetTurnover.textContent = fin.dupont.assetTurnover;
-  if (dupLeverage && fin.dupont) dupLeverage.textContent = fin.dupont.leverage;
-  if (dupEq && fin.dupont) {
-    dupEq.innerHTML = `${fin.dupont.netMargin} (Net Marj) × ${fin.dupont.assetTurnover} (Devir Hızı) × ${fin.dupont.leverage} (Kaldıraç) = <span class="text-emerald-700 font-bold">${fin.dupont.roe} ROE</span>`;
-  }
+  // 4-5. Altman Z, Piotroski F and DuPont are computed from real statements (statements.js)
 
   // 6. Annual Revenue / FAVÖK / Net Income
   const annRev = document.getElementById('stockAnnualRevenue');
@@ -4059,7 +4035,7 @@ function getRadarAxisScores(fin) {
   const fk = parseFloat(fin.fk) || 6.5;
   const pddd = parseFloat(fin.pddd) || 1.3;
   const roe = parseFloat(fin.roe) || 24;
-  const pio = fin.pio ? parseInt(fin.pio) : 7;
+  const pio = fin.pio != null ? parseInt(fin.pio) : 7;
   const isUp = fin.isPositive !== undefined ? fin.isPositive : true;
 
   // 1. Değerleme: Lower P/E and P/B give higher score

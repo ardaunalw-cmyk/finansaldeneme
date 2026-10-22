@@ -1107,31 +1107,31 @@
                 <h3 class="font-serif font-bold text-white text-base">3 Aşamalı DuPont Özsermaye Ayrıştırması</h3>
                 <p class="text-xs text-slate-400">ROE = Net Kâr Marjı &times; Aktif Devir Hızı &times; Finansal Kaldıraç</p>
               </div>
-              <span class="text-xs text-red-400 font-mono font-bold bg-red-950/40 border border-red-800/40 px-2.5 py-1 rounded-lg">KÂRLILIK KALİTESİ: A+</span>
+              <span id="dupontQualityBadge" class="text-xs font-mono font-bold border px-2.5 py-1 rounded-lg bg-[#070B14] border-[#1A2540] text-slate-400">VERİ YOK</span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center my-3">
               <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl dupont-line">
                 <div class="text-[10px] text-slate-500 font-mono uppercase font-bold">1. NET KÂR MARJI</div>
-                <div id="dupontNetMargin" class="text-2xl font-bold font-mono text-white mt-1">%17,14</div>
+                <div id="dupontNetMargin" class="text-2xl font-bold font-mono text-white mt-1">—</div>
                 <div class="text-[11px] text-slate-400 mt-1">Fiyatlama gücü ve operasyonel verim</div>
               </div>
 
               <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl dupont-line">
                 <div class="text-[10px] text-slate-500 font-mono uppercase font-bold">2. AKTİF DEVİR HIZI</div>
-                <div id="dupontAssetTurnover" class="text-2xl font-bold font-mono text-white mt-1">1.12x</div>
+                <div id="dupontAssetTurnover" class="text-2xl font-bold font-mono text-white mt-1">—</div>
                 <div class="text-[11px] text-slate-400 mt-1">Varlık başına üretilen hasılat</div>
               </div>
 
               <div class="p-4 bg-[#070B14] border border-[#1A2540] rounded-xl">
                 <div class="text-[10px] text-slate-500 font-mono uppercase font-bold">3. FİNANSAL KALDIRAÇ</div>
-                <div id="dupontLeverage" class="text-2xl font-bold font-mono text-white mt-1">2.00x</div>
-                <div class="text-[11px] text-slate-400 mt-1">Özkaynak / Toplam Varlıklar çarpanı</div>
+                <div id="dupontLeverage" class="text-2xl font-bold font-mono text-white mt-1">—</div>
+                <div class="text-[11px] text-slate-400 mt-1">Toplam Varlıklar / Özkaynak çarpanı</div>
               </div>
             </div>
 
-            <div class="p-3 bg-red-950/40/40 border border-red-800/40 rounded-xl text-center text-xs text-white font-mono">
-              <span id="dupontEquation">%17.14 (Net Marj) &times; 1.12x (Devir Hızı) &times; 2.00x (Kaldıraç) = <strong class="text-emerald-400">%38,4 ROE</strong></span>
+            <div class="p-3 bg-[#070B14] border border-[#1A2540] rounded-xl text-center text-xs text-white font-mono">
+              <span id="dupontEquation">Gerçek bilanço verisi yükleniyor...</span>
             </div>
           </div>
 
@@ -1142,30 +1142,27 @@
             <div class="utl-card p-6 space-y-3">
               <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
                 <h4 class="font-serif font-bold text-white text-base">Altman Z-Skoru (İflas Riski)</h4>
-                <span id="stockAltmanZStatus" class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-800/50 text-emerald-400 font-bold font-mono">GÜVENLİ BÖLGE</span>
+                <span id="stockAltmanZStatus" class="text-xs px-2.5 py-0.5 rounded-full border font-bold font-mono bg-[#070B14] border-[#1A2540] text-slate-400">VERİ YOK</span>
               </div>
               <div class="flex items-baseline justify-between">
-                <div id="stockAltmanZScore" class="text-3xl font-bold font-mono text-white">3.45</div>
-                <span class="text-xs text-slate-400 font-mono">Eşik: &gt; 2.99 Güvenli</span>
+                <div id="stockAltmanZScore" class="text-3xl font-bold font-mono text-white">—</div>
+                <span class="text-xs text-slate-400 font-mono">Z'' modeli • &gt; 2,60 güvenli • &lt; 1,10 riskli</span>
               </div>
-              <p id="stockAltmanZDesc" class="text-xs text-slate-300 leading-relaxed font-light">
-                Şirket güçlü işletme sermayesi ve yüksek nakit yaratımıyla kısa-orta vadede herhangi bir finansal sıkışıklık veya iflas riski taşımamaktadır.
-              </p>
+              <p id="stockAltmanZDesc" class="text-xs text-slate-300 leading-relaxed font-light">Gerçek bilanço verisi yükleniyor...</p>
             </div>
 
             <!-- Piotroski F-Score -->
             <div class="utl-card p-6 space-y-3">
               <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
                 <h4 class="font-serif font-bold text-white text-base">Piotroski F-Skoru (Kurumsal Güç)</h4>
-                <span id="stockPiotroskiStatus" class="text-xs px-2.5 py-0.5 rounded-full bg-red-950/40 border border-red-800/50 text-red-300 font-bold font-mono">GÜÇLÜ İYİLEŞME</span>
+                <span id="stockPiotroskiStatus" class="text-xs px-2.5 py-0.5 rounded-full border font-bold font-mono bg-[#070B14] border-[#1A2540] text-slate-400">VERİ YOK</span>
               </div>
               <div class="flex items-baseline justify-between">
-                <div id="stockPiotroskiScore" class="text-3xl font-bold font-mono text-white">8 <span class="text-xs text-slate-500 font-normal">/ 9</span></div>
-                <span class="text-xs text-slate-400 font-mono">9 Kriterden 8'i Başarılı</span>
+                <div id="stockPiotroskiScore" class="text-3xl font-bold font-mono text-white">— <span class="text-xs text-slate-500 font-normal">/ 9</span></div>
+                <span id="stockPiotroskiPassed" class="text-xs text-slate-400 font-mono"></span>
               </div>
-              <p id="stockPiotroskiDesc" class="text-xs text-slate-300 leading-relaxed font-light">
-                Kârlılık, kaldıraç verimliliği ve operasyonel nakit akışı parametreleri tepe noktada. Finansal tablolar üstün kurumsal sağlığa işaret ediyor.
-              </p>
+              <ul id="stockPiotroskiList" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px]" style="display:none"></ul>
+              <p id="stockPiotroskiDesc" class="text-xs text-slate-300 leading-relaxed font-light">Gerçek bilanço verisi yükleniyor...</p>
             </div>
 
           </div>
@@ -3173,7 +3170,7 @@ Bu program, Borsa İstanbul’daki 1048 şirketin künyelerini KAP kayıtlarınd
                     <span>2. İleri Düzey Bilanço Dekompozisyonu</span>
                   </div>
                   <p class="text-xs text-slate-400 leading-relaxed font-sans">
-DuPont ayrıştırması, Altman Z, Piotroski, Verity skoru, hedef fiyat ve analist sayıları şu an örnek niteliğindedir ve ilgili bölümlerde “ÖRNEK” etiketiyle belirtilir.
+DuPont ayrıştırması, Altman Z'' ve Piotroski F-skoru şirketin KAP'a bildirdiği gerçek bilançodan hesaplanır. Henüz örnek veriyle çalışan bölümler “ÖRNEK” etiketiyle belirtilir.
 </p>
                 </div>
 
