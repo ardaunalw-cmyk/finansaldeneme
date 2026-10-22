@@ -1586,3 +1586,7 @@ html.intro-active, html.intro-active body { overflow: hidden; }
 .oa-chat-actions { margin-top: 10px; }
 .oa-chat-action { padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(79,134,255,0.5); background: rgba(47,107,255,0.15); color: #CFE0FF; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .15s ease; }
 .oa-chat-action:hover { background: rgba(47,107,255,0.32); }
+
+/* Indicator list next to the candlestick chart (assets/js/app.js paintTechIndicatorList) */
+.tech-indicator-list { max-height: 470px; scrollbar-width: thin; }
+@media (max-width: 1023px) { .tech-indicator-list { max-height: 520px; } }

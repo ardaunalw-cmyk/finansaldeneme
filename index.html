@@ -1654,7 +1654,7 @@
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#1A2540]">
                 <div>
                   <h4 class="font-serif font-bold text-white text-base">Mum Grafiği (OHLC) ve Hareketli Ortalamalar</h4>
-                  <div class="flex items-center gap-2 mt-0.5">
+                  <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span id="techCurrentPriceLabel" class="text-xs font-mono font-bold text-red-400">—</span>
                     <span id="techCurrentChangeLabel" class="text-[11px] font-mono text-emerald-400"></span>
                     <span class="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/60 text-slate-300 text-[9px] font-mono font-bold" title="Açılış, Yüksek, Düşük, Kapanış mum grafiği">MUM • OHLC</span>
@@ -1711,61 +1711,71 @@
               </div>
             </div>
 
-            <!-- Oscillator Chart (RSI / MACD) -->
-            <div class="utl-card p-6 space-y-4">
-              <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
-                <div>
-                  <h4 class="font-serif font-bold text-white text-base">Momentum ve Osilatörler</h4>
+            <!-- Indicator panel next to the candlestick chart: all indicators | oscillator chart -->
+            <div class="utl-card p-6 space-y-4 flex flex-col">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#1A2540]">
+                <div class="flex items-center bg-[#070B14] p-1 rounded-xl text-xs font-semibold border border-[#1A2540]" role="tablist">
+                  <button id="techPanelTab-list" type="button" role="tab" onclick="setTechPanelTab('list')" class="tech-panel-tab px-3 py-1 rounded-lg bg-[#2F6BFF] text-white font-bold transition-all">
+                    <i class="fa-solid fa-list-check text-[10px] mr-1"></i>İndikatörler <span id="techIndicatorCount" class="opacity-80">(—)</span>
+                  </button>
+                  <button id="techPanelTab-chart" type="button" role="tab" onclick="setTechPanelTab('chart')" class="tech-panel-tab px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-wave-square text-[10px] mr-1"></i>Osilatör Grafiği
+                  </button>
+                </div>
+                <span id="techConsensusBadge" class="text-[11px] font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg">HESAPLANIYOR</span>
+              </div>
+
+              <!-- Tab: every indicator, grouped -->
+              <div id="techPanel-list" class="space-y-3 flex-1 flex flex-col">
+                <div id="techGroupFilter" class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap"></div>
+                <div id="techIndicatorList" class="tech-indicator-list flex-1 overflow-y-auto pr-1 space-y-1.5">
+                  <div class="py-6 text-center text-slate-500 text-xs font-mono">Göstergeler gerçek fiyat geçmişinden hesaplanıyor...</div>
+                </div>
+                <p class="text-[10px] text-slate-500 font-mono">Gerçek günlük fiyatlardan (Yahoo Finance, gecikmeli) kural tabanlı hesaplanır; yatırım tavsiyesi değildir.</p>
+              </div>
+
+              <!-- Tab: oscillator chart -->
+              <div id="techPanel-chart" class="space-y-4 hidden">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
                   <p class="text-xs text-slate-400">RSI 14 &bull; MACD 12,26,9 &bull; Stokastik</p>
+                  <div class="flex items-center bg-[#070B14] p-1 rounded-xl text-xs font-semibold border border-[#1A2540]">
+                    <button id="btnOscRSI" onclick="setTechnicalOscillator('rsi')" class="px-2.5 py-0.5 rounded-lg bg-[#2F6BFF] text-white font-bold transition-all">RSI (14)</button>
+                    <button id="btnOscMACD" onclick="setTechnicalOscillator('macd')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">MACD (12,26,9)</button>
+                    <button id="btnOscStoch" onclick="setTechnicalOscillator('stoch')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">Stokastik</button>
+                  </div>
                 </div>
 
-                <div class="flex items-center bg-[#070B14] p-1 rounded-xl text-xs font-semibold border border-[#1A2540]">
-                  <button id="btnOscRSI" onclick="setTechnicalOscillator('rsi')" class="px-2.5 py-0.5 rounded-lg bg-[#2F6BFF] text-white font-bold transition-all">RSI (14)</button>
-                  <button id="btnOscMACD" onclick="setTechnicalOscillator('macd')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">MACD (12,26,9)</button>
-                  <button id="btnOscStoch" onclick="setTechnicalOscillator('stoch')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">Stokastik</button>
+                <!-- Canvas -->
+                <div class="relative h-64 w-full">
+                  <canvas id="technicalOscillatorChart"></canvas>
+                </div>
+
+                <!-- Indicator Note -->
+                <div class="flex items-center justify-between text-xs pt-3 border-t border-[#1A2540] text-slate-400">
+                  <div id="techOscillatorStatus" class="font-mono text-xs font-bold text-emerald-400">—</div>
+                  <span id="techOscillatorNote" class="text-emerald-400 font-mono font-bold"></span>
                 </div>
               </div>
+            </div>
+            </div>
 
-              <!-- Canvas -->
-              <div class="relative h-64 w-full">
-                <canvas id="technicalOscillatorChart"></canvas>
+          <!-- Section: technical report evaluation (written reading of every indicator) -->
+          <div class="utl-card p-6 space-y-5" id="techReportSection">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1A2540]">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-950/80 border border-indigo-800/50 text-indigo-400 flex items-center justify-center text-base">
+                  <i class="fa-solid fa-file-lines"></i>
+                </div>
+                <div>
+                  <h3 class="font-serif font-bold text-white text-lg tracking-tight">Teknik Rapor Değerlendirmesi</h3>
+                  <p class="text-xs text-slate-400">Tüm indikatörlerin trend, momentum, hacim ve volatilite başlıklarında yorumu</p>
+                </div>
               </div>
-
-              <!-- Indicator Note -->
-              <div class="flex items-center justify-between text-xs pt-3 border-t border-[#1A2540] text-slate-400">
-                <div id="techOscillatorStatus" class="font-mono text-xs font-bold text-emerald-400">RSI (14): 64.20 (Boğa Bölgesi)</div>
-                <span id="techOscillatorNote" class="text-emerald-400 font-mono font-bold">AL SİNYALİ</span>
-              </div>
+              <span id="techReportVerdict" class="text-xs font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg">HESAPLANIYOR</span>
             </div>
+            <div id="techReportBody" class="space-y-5 text-xs">
+              <p class="text-slate-500 font-mono">Rapor gerçek fiyat geçmişinden hazırlanıyor...</p>
             </div>
-
-          <!-- Section: 10 Technical Indicators Scorecard Table -->
-          <div class="utl-card p-6 space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-[#1A2540]">
-              <div>
-                <h3 class="font-serif font-bold text-white text-base">10 Temel Teknik İndikatör Karnesi</h3>
-                <p class="text-xs text-slate-400">Gerçek günlük fiyatlardan hesaplanan osilatör, ortalama ve trend göstergeleri; kural tabanlıdır, yatırım tavsiyesi değildir</p>
-              </div>
-              <span id="techConsensusBadge" class="text-xs font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg">HESAPLANIYOR</span>
-            </div>
-
-            <div class="overflow-x-auto rounded-xl border border-[#1A2540]">
-              <table class="utl-table">
-                <thead>
-                  <tr>
-                    <th>İNDİKATÖR ADI</th>
-                    <th>PERİYOT</th>
-                    <th class="text-right">HESAPLANAN DEĞER</th>
-                    <th class="text-center">SİNYAL KARARI</th>
-                    <th>STRATEJİK YORUM</th>
-                  </tr>
-                </thead>
-                <tbody id="technicalIndicatorsTbody">
-                  <!-- Dynamically populated via loadStockDetails() -->
-                </tbody>
-              </table>
-            </div>
-            <div id="techAnalysisCommentary" class="p-4 rounded-xl bg-[#090D18] border border-[#162238] text-xs"></div>
           </div>
 
           <!-- ================================================================
@@ -2792,6 +2802,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/calc.js"></script>
   <script src="assets/js/company-about.js"></script>
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/indicators.js"></script>
   <script src="assets/js/technicals.js"></script>
   <script src="assets/js/statements.js"></script>
   <script src="assets/js/disclosures.js"></script>

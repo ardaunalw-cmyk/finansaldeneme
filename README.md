@@ -15,7 +15,7 @@ Canlı site Vercel'de; `main` dalına her push otomatik yayınlanır.
 | | DuPont, Altman Z'', Piotroski F | KAP bilançoları (`assets/data/statements`) |
 | | Bilanço, gelir tablosu, çeyreklik grafikler | KAP bilançoları (İş Yatırım derlemesi) |
 | | Bedelsiz potansiyeli, temettü verimi, dağıtım oranı | Bilanço, nakit akışı, `dividends.json` |
-| | Teknik göstergeler ve mum grafiği | Yahoo Finance fiyat geçmişi |
+| | Mum grafiği, yanında 27 teknik indikatör (trend, momentum, hacim, volatilite) ve yazılı teknik rapor değerlendirmesi | Yahoo Finance fiyat geçmişi |
 | | Rakip kıyaslama ve radar | Aynı KAP sektöründeki şirketlerin gerçek verisi |
 | | KAP bildirimleri | kap.org.tr |
 | Hisse karşılaştırma | En fazla 3 hisse yan yana | Fiyat + bilanço |
@@ -63,7 +63,8 @@ assets/js/calc.js       Saf hesaplamalar: DuPont, Altman, Piotroski, dağıtım 
 assets/js/verity-score.js  Verity skoru ve sektör çarpanına göre model değer
 assets/js/statements.js Bilanço sekmesi ve finansal sağlık kartları
 assets/js/live-data.js  Fiyatlar ve fiyata bağlı oranlar
-assets/js/technicals.js Fiyat geçmişi ve teknik göstergeler
+assets/js/indicators.js Saf teknik indikatör hesapları (RSI, MACD, ADX, Ichimoku, Supertrend, MFI, ...)
+assets/js/technicals.js Fiyat geçmişi, indikatör karnesi ve teknik rapor metni
 assets/js/dividends.js  Temettü takvimi ve temettü verimi
 assets/js/compare.js    Hisse karşılaştırma
 assets/js/app.js        Görünümler, arama, tablo, grafikler, rakip kıyaslama

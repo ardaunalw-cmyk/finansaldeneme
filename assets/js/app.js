@@ -2041,49 +2041,169 @@ window.copySupportEmail = copySupportEmail;
 
 
 /**
- * Fills the indicator scorecard, the consensus badge and the written reading from real
- * daily bars (see TechData.scorecard). Shows an explicit message when no data is available.
+ * Indicator panel next to the candlestick chart: "list" shows every indicator, "chart" the
+ * oscillator chart (resized on show, since Chart.js cannot measure a hidden canvas).
+ */
+function setTechPanelTab(tab) {
+  ['list', 'chart'].forEach(t => {
+    const btn = document.getElementById(`techPanelTab-${t}`);
+    const pane = document.getElementById(`techPanel-${t}`);
+    if (pane) pane.classList.toggle('hidden', t !== tab);
+    if (btn) btn.className = `tech-panel-tab px-3 py-1 rounded-lg transition-all ${t === tab ? 'bg-[#2F6BFF] text-white font-bold' : 'text-slate-400 hover:text-white'}`;
+  });
+  if (tab === 'chart' && appState.charts.techOsc) appState.charts.techOsc.resize();
+}
+window.setTechPanelTab = setTechPanelTab;
+
+let techScorecard = null;      // last scorecard shown, so the group filter can repaint without refetching
+let techGroupFilter = 'all';
+
+function paintTechIndicatorList() {
+  const list = document.getElementById('techIndicatorList');
+  const filter = document.getElementById('techGroupFilter');
+  if (!list || !techScorecard) return;
+  const sc = techScorecard;
+  const groups = Object.entries(sc.groups);
+
+  if (filter) {
+    const chip = (key, label, count) => `<button type="button" onclick="setTechGroupFilter('${key}')" class="px-2 py-0.5 rounded-md border transition-colors ${techGroupFilter === key ? 'bg-[#2F6BFF] border-[#2F6BFF] text-white font-bold' : 'bg-[#070B14] border-[#1A2540] text-slate-400 hover:text-white'}">${label} <span class="opacity-70">${count}</span></button>`;
+    filter.innerHTML = chip('all', 'Tümü', sc.rows.length)
+      + groups.map(([key, label]) => chip(key, label, sc.rows.filter(r => r.group === key).length)).join('');
+  }
+
+  const shown = groups.filter(([key]) => techGroupFilter === 'all' || techGroupFilter === key);
+  list.innerHTML = shown.map(([key, label]) => {
+    const rows = sc.rows.filter(r => r.group === key);
+    const sec = sc.report.sections.find(s => s.key === key);
+    return `
+      <div class="pt-1">
+        <div class="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold px-1 pb-1">
+          <span>${label}</span>
+          ${key === 'volatility' ? '' : `<span class="${sec.score > 0.12 ? 'text-emerald-400' : sec.score < -0.12 ? 'text-rose-400' : 'text-amber-300'}">${sec.tone}</span>`}
+        </div>
+        ${rows.map(ind => `
+          <div class="p-2.5 rounded-xl bg-[#070B14] border border-[#162238] hover:border-[#24345A] transition-colors" title="${ind.note.replace(/"/g, '&quot;')}">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <div class="text-[12px] font-semibold text-slate-200 truncate">${ind.name}</div>
+                <div class="text-[10px] font-mono text-slate-500">${ind.period}</div>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="font-mono font-bold text-white text-[12px]">${ind.val}</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold font-mono whitespace-nowrap ${ind.sig.cls}">${ind.sig.label}</span>
+              </div>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1 leading-snug">${ind.note}</div>
+          </div>`).join('')}
+      </div>`;
+  }).join('');
+}
+
+function setTechGroupFilter(key) {
+  techGroupFilter = key;
+  paintTechIndicatorList();
+}
+window.setTechGroupFilter = setTechGroupFilter;
+
+/** Written report: overview, one section per indicator group, levels, synthesis, watch list. */
+function paintTechReport(sc) {
+  const body = document.getElementById('techReportBody');
+  const verdict = document.getElementById('techReportVerdict');
+  if (!body) return;
+  const rep = sc.report;
+  const money = v => `₺${v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const dist = d => `${d >= 0 ? '+' : '-'}%${Math.abs(d).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+  const toneCls = s => (s > 0.12 ? 'text-emerald-400 border-emerald-800/50 bg-emerald-950/40' : s < -0.12 ? 'text-rose-400 border-rose-800/50 bg-rose-950/40' : 'text-amber-300 border-amber-800/50 bg-amber-950/30');
+  const icons = { trend: 'fa-arrow-trend-up', momentum: 'fa-gauge-high', volume: 'fa-chart-column', volatility: 'fa-arrows-left-right-to-line' };
+  const levelRows = (items, cls) => items.length
+    ? items.map(x => `<li class="flex items-center justify-between gap-2 py-1 border-b border-[#162238]/60 last:border-0"><span class="text-slate-300">${x.name}</span><span class="font-mono"><strong class="${cls}">${money(x.value)}</strong> <span class="text-slate-500">${dist(x.dist)}</span></span></li>`).join('')
+    : '<li class="text-slate-500 py-1">Yakında seviye yok.</li>';
+
+  if (verdict) {
+    verdict.className = `text-xs font-mono font-bold px-2.5 py-1 rounded-lg ${rep.verdict.cls}`;
+    verdict.textContent = `GENEL GÖRÜNÜM: ${rep.verdict.label}`;
+  }
+
+  body.innerHTML = `
+    <div class="p-4 rounded-xl bg-[#090D18] border border-[#162238]">
+      <div class="text-[10px] font-mono uppercase tracking-wider text-indigo-300 font-bold mb-1.5">Genel Görünüm</div>
+      <p class="text-slate-200 leading-relaxed">${rep.overview}</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      ${rep.sections.map(s => `
+        <div class="p-4 rounded-xl bg-[#070B14] border border-[#1A2540] space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-serif font-bold text-white text-sm flex items-center gap-2"><i class="fa-solid ${icons[s.key]} text-indigo-400 text-xs"></i>${s.title}</span>
+            <span class="px-2 py-0.5 rounded border text-[10px] font-mono font-bold ${s.key === 'volatility' ? 'text-sky-300 border-sky-800/50 bg-sky-950/40' : toneCls(s.score)}">${s.tone.toLocaleUpperCase('tr-TR')}</span>
+          </div>
+          ${s.text.map(t => `<p class="text-slate-300 leading-relaxed">${t}</p>`).join('')}
+        </div>`).join('')}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="p-4 rounded-xl bg-[#070B14] border border-[#1A2540]">
+        <div class="text-[10px] font-mono uppercase tracking-wider text-rose-300 font-bold mb-1">Yakın Direnç Seviyeleri</div>
+        <ul class="text-[11px]">${levelRows(rep.resistances, 'text-rose-300')}</ul>
+      </div>
+      <div class="p-4 rounded-xl bg-[#070B14] border border-[#1A2540]">
+        <div class="text-[10px] font-mono uppercase tracking-wider text-emerald-300 font-bold mb-1">Yakın Destek Seviyeleri</div>
+        <ul class="text-[11px]">${levelRows(rep.supports, 'text-emerald-300')}</ul>
+      </div>
+    </div>
+
+    <div class="p-4 rounded-xl bg-[#090D18] border border-[#162238] space-y-2">
+      <div class="text-[10px] font-mono uppercase tracking-wider text-indigo-300 font-bold">Sonuç ve Sentez</div>
+      <p class="text-slate-200 leading-relaxed">${rep.synthesis}</p>
+      ${rep.watch.length ? `
+        <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold pt-1">İzlenecekler</div>
+        <ul class="list-disc pl-5 space-y-1 text-slate-300">${rep.watch.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}
+      <p class="text-slate-500 text-[11px] pt-1">Bu değerlendirme gerçek geçmiş fiyatlardan (Yahoo Finance, gecikmeli) kural tabanlı olarak üretilmiştir; tahmin ya da yatırım tavsiyesi değildir.</p>
+    </div>`;
+}
+
+/**
+ * Fills the indicator panel, the consensus badge and the written report from real daily bars
+ * (see TechData.scorecard). Shows an explicit message when no data is available.
  */
 async function renderTechScorecard(code) {
-  const tbody = document.getElementById('technicalIndicatorsTbody');
+  const list = document.getElementById('techIndicatorList');
+  const filter = document.getElementById('techGroupFilter');
+  const count = document.getElementById('techIndicatorCount');
   const badge = document.getElementById('techConsensusBadge');
-  const box = document.getElementById('techAnalysisCommentary');
-  if (!tbody) return;
+  const body = document.getElementById('techReportBody');
+  const verdict = document.getElementById('techReportVerdict');
+  if (!list) return;
 
-  tbody.innerHTML = '<tr><td colspan="5" class="py-6 px-3 text-center text-slate-500 text-xs font-mono">Göstergeler gerçek fiyat geçmişinden hesaplanıyor...</td></tr>';
-  if (badge) { badge.className = 'text-xs font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg'; badge.textContent = 'HESAPLANIYOR'; }
+  const neutralCls = 'text-[11px] font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg';
+  techScorecard = null;
+  list.innerHTML = '<div class="py-6 text-center text-slate-500 text-xs font-mono">Göstergeler gerçek fiyat geçmişinden hesaplanıyor...</div>';
+  if (filter) filter.innerHTML = '';
+  if (count) count.textContent = '(—)';
+  if (badge) { badge.className = neutralCls; badge.textContent = 'HESAPLANIYOR'; }
+  if (verdict) { verdict.className = neutralCls; verdict.textContent = 'HESAPLANIYOR'; }
+  if (body) body.innerHTML = '<p class="text-slate-500 font-mono">Rapor gerçek fiyat geçmişinden hazırlanıyor...</p>';
 
   try {
     if (!window.TechData) throw new Error('technicals not loaded');
     const sc = await TechData.scorecard(code);
     if (appState.currentStock !== code) return;
 
-    tbody.innerHTML = sc.rows.map(ind => `
-      <tr class="hover:bg-[#121C30]/50 transition-colors border-b border-[#162238]/60">
-        <td class="py-2.5 px-3 font-medium text-slate-200">${ind.name}</td>
-        <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${ind.period}</td>
-        <td class="py-2.5 px-3 font-mono font-bold text-white">${ind.val}</td>
-        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono ${ind.sig.cls}">${ind.sig.label}</span></td>
-        <td class="py-2.5 px-3 text-slate-400 text-[11px]">${ind.note}</td>
-      </tr>
-    `).join('');
-
+    techScorecard = sc;
+    if (count) count.textContent = `(${sc.rows.length})`;
+    paintTechIndicatorList();
     if (badge) {
-      badge.className = `text-xs font-mono font-bold px-2.5 py-1 rounded-lg ${sc.verdict.cls}`;
-      badge.textContent = `KONSENSÜS: ${sc.verdict.label} (${sc.buy} AL · ${sc.neutral} NÖTR · ${sc.sell} SAT)`;
+      badge.className = `text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg ${sc.verdict.cls}`;
+      badge.textContent = `${sc.verdict.label} · ${sc.buy} AL · ${sc.neutral} NÖTR · ${sc.sell} SAT`;
     }
-    if (box) {
-      box.innerHTML = `
-        <p class="font-medium text-slate-200 leading-relaxed"><strong class="text-white">Gösterge Okuması:</strong> ${sc.commentary[0]}</p>
-        <p class="text-slate-400 mt-2 leading-relaxed">${sc.commentary[1]} ${sc.commentary[2]}</p>
-        <p class="text-slate-500 mt-2 text-[11px]">Gerçek geçmiş fiyatlardan (Yahoo Finance, gecikmeli) kural tabanlı hesaplanmıştır; yatırım tavsiyesi değildir.</p>
-      `;
-    }
+    paintTechReport(sc);
   } catch (e) {
     console.warn('[Technical] scorecard unavailable:', e.message);
-    tbody.innerHTML = '<tr><td colspan="5" class="py-6 px-3 text-center text-amber-400 text-xs font-mono">Fiyat geçmişi alınamadığı için göstergeler hesaplanamadı.</td></tr>';
-    if (badge) { badge.className = 'text-xs font-mono font-bold text-amber-400 bg-amber-950/40 border border-amber-800/40 px-2.5 py-1 rounded-lg'; badge.textContent = 'VERİ YOK'; }
-    if (box) box.innerHTML = '<p class="text-slate-400">Gerçek fiyat verisi alınamadı; yorum üretilmedi.</p>';
+    list.innerHTML = '<div class="py-6 text-center text-amber-400 text-xs font-mono">Fiyat geçmişi alınamadığı ya da yetersiz olduğu için göstergeler hesaplanamadı.</div>';
+    const noData = 'text-[11px] font-mono font-bold text-amber-400 bg-amber-950/40 border border-amber-800/40 px-2.5 py-1 rounded-lg';
+    if (badge) { badge.className = noData; badge.textContent = 'VERİ YOK'; }
+    if (verdict) { verdict.className = noData; verdict.textContent = 'VERİ YOK'; }
+    if (body) body.innerHTML = '<p class="text-slate-400">Gerçek fiyat verisi alınamadı ya da yetersiz; rapor üretilmedi.</p>';
   }
 }
 /* ==============================================================================
