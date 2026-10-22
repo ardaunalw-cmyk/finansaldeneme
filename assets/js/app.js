@@ -1063,7 +1063,7 @@ const bistCandlestickRenderer = {
  * 2 & 3. technicalPriceChart & technicalOscillatorChart:
  * Candlestick OHLC price chart + overlays (SMA, Bollinger) & oscillators (RSI / MACD)
  */
-async function initTechnicalCharts(ticker = 'THYAO') {
+async function initTechnicalCharts(ticker = 'THYAO', retried = false) {
   const priceCanvas = document.getElementById('technicalPriceChart');
   const oscCanvas = document.getElementById('technicalOscillatorChart');
   if (!priceCanvas || !oscCanvas) return;
@@ -1071,6 +1071,11 @@ async function initTechnicalCharts(ticker = 'THYAO') {
   const tech = await MockFinancialApi.fetchTechnicalData(ticker, appState.technical.timeframe);
 
   const techNote = document.getElementById('techDataNote');
+  if (!tech && !retried) {
+    // One quiet retry: the history request sometimes fails while many quotes load at once
+    setTimeout(() => { if (appState.currentStock === ticker) initTechnicalCharts(ticker, true); }, 4000);
+    return;
+  }
   if (!tech) {
     if (techNote) { techNote.className = 'data-badge sample'; techNote.textContent = 'VERİ ALINAMADI'; }
     ['techPrice', 'techOsc'].forEach(k => { if (appState.charts[k]) { appState.charts[k].destroy(); appState.charts[k] = null; } });

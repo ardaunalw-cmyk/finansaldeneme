@@ -175,7 +175,7 @@ const LiveData = (() => {
     return hi > lo ? Math.min(100, Math.max(0, (v - lo) / (hi - lo) * 100)) : 50;
   }
 
-  async function syncStockHeader(fin) {
+  async function syncStockHeader(fin, retried = false) {
     const code = fin.code;
     const note = document.getElementById('stockDetailDataNote');
     try {
@@ -205,6 +205,13 @@ const LiveData = (() => {
       }
       syncFundamentals(fin, note, priceBadge);
     } catch {
+      if (appState.currentStock !== code) return;
+      // Yahoo occasionally drops a request under load; one quiet retry before giving up
+      if (!retried) {
+        if (note) note.innerHTML = 'Fiyat yükleniyor...';
+        setTimeout(() => { if (appState.currentStock === code) syncStockHeader(fin, true); }, 4000);
+        return;
+      }
       if (note) {
         note.innerHTML = '<i class="data-badge sample">VERİ YOK</i> Fiyat alınamadı; fiyata bağlı oranlar, skor ve model değer hesaplanamadı.';
       }
@@ -217,14 +224,8 @@ const LiveData = (() => {
 
   /** Combines a statement summary with the stock's current price into the ratio fields. */
   function applyFundamentals(fin, f) {
-    const mcap = fin.priceNum * f.shares;          // BIST par value is 1 TL, so capital = share count
     const t = f.ttm;
-    const fk = t.netIncome > 0 ? mcap / t.netIncome : NaN;
-    const pddd = f.equity > 0 ? mcap / f.equity : NaN;
-    const fdFavok = t.ebitda > 0 ? (mcap + f.netDebt) / t.ebitda : NaN;
-    const netDebtFavok = t.ebitda > 0 ? f.netDebt / t.ebitda : NaN;
-    const roe = f.equity > 0 ? t.netIncome / f.equity * 100 : NaN;
-    const roa = f.totalAssets > 0 ? t.netIncome / f.totalAssets * 100 : NaN;
+    const { fk, pddd, fdFavok, netDebtFavok, roe, roa } = Calc.ratios(fin.priceNum, f);
 
     Object.assign(fin, {
       fk: ratio(fk), pddd: ratio(pddd), fdFavok: ratio(fdFavok),

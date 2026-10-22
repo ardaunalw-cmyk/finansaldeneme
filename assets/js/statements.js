@@ -18,14 +18,7 @@ const Statements = (() => {
   /* ---------- loading ---------- */
   async function fetchStatic(code) {
     const r = await fetch(`/assets/data/statements/${code}.json`);
-    if (!r.ok) return null;
-    const j = await r.json();
-    // Older files have no "kind"; banks are recognisable by total assets 1Z plus operating income 3CE
-    const kind = j.kind || (j.rows.some(r => r[0] === '1Z') && j.rows.some(r => r[0] === '3CE') ? 'bank' : 'industrial');
-    return {
-      available: true, kind, source: j.source, basis: j.basis, periods: j.periods,
-      rows: j.rows.map(([c, n, l, ...v]) => ({ c, n, l, v: v.map(x => x * (j.unit || 1)) }))
-    };
+    return r.ok ? Calc.fromFile(await r.json()) : null;
   }
 
   async function fetchLive(code, ex) {
@@ -53,14 +46,8 @@ const Statements = (() => {
     return cache.get(key);
   }
 
-  /* ---------- helpers over a data set ---------- */
-  const rowMap = d => d._map || (d._map = new Map(d.rows.map(r => [r.c, r])));
-  const val = (d, code, i = 0) => rowMap(d).get(code)?.v[i] ?? 0;
-  const lastP = d => parseInt(d.periods[0].split('/')[1], 10);
-  const prevFyIdx = d => Math.max(1, d.periods.findIndex((p, i) => i > 0 && p.endsWith('/12')));
-  const LY = 4;                                    // same period one year earlier
-  const ttm = (d, code) => (lastP(d) === 12 ? val(d, code, 0) : val(d, code, 0) + val(d, code, prevFyIdx(d)) - val(d, code, LY));
-  const flow = (d, code, i) => (parseInt(d.periods[i].split('/')[1], 10) === 3 ? val(d, code, i) : val(d, code, i) - val(d, code, i + 1));
+  /* ---------- helpers over a data set (pure calculations live in calc.js) ---------- */
+  const { val, ttm, flow, prevFyIdx, LY, isBank, isIns, premium, claims } = Calc;
 
   function money(v, ex) {
     const abs = Math.abs(v);
@@ -79,11 +66,7 @@ const Statements = (() => {
     return `${p >= 0 ? '+' : '-'}%${nf1.format(Math.abs(p))}`;
   };
 
-  const isBank = d => d.kind === 'bank';
-  const isIns = d => d.kind === 'insurance';
-  // Premiums, claims and technical lines of insurers (non-life + life)
-  const premium = (d, i) => val(d, '3AA', i) + val(d, '3DAA', i);
-  const claims = (d, i) => val(d, '3BA', i) + val(d, '3EA', i);
+  // Technical provisions of insurers (non-life + life)
   const techProvisions = (d, i) => d.rows.filter(r => /Sigortacılık Teknik Karşılıkları/.test(r.n) && r.c.startsWith('2') && r.l <= 1).reduce((a, r) => a + r.v[i], 0);
 
   function category(code, kind) {
@@ -486,16 +469,7 @@ const Statements = (() => {
       },
       items: []
     };
-    // Payout: cash dividends paid (cash flow statement, incl. to minorities) / net profit for the
-    // period incl. minorities, both last twelve months. Many companies report dividends inside
-    // "other financing" without a separate line; those get null rather than a guessed 0.
-    if (rowMap(d).has('4CBB')) {
-      const paid = Math.abs(ttm(d, '4CBB'));
-      const profit = rowMap(d).has('3L') ? ttm(d, '3L') : ttm(d, '3Z');
-      fin.payout = { paid, profit, ratio: profit > 0 ? paid / profit * 100 : null, period: d.periods[0] };
-    } else {
-      fin.payout = { missing: bank || ins ? 'financial' : 'no-line' };
-    }
+    fin.payout = Calc.payout(d);
 
     // Captions of the two annual figures differ for banks
     const lbl = (id, text) => { const n = document.getElementById(id); if (n && n.previousSibling) n.previousSibling.textContent = text; };
@@ -519,55 +493,7 @@ const Statements = (() => {
   const tag = (id, text, tone) => { set(id, text); cls(id, `text-xs font-mono font-bold border px-2.5 py-1 rounded-lg ${TONE[tone]}`); };
   const pct = x => `%${pct1(x * 100)}`;
 
-  /** ROE = net margin x asset turnover x leverage; last-twelve-months profit over the latest balance sheet. */
-  function dupont(d) {
-    const bank = isBank(d), ins = isIns(d);
-    const ni = bank ? ttm(d, '3ZA') : ttm(d, '3Z');
-    const rev = bank ? ttm(d, '3CE') : ins ? ttm(d, '3AA') + ttm(d, '3DAA') : ttm(d, '3C');
-    const assets = bank || ins ? val(d, '1Z', 0) : val(d, '1BL', 0);
-    const eq = bank ? val(d, '2O', 0) - val(d, '2OVA', 0) : val(d, '2O', 0);
-    if (!(rev > 0 && assets > 0 && eq > 0)) return null;
-    return { margin: ni / rev, turnover: rev / assets, leverage: assets / eq, roe: ni / eq, revLabel: bank ? 'faaliyet geliri' : ins ? 'prim' : 'hasılat' };
-  }
-
-  /** Altman Z'' (non-manufacturing / emerging markets): book values only, no market price. */
-  function altman(d) {
-    const ta = val(d, '1BL', 0);
-    const liab = val(d, '2A', 0) + val(d, '2B', 0);
-    if (!(ta > 0 && liab > 0)) return null;
-    const x1 = (val(d, '1A', 0) - val(d, '2A', 0)) / ta;
-    const x2 = (val(d, '2OCD', 0) + val(d, '2OCE', 0) + val(d, '2OCF', 0)) / ta;
-    const x3 = ttm(d, '3DF') / ta;
-    const x4 = val(d, '2N', 0) / liab;
-    return { z: 6.56 * x1 + 3.26 * x2 + 6.72 * x3 + 1.05 * x4, x1, x2, x3, x4 };
-  }
-
-  /**
-   * Piotroski F: nine pass/fail tests. Changes compare the latest period with the same period a
-   * year earlier (equal year-to-date lengths, both in current purchasing power under TMS 29).
-   */
-  function piotroski(d) {
-    const v = (c, i) => val(d, c, i);
-    const has = c => rowMap(d).has(c);
-    const ta0 = v('1BL', 0), ta1 = v('1BL', LY);
-    const ratio = (a, b) => (b ? a / b : null);
-    const up = (a, b) => (a == null || b == null ? null : a > b);
-    const niTtm = ttm(d, '3Z'), cfoTtm = ttm(d, '4C');
-    const ltd0 = ratio(v('2BA', 0), ta0), ltd1 = ratio(v('2BA', LY), ta1);
-    const rev = has('3C') && v('3C', 0) && v('3C', LY);
-    const tests = [
-      ['Kârlılık', 'Son 12 ay net kâr pozitif', niTtm > 0],
-      ['Kârlılık', 'Son 12 ay işletme nakit akışı pozitif', has('4C') ? cfoTtm > 0 : null],
-      ['Kârlılık', 'Aktif kârlılığı (ROA) yükseldi', up(ratio(v('3Z', 0), ta0), ratio(v('3Z', LY), ta1))],
-      ['Kârlılık', 'Nakit akışı net kârdan büyük', has('4C') ? cfoTtm > niTtm : null],
-      ['Borçluluk', 'Uzun vadeli borç / aktif azaldı', !has('2BA') || (ltd0 === 0 && ltd1 === 0) ? true : ltd0 < ltd1],
-      ['Borçluluk', 'Cari oran yükseldi', up(ratio(v('1A', 0), v('2A', 0)), ratio(v('1A', LY), v('2A', LY)))],
-      ['Borçluluk', 'Ödenmiş sermaye artmadı', v('2OA', 0) <= v('2OA', LY)],
-      ['Verimlilik', 'Brüt kâr marjı yükseldi', rev && has('3D') ? up(v('3D', 0) / v('3C', 0), v('3D', LY) / v('3C', LY)) : null],
-      ['Verimlilik', 'Aktif devir hızı yükseldi', rev ? up(v('3C', 0) / ta0, v('3C', LY) / ta1) : null]
-    ];
-    return { tests, score: tests.filter(t => t[2] === true).length, known: tests.filter(t => t[2] != null).length };
-  }
+  const { dupont, altman, altmanZone, piotroski } = Calc;
 
   function renderHealth() {
     const d = state.data;
@@ -600,9 +526,11 @@ const Statements = (() => {
     const az = ready && !financial ? altman(d) : null;
     if (az) {
       set('stockAltmanZScore', nf2.format(az.z));
-      const zone = az.z > 2.6 ? ['GÜVENLİ BÖLGE', 'good', 'Model, yakın vadede finansal sıkıntı riskini düşük görüyor.']
-        : az.z >= 1.1 ? ['GRİ BÖLGE', 'mid', 'Model belirsiz bölgede; sonuç tek başına bir risk işareti değildir.']
-          : ['RİSKLİ BÖLGE', 'bad', 'Model, finansal sıkıntı riskinin yüksek olduğuna işaret ediyor.'];
+      const zone = {
+        safe: ['GÜVENLİ BÖLGE', 'good', 'Model, yakın vadede finansal sıkıntı riskini düşük görüyor.'],
+        grey: ['GRİ BÖLGE', 'mid', 'Model belirsiz bölgede; sonuç tek başına bir risk işareti değildir.'],
+        distress: ['RİSKLİ BÖLGE', 'bad', 'Model, finansal sıkıntı riskinin yüksek olduğuna işaret ediyor.']
+      }[altmanZone(az.z)];
       pill('stockAltmanZStatus', zone[0], zone[1]);
       set('stockAltmanZDesc', `${zone[2]} ${d.periods[0]} bilançosuna göre işletme sermayesi / aktif ${pct(az.x1)}, birikmiş kârlar / aktif ${pct(az.x2)}, son 12 ay faaliyet kârı / aktif ${pct(az.x3)}, özkaynak / yükümlülük ${nf2.format(az.x4)}x.`);
     } else {

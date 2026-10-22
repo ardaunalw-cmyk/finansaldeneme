@@ -4,6 +4,7 @@
   "scripts": {
     "build": "node build.mjs",
     "dev": "node dev.mjs",
+    "test": "node --test",
     "data": "node scripts/fetch-fundamentals.mjs",
     "data:multiples": "node scripts/fetch-sector-multiples.mjs",
     "data:statements": "node scripts/fetch-statements.mjs",
