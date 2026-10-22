@@ -1978,6 +1978,8 @@ function switchView(viewName, stockCode = null) {
       if (typeof renderOverviewNewsPreview === 'function') renderOverviewNewsPreview();
     } else if (viewName === 'news') {
       if (typeof renderNewsCenter === 'function') renderNewsCenter();
+    } else if (viewName === 'social') {
+      if (window.SocialFeed) SocialFeed.render();
     } else if (viewName === 'stock-detail') {
       if (appState.loadedStock !== appState.currentStock) {
         // First visit (or a different stock): loadStockDetails renders the view and its charts
@@ -2324,6 +2326,8 @@ async function loadStockDetails(ticker) {
 
   // 9. Real KAP disclosures (assets/js/disclosures.js)
   if (window.Disclosures) Disclosures.show(fin);
+  // 9b. Public social posts that mention this stock (assets/js/social.js)
+  if (window.SocialFeed) SocialFeed.showForStock(fin.code);
 
   // 10-11. Technical indicator scorecard, consensus and commentary (computed from real bars)
   renderTechScorecard(fin.code);

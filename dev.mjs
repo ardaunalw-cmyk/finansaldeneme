@@ -13,6 +13,7 @@ import financialsHandler from './api/financials.mjs';
 import statementsHandler from './api/statements.mjs';
 import disclosuresHandler from './api/disclosures.mjs';
 import newsHandler from './api/news.mjs';
+import socialHandler from './api/social.mjs';
 
 const PORT = Number(process.env.PORT) || 8080;
 const ROOT = resolve('.');
@@ -60,6 +61,10 @@ createServer(async (req, res) => {
     }
     if (path === '/api/news') {
       await newsHandler(req, res);
+      return;
+    }
+    if (path === '/api/social') {
+      await socialHandler(req, res);
       return;
     }
     if (path === '/api/disclosures') {

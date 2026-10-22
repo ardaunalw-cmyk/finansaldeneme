@@ -68,7 +68,7 @@ assets/js/technicals.js Fiyat geçmişi, indikatör karnesi ve teknik rapor metn
 assets/js/dividends.js  Temettü takvimi ve temettü verimi
 assets/js/compare.js    Hisse karşılaştırma
 assets/js/app.js        Görünümler, arama, tablo, grafikler, rakip kıyaslama
-api/*.mjs               Vercel fonksiyonları (Yahoo Finance, İş Yatırım, KAP, haberler, sohbet)
+api/*.mjs               Vercel fonksiyonları (Yahoo Finance, İş Yatırım, KAP, haberler, sosyal medya, sohbet)
 scripts/*.mjs           Veri üretme betikleri
 test/                   Birim testleri (gerçek bilanço dosyalarıyla)
 ```
