@@ -54,28 +54,57 @@
       return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
     };
 
+    // Every sub-score is also recorded here for the "why this score" panel
+    const detail = {};
+    const add = (part, label, value, score, rule) => {
+      if (score !== null) (detail[part] = detail[part] || []).push({ label, value, score: Math.round(score * 10) / 10, rule });
+      return score;
+    };
+    const pct = v => `%${fmt1.format(v)}`;
+
     const profitability = avg([
-      roe === null ? (d.netIncome < 0 ? 0 : null) : (roe <= 0 ? 0 : lin(roe, 0, 30)),
-      netMargin === null ? null : (netMargin <= 0 ? 0 : lin(netMargin, 0, 15))
+      add('Kârlılık', 'Özsermaye kârlılığı (ROE)', roe === null ? 'Hesaplanamadı' : pct(roe),
+        roe === null ? (d.netIncome < 0 ? 0 : null) : (roe <= 0 ? 0 : lin(roe, 0, 30)),
+        '%0 ve altı 0 puan, %30 ve üstü 10 puan'),
+      add('Kârlılık', 'Net kâr marjı', netMargin === null ? '—' : pct(netMargin),
+        netMargin === null ? null : (netMargin <= 0 ? 0 : lin(netMargin, 0, 15)),
+        '%0 ve altı 0 puan, %15 ve üstü 10 puan')
     ]);
 
-    const operating = financial || ebitdaMargin === null ? null : (ebitdaMargin <= 0 ? 0 : lin(ebitdaMargin, 0, 25));
+    const operating = financial || ebitdaMargin === null ? null
+      : add('Faaliyet gücü', 'FAVÖK marjı', pct(ebitdaMargin), ebitdaMargin <= 0 ? 0 : lin(ebitdaMargin, 0, 25),
+        '%0 ve altı 0 puan, %25 ve üstü 10 puan');
 
     let leverageDebt = null;
     if (!financial) {
-      if (d.ebitda > 0) leverageDebt = d.netDebt <= 0 ? 10 : lin(5 - d.netDebt / d.ebitda, 0, 5);
-      else leverageDebt = d.netDebt <= 0 ? 4 : 0;
+      if (d.ebitda > 0) {
+        leverageDebt = d.netDebt <= 0 ? 10 : lin(5 - d.netDebt / d.ebitda, 0, 5);
+        add('Borç durumu', 'Net borç / FAVÖK', d.netDebt <= 0 ? 'Net nakit' : `${fmt1.format(d.netDebt / d.ebitda)}x`, leverageDebt,
+          'Net nakit 10 puan, 0x 10 puan, 5x ve üstü 0 puan');
+      } else {
+        leverageDebt = d.netDebt <= 0 ? 4 : 0;
+        add('Borç durumu', 'Net borç / FAVÖK', 'FAVÖK negatif', leverageDebt, 'FAVÖK negatifken net nakit 4 puan, net borç 0 puan');
+      }
     }
     // Banks and insurers are leveraged by nature: neither debt/EBITDA nor equity/assets says much about them
-    const leverage = financial ? null : avg([leverageDebt, equityRatio === null ? null : (equityRatio <= 0 ? 0 : lin(equityRatio, 0, 50))]);
+    const leverage = financial ? null : avg([
+      leverageDebt,
+      equityRatio === null ? null : add('Borç durumu', 'Özsermaye / toplam aktif', pct(equityRatio), equityRatio <= 0 ? 0 : lin(equityRatio, 0, 50),
+        '%0 ve altı 0 puan, %50 ve üstü 10 puan')
+    ]);
 
     const pe = d.netIncome > 0 && mcap > 0 ? mcap / d.netIncome : null;
     const pb = d.equity > 0 && mcap > 0 ? mcap / d.equity : null;
+    const peRule = 'Sektör medyanının yarısı ve altı 10 puan, medyanda 6 puan, iki katında 0 puan';
     let valuation = null;
     if (m) {
       valuation = avg([
-        pe !== null && m.pe ? relative(pe / m.pe) : (d.netIncome <= 0 ? 0 : null),
-        pb !== null && m.pb ? relative(pb / m.pb) : null
+        pe !== null && m.pe
+          ? add('Değerleme', 'F/K', `${fmt.format(pe)} (sektör medyanı ${fmt.format(m.pe)})`, relative(pe / m.pe), peRule)
+          : (d.netIncome <= 0 ? add('Değerleme', 'F/K', 'Net zarar', 0, 'Şirket zarar ediyorsa 0 puan') : null),
+        pb !== null && m.pb
+          ? add('Değerleme', 'PD/DD', `${fmt.format(pb)} (sektör medyanı ${fmt.format(m.pb)})`, relative(pb / m.pb), peRule)
+          : null
       ]);
     }
 
@@ -109,7 +138,13 @@
 
     return {
       score, status, model,
-      parts: weights.filter(w => w[1] !== null).map(w => [w[0], Math.round(w[1] * 10) / 10])
+      parts: weights.filter(w => w[1] !== null).map(w => [w[0], Math.round(w[1] * 10) / 10]),
+      breakdown: {
+        parts: used.map(w => ({ name: w[0], score: Math.round(w[1] * 10) / 10, weight: w[2], share: w[2] / total, items: detail[w[0]] || [] })),
+        skipped: weights.filter(w => w[1] === null).map(w => w[0]),
+        financial,
+        scope: m ? m.scope : null
+      }
     };
   }
 
@@ -122,6 +157,7 @@
     fin.score = r.score;
     fin.scoreStatus = r.status;
     fin.scoreParts = r.parts;
+    fin.scoreBreakdown = r.score === null ? null : r.breakdown;
     fin.modelValue = r.model;
   }
 
@@ -131,6 +167,7 @@
   function paintHeader(fin) {
     if (typeof appState !== 'undefined' && appState.currentStock !== fin.code) return;
     const real = fin.score !== null && fin.score !== undefined;
+    paintBreakdown(fin);
     set('stockDetailScore', real ? fmt1.format(fin.score) : '—');
     set('stockDetailScoreStatus', real ? fin.scoreStatus : 'Bilanço verisi yok');
     set('stockDetailScorePercentile', real && fin.scoreParts
@@ -151,5 +188,70 @@
     if (label) label.textContent = 'MODEL DEĞER (SEKTÖR ÇARPANI)';
   }
 
-  window.VerityScore = { ready, compute, apply, paintHeader };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Full class names, so Tailwind's build can see them
+  const TONES = {
+    good: { text: 'text-emerald-400', bg: 'bg-emerald-400' },
+    mid: { text: 'text-amber-400', bg: 'bg-amber-400' },
+    bad: { text: 'text-rose-400', bg: 'bg-rose-400' }
+  };
+  const tone = v => (v >= 7 ? TONES.good : v >= 4 ? TONES.mid : TONES.bad);
+
+  /** "Why this score" panel: each component, its ratios, and how many points each earned. */
+  function breakdownHtml(fin) {
+    const b = fin.scoreBreakdown;
+    const cards = b.parts.map(p => {
+      const c = tone(p.score);
+      const items = p.items.map(i => `
+        <div class="flex items-start justify-between gap-3 py-1.5 border-t border-[#1A2540]/70">
+          <div class="min-w-0">
+            <div class="text-[11px] text-slate-300">${esc(i.label)}: <span class="font-mono text-white">${esc(i.value)}</span></div>
+            <div class="text-[10px] text-slate-500">${esc(i.rule)}</div>
+          </div>
+          <div class="font-mono text-xs font-bold ${tone(i.score).text} whitespace-nowrap">${fmt1.format(i.score)}/10</div>
+        </div>`).join('');
+      return `
+        <div class="p-3.5 rounded-xl bg-[#070B14] border border-[#1A2540]">
+          <div class="flex items-baseline justify-between gap-2">
+            <div class="text-xs font-bold text-white">${esc(p.name)}</div>
+            <div class="text-[10px] font-mono text-slate-500">ağırlık %${Math.round(p.share * 100)}</div>
+          </div>
+          <div class="flex items-center gap-2 mt-2 mb-1.5">
+            <div class="flex-1 h-1.5 rounded-full bg-[#121A2E] overflow-hidden"><div class="h-full rounded-full ${c.bg}" style="width:${p.score * 10}%"></div></div>
+            <div class="font-mono text-sm font-bold ${c.text}">${fmt1.format(p.score)}</div>
+          </div>
+          ${items}
+        </div>`;
+    }).join('');
+
+    const notes = [];
+    if (b.financial) notes.push('Banka ve sigorta gibi finansal şirketlerde borçluluk doğası gereği yüksektir; bu yüzden faaliyet gücü ve borç durumu skora katılmaz.');
+    else if (b.skipped.length) notes.push(`Veri eksik olduğu için ${b.skipped.join(', ')} skora katılmadı.`);
+    if (b.scope) notes.push(`Değerleme "${b.scope}" medyan çarpanlarıyla karşılaştırılır.`);
+    notes.push('Toplam skor, bileşen puanlarının ağırlıklı ortalamasıdır. Gerçek bilançodan hesaplanır, yatırım tavsiyesi değildir.');
+
+    return `
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">${cards}</div>
+      <div class="mt-3 space-y-1 text-[10px] text-slate-500">${notes.map(n => `<div>${esc(n)}</div>`).join('')}</div>`;
+  }
+
+  function paintBreakdown(fin) {
+    const wrap = document.getElementById('scoreWhy');
+    const box = document.getElementById('scoreBreakdown');
+    if (!wrap || !box) return;
+    const has = !!fin.scoreBreakdown;
+    wrap.classList.toggle('hidden', !has);
+    if (!has) { box.classList.add('hidden'); return; }
+    box.innerHTML = breakdownHtml(fin);
+  }
+
+  function toggleBreakdown() {
+    const box = document.getElementById('scoreBreakdown');
+    const icon = document.getElementById('scoreWhyIcon');
+    if (!box) return;
+    const open = box.classList.toggle('hidden') === false;
+    if (icon) icon.style.transform = open ? 'rotate(180deg)' : '';
+  }
+
+  window.VerityScore = { ready, compute, apply, paintHeader, toggleBreakdown };
 })();

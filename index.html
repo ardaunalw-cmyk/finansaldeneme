@@ -954,6 +954,14 @@
 
             </div>
 
+            <!-- Score breakdown ("Neden bu skor?"), filled by assets/js/verity-score.js -->
+            <div id="scoreWhy" class="hidden">
+              <button type="button" onclick="VerityScore.toggleBreakdown()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7FA6FF] hover:text-white transition-colors">
+                <i class="fa-solid fa-circle-question"></i> Neden bu skor? <i id="scoreWhyIcon" class="fa-solid fa-chevron-down text-[9px] transition-transform"></i>
+              </button>
+              <div id="scoreBreakdown" class="hidden mt-3"></div>
+            </div>
+
             <!-- Price Ranges (Günlük and 52 Haftalık Koridor) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
               <div>
