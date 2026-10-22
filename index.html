@@ -202,6 +202,9 @@
         <a href="#compare" data-view-target="compare" class="menu-item">
           <i class="fa-solid fa-code-compare"></i><span>Hisse Karşılaştırma</span>
         </a>
+        <a href="#dividends" data-view-target="dividends" class="menu-item">
+          <i class="fa-solid fa-calendar-days"></i><span>Temettü Takvimi</span>
+        </a>
         <a href="#reports" data-view-target="reports" class="menu-item">
           <i class="fa-solid fa-book-bookmark"></i><span>Sektörel Raporlar</span>
         </a>
@@ -3040,6 +3043,19 @@
     </div>
 
     <!-- ====================================================================
+         VIEW: TEMETTÜ TAKVİMİ (assets/js/dividends.js)
+         ==================================================================== -->
+    <div id="view-dividends" class="view-panel">
+      <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 space-y-6">
+        <div class="space-y-2">
+          <h1 class="text-2xl sm:text-4xl font-serif font-black text-white tracking-tight">Temettü Takvimi</h1>
+          <p class="text-sm text-slate-400 font-sans">BIST şirketlerinin son iki yıldaki nakit temettü dağıtımları: hak kullanım tarihleri, hisse başına tutarlar ve verimler.</p>
+        </div>
+        <div id="dividendsRoot" class="space-y-5"></div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
          VIEW: VERITY PRO (üyelik / fiyatlandırma)
          ==================================================================== -->
     <div id="view-pro" class="view-panel">
@@ -3800,6 +3816,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/plain-summary.js"></script>
   <script src="assets/js/glossary.js"></script>
   <script src="assets/js/compare.js"></script>
+  <script src="assets/js/dividends.js"></script>
   <script src="assets/js/chat-widget.js" defer></script>
 
   <!-- PWA Service Worker Registration -->
