@@ -2814,6 +2814,8 @@ function switchView(viewName, stockCode = null) {
       else initPortfolioDonutChart();
 
       if (typeof initQuantPortfolioDesk === 'function') initQuantPortfolioDesk();
+    } else if (viewName === 'compare') {
+      if (window.Compare) Compare.render();
     } else if (viewName === 'reports') {
       if (appState.charts.sector) appState.charts.sector.resize();
       else initSectorComparisonChart();

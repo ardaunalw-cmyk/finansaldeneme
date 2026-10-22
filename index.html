@@ -199,6 +199,9 @@
         <a href="#stock-detail" data-view-target="stock-detail" class="menu-item">
           <i class="fa-solid fa-chart-column"></i><span>Hisse ve Bilanço Analizi</span>
         </a>
+        <a href="#compare" data-view-target="compare" class="menu-item">
+          <i class="fa-solid fa-code-compare"></i><span>Hisse Karşılaştırma</span>
+        </a>
         <a href="#reports" data-view-target="reports" class="menu-item">
           <i class="fa-solid fa-book-bookmark"></i><span>Sektörel Raporlar</span>
         </a>
@@ -895,6 +898,12 @@
                     <button id="stockDetailWatchlistStarBtn" onclick="toggleCurrentStockWatchlist()" class="px-2.5 py-0.5 rounded-lg bg-[#0C1322] hover:bg-[#162238] border border-[#1A2540] text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1.5 text-xs cursor-pointer" title="İzleme Listesine Ekle / Çıkar">
                       <i class="fa-regular fa-star text-xs" id="stockDetailWatchlistStarIcon"></i>
                       <span class="text-[11px] font-mono font-medium hidden sm:inline" id="stockDetailWatchlistStarText">İzle</span>
+                    </button>
+
+                    <!-- Compare Button -->
+                    <button onclick="Compare.addAndOpen(appState.currentStock)" class="px-2.5 py-0.5 rounded-lg bg-[#0C1322] hover:bg-[#162238] border border-[#1A2540] text-slate-400 hover:text-[#7FA6FF] transition-colors flex items-center gap-1.5 text-xs cursor-pointer" title="Başka hisselerle karşılaştır">
+                      <i class="fa-solid fa-code-compare text-[11px] text-[#7FA6FF]"></i>
+                      <span class="text-[11px] font-mono font-medium hidden sm:inline">Karşılaştır</span>
                     </button>
 
                     <!-- Price Alert Button -->
@@ -3013,6 +3022,19 @@
     </div>
 
     <!-- ====================================================================
+         VIEW: HİSSE KARŞILAŞTIRMA (assets/js/compare.js)
+         ==================================================================== -->
+    <div id="view-compare" class="view-panel">
+      <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 space-y-6">
+        <div class="space-y-2">
+          <h1 class="text-2xl sm:text-4xl font-serif font-black text-white tracking-tight">Hisse Karşılaştırma</h1>
+          <p class="text-sm text-slate-400 font-sans">En fazla üç hisseyi skor, değerleme, kârlılık ve borç açısından yan yana koy.</p>
+        </div>
+        <div id="compareRoot" class="space-y-5"></div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
          VIEW: VERITY PRO (üyelik / fiyatlandırma)
          ==================================================================== -->
     <div id="view-pro" class="view-panel">
@@ -3772,6 +3794,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/verity-score.js"></script>
   <script src="assets/js/plain-summary.js"></script>
   <script src="assets/js/glossary.js"></script>
+  <script src="assets/js/compare.js"></script>
   <script src="assets/js/chat-widget.js" defer></script>
 
   <!-- PWA Service Worker Registration -->
