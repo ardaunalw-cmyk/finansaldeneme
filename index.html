@@ -28,8 +28,12 @@
   <!-- Chart.js v4 (Local High-Speed Bundle with CDN Fallback) -->
   <script src="assets/lib/chart.min.js"></script>
   <script>
+    /* CDN backup only if the local bundle failed to load (appended, not document.write). */
     if (typeof Chart === 'undefined') {
-      document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>');
+      var chartCdn = document.createElement('script');
+      chartCdn.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+      chartCdn.async = false;
+      document.head.appendChild(chartCdn);
     }
   </script>
 
