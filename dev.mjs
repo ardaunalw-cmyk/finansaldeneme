@@ -34,6 +34,15 @@ const MIME = {
   '.ttf': 'font/ttf'
 };
 
+// Same site-wide security headers as Vercel (vercel.json), so a CSP violation shows up locally
+// too. HTTPS-only parts are dropped: this server is plain http, also opened from a phone.
+const SECURITY_HEADERS = Object.fromEntries(
+  JSON.parse(await readFile('vercel.json', 'utf8')).headers
+    .find((h) => h.source === '/(.*)').headers
+    .filter((h) => h.key !== 'Strict-Transport-Security')
+    .map((h) => [h.key, h.value.replace(/;\s*upgrade-insecure-requests/, '')])
+);
+
 // 1) One synchronous build so the first page load is already styled
 execSync(`npx tailwindcss ${TW_ARGS}`, { stdio: 'inherit' });
 
@@ -82,6 +91,7 @@ createServer(async (req, res) => {
     if (!(await stat(file)).isFile()) throw new Error('not a file');
     const body = await readFile(file);
     res.writeHead(200, {
+      ...SECURITY_HEADERS,
       'Content-Type': MIME[extname(file).toLowerCase()] || 'application/octet-stream',
       'Cache-Control': 'no-cache'
     });

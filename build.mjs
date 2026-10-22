@@ -70,3 +70,13 @@ execSync(
   });
   writeFileSync(`${OUT}/index.html`, stamped);
 }
+
+// Service worker cache name from the stamped index.html (it carries every JS/CSS hash), so a
+// deploy that changes anything replaces the old cache and an identical one keeps it.
+{
+  const hash = createHash('sha256').update(readFileSync(`${OUT}/index.html`)).update(readFileSync('sw.js')).digest('hex').slice(0, 10);
+  const sw = readFileSync(`${OUT}/sw.js`, 'utf8');
+  const named = sw.replace(/const CACHE_NAME = '[^']*';/, `const CACHE_NAME = 'verity-${hash}';`);
+  if (named === sw) throw new Error('sw.js: CACHE_NAME not found');
+  writeFileSync(`${OUT}/sw.js`, named);
+}

@@ -6,7 +6,8 @@
    - Libraries and icons (versioned, immutable): cache first.
    ========================================================================== */
 
-const CACHE_NAME = 'oa-terminal-cache-v7';
+// The build replaces this with a hash of the deployed files, so every deploy gets a fresh cache
+const CACHE_NAME = 'verity-dev';
 const STATIC_ASSETS = [
   './',
   './index.html',
