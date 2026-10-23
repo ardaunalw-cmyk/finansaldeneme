@@ -242,15 +242,17 @@ const LiveData = (() => {
 
   /** Pre-fetched statements for every covered company (assets/data/fundamentals.json). */
   let staticFund = null;
+  let staticFundDate = null;   // when the file was compiled, shown in the stock page's source note
   function loadStaticFundamentals() {
     if (!staticFund) {
       staticFund = fetch('/assets/data/fundamentals.json')
         .then(r => (r.ok ? r.json() : null))
-        .then(j => (j ? j.data : {}))
+        .then(j => { staticFundDate = j && j.generatedAt; return j ? j.data : {}; })
         .catch(() => ({}));
     }
     return staticFund;
   }
+  const compiledOn = iso => (iso ? new Date(iso).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' }) : null);
 
   async function applyStaticFundamentals(codes) {
     const data = await loadStaticFundamentals();
@@ -290,7 +292,8 @@ const LiveData = (() => {
     // The pre-fetched file answers at once; the live statement below refines it when it arrives
     const row = (await loadStaticFundamentals())[code];
     if (row && appState.currentStock === code && await applyStaticFundamentals([code])) {
-      paintStockFundamentals(fin, note, priceBadge, `Önceden derlenmiş bilanço · ${row[0]}`);
+      const on = compiledOn(staticFundDate);
+      paintStockFundamentals(fin, note, priceBadge, `Önceden derlenmiş bilanço · ${row[0]}${on ? ` · ${on} derlemesi` : ''}`);
     }
     try {
       const res = await fetch(`/api/financials?symbol=${encodeURIComponent(typeof tradingCode === 'function' ? tradingCode(code) : code)}`);

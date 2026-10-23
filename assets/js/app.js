@@ -760,6 +760,13 @@ const MockFinancialApi = {
     const res = await fetch('/assets/data/sector-multiples.json');
     if (!res.ok) throw new Error(`sector-multiples ${res.status}`);
     const json = await res.json();
+    const note = document.getElementById('sectorMultiplesNote');
+    if (note && json.generatedAt) {
+      const on = new Date(json.generatedAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' });
+      // Keep the original caption so a second load does not append the date twice
+      if (!note.dataset.base) note.dataset.base = note.textContent;
+      note.textContent = `${note.dataset.base} · ${on} verisi`;
+    }
     return Object.entries(json.sectors)
       .filter(([, s]) => s.n >= SECTOR_CHART_MIN_N && s.pe != null && s.pb != null)
       .map(([sector, s]) => ({ sector, fk: s.pe, pb: s.pb, n: s.n }))

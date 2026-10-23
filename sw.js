@@ -92,10 +92,14 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
       }
       return res;
-    }).catch(() => caches.match(event.request).then((cached) => {
+    }).catch(() => caches.match(event.request).then(async (cached) => {
       if (cached) return cached;
-      if (event.request.mode === 'navigate') return caches.match('./index.html');
-      return undefined;
+      if (event.request.mode === 'navigate') {
+        const page = await caches.match('./index.html');
+        if (page) return page;
+      }
+      // respondWith needs a Response: a plain network error instead of a TypeError in the worker
+      return Response.error();
     }))
   );
 });
