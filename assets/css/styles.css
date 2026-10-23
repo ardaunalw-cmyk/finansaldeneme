@@ -1341,7 +1341,9 @@ body.menu-open { overflow: hidden; }
   gap: 12px;
   padding: 14px 16px;
   border-top: 1px solid #1A2540;
+  transition: background-color .15s;
 }
+a.site-menu-foot:hover { background: #0C1322; }
 .menu-group { padding-top: 14px; }
 .menu-group-title {
   padding: 0 10px 6px;

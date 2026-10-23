@@ -58,12 +58,20 @@ function sanitizeMessages(input) {
   return messages;
 }
 
-function contextNote(context) {
+export function contextNote(context) {
   if (!context || typeof context !== 'object') return null;
   const view = typeof context.view === 'string' ? context.view.slice(0, 40) : null;
   const stock = typeof context.stock === 'string' ? context.stock.replace(/[^A-Z0-9.]/gi, '').slice(0, 12) : null;
-  if (!view && !stock) return null;
-  return `Kullanıcının o an sitede baktığı yer: sayfa=${view || 'bilinmiyor'}${stock ? `, seçili hisse=${stock}` : ''}.`;
+  // The profile's holdings: codes and cost weights only (no amounts), at most 15
+  const holdings = Array.isArray(context.portfolio)
+    ? context.portfolio.slice(0, 15)
+      .filter((h) => h && typeof h.c === 'string' && /^[A-Z0-9]{3,6}$/.test(h.c))
+      .map((h) => (Number.isFinite(h.w) && h.w >= 0 && h.w <= 100 ? `${h.c} %${h.w}` : h.c))
+    : [];
+  if (!view && !stock && !holdings.length) return null;
+  let note = `Kullanıcının o an sitede baktığı yer: sayfa=${view || 'bilinmiyor'}${stock ? `, seçili hisse=${stock}` : ''}.`;
+  if (holdings.length) note += ` Kullanıcının Profilim sayfasına girdiği portföy (maliyete göre ağırlık): ${holdings.join(', ')}. Portföy sorularında bunu kullan; al/sat önerisi verme.`;
+  return note;
 }
 
 function send(res, status, payload) {

@@ -21,6 +21,7 @@ Canlı site Vercel'de; `main` dalına her push otomatik yayınlanır.
 | İzleme listesi ve alarmlar | Fiyat ve RSI alarmları; grafikten tıklayarak alarm kurma, aktif alarmlar grafikte çizgi olarak; sekme arka plandayken de dakikada bir kontrol ve sistem bildirimi. Tarayıcıda saklanır, site kapalıyken çalışmaz | Yahoo Finance fiyatları (gecikmeli) |
 | | Rakip kıyaslama ve radar | Aynı KAP sektöründeki şirketlerin gerçek verisi |
 | | KAP bildirimleri | kap.org.tr |
+| Profilim | Portföy (alış/satış kayıtları, ortalama maliyet, kâr/zarar, sektör dağılımı, yoğunlaşma uyarıları, portföy F/K ve PD/DD, hak kazanılan ve son 12 ay temettü); portföydeki sektörlerin 10 yıla kadar uzun dönem endeksi (TL ve dolar, BIST 100 kıyası, getiri/oynaklık/düşüş, sektör medyanları); incelenen hisseler; komut satırı (`al THYAO 100`, `sat`, `izle`, `alarm`, `not`...) ve komut geçmişi; JSON/CSV dışa aktarma. Tarayıcıda saklanır, aracı kuruma emir iletilmez | Yahoo Finance haftalık fiyat geçmişi, `fundamentals.json`, `technicals.json`, `sector-multiples.json`, `dividends.json` |
 | Hisse karşılaştırma | En fazla 3 hisse yan yana | Fiyat + bilanço |
 | Temettü takvimi | Son 12 ayın dağıtımları, verim sıralaması | `dividends.json` |
 | Sektör ve korelasyon | Sektör medyan F/K ve PD/DD, 8 varlığın 1 yıllık getiri korelasyonu | `sector-multiples.json`, Yahoo Finance fiyat geçmişi |
@@ -76,6 +77,8 @@ assets/js/backtest-ui.js Strateji Testi kartı: form, özet, sermaye eğrisi, i�
 assets/lib/lightweight-charts-*/  TradingView Lightweight Charts (Apache-2.0, sürüm klasör adında)
 assets/js/dividends.js  Temettü takvimi ve temettü verimi
 assets/js/compare.js    Hisse karşılaştırma
+assets/js/portfolio.js  Saf portföy hesapları: maliyet, değerleme, temettü hakkı, haftalık endeksler, komut ayrıştırma
+assets/js/profile.js    Profilim sayfası: portföy, uzun dönem sektörler, incelenenler, komutlar, yedekleme
 assets/js/app.js        Görünümler, arama, tablo, grafikler, rakip kıyaslama
 api/*.mjs               Vercel fonksiyonları (Yahoo Finance, İş Yatırım, KAP, haberler, sosyal medya, sohbet)
 scripts/*.mjs           Veri üretme betikleri

@@ -1451,6 +1451,8 @@ function switchView(viewName, stockCode = null) {
       if (window.Compare) Compare.render();
     } else if (viewName === 'dividends') {
       if (window.Dividends) Dividends.render();
+    } else if (viewName === 'profile') {
+      if (window.Profile) Profile.render();
     } else if (viewName === 'reports') {
       if (appState.charts.sector) appState.charts.sector.resize();
       else initSectorComparisonChart();
@@ -1647,6 +1649,7 @@ async function renderTechScorecard(code) {
 async function loadStockDetails(ticker) {
   appState.currentStock = ticker.toUpperCase();
   appState.loadedStock = appState.currentStock;
+  if (window.Profile) Profile.recordView(appState.currentStock);   // "İncelediklerim" on the profile page
   // Opened from a list or search while the stock page shows: the address follows the stock
   if (appState.activeView === 'stock-detail') syncUrl('replace');
   const fin = await MockFinancialApi.fetchFinancials(appState.currentStock);
@@ -4084,7 +4087,8 @@ function renderCommandPaletteResults(query) {
     }
 
     // I. /alarm [Hisse] [Fiyat]
-    if ('alarm'.startsWith(cmd) || cmd === 'alert') {
+    // "/al" is the buy command of the profile (K below), not the start of "/alarm"
+    if (('alarm'.startsWith(cmd) && cmd !== 'al') || cmd === 'alert') {
       const ticker = arg1 || 'THYAO';
       const targetVal = parseFloat(arg2) || 320.0;
       actions.push({
@@ -4105,6 +4109,28 @@ function renderCommandPaletteResults(query) {
           });
           showTerminalToast(`Alarm Kuruldu: ${ticker}`, `Hedef ₺${targetVal.toFixed(2)} fiyat alarmı kaydedildi.`, ticker, 'success');
         }
+      });
+    }
+
+    // K. Profile commands: /al, /sat, /izle, /not, /portföy (recorded on the profile page)
+    const profileWord = { al: 'Alış kaydı', sat: 'Satış kaydı', izle: 'İzleme listesi', not: 'Yatırım notu' }[cmd];
+    if (window.Profile && profileWord && arg1) {
+      const line = rawQ.slice(1).trim();
+      actions.push({
+        title: `/${line.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`)}`,
+        desc: `${profileWord} · Profilim sayfasına işlenir (aracı kuruma emir iletilmez)`,
+        icon: 'fa-solid fa-briefcase text-emerald-400',
+        badge: 'PROFİL',
+        run: () => Profile.run(line)
+      });
+    }
+    if (['portföy', 'portfoy', 'profil', 'profilim'].some(w => w.startsWith(cmd)) && cmd) {
+      actions.push({
+        title: '/profil',
+        desc: 'Profilim: portföy, sektörlerin uzun dönem seyri, incelenen hisseler ve komut geçmişi',
+        icon: 'fa-solid fa-user text-[#7FA6FF]',
+        badge: 'PROFİL',
+        run: () => switchView('profile')
       });
     }
 
@@ -4162,6 +4188,13 @@ function renderCommandPaletteResults(query) {
           icon: 'fa-solid fa-code-compare text-purple-400',
           badge: 'KOMUT',
           run: () => setCommandPaletteText('/kıyas ')
+        },
+        {
+          title: '/al [Hisse] [Adet] [Fiyat]',
+          desc: 'Portföyünüze alış kaydı ekler (Örn: /al THYAO 100); /sat ile satış',
+          icon: 'fa-solid fa-briefcase text-emerald-400',
+          badge: 'KOMUT',
+          run: () => setCommandPaletteText('/al ')
         },
         {
           title: '/tarayıcı',

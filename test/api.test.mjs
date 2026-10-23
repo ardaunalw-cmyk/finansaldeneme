@@ -56,6 +56,19 @@ test('invalid parameters are refused before any data source is called', async ()
 
 const chatBody = (content = 'THYAO nasıl?') => ({ messages: [{ role: 'user', content }], context: { view: 'stock-detail', stock: 'THYAO' } });
 
+test('chat: the page context keeps only codes and weights of the portfolio', async () => {
+  const { contextNote } = await import('../api/chat.mjs');
+  assert.equal(contextNote(null), null);
+  assert.equal(contextNote({}), null);
+  const note = contextNote({
+    view: 'profile', stock: null,
+    portfolio: [{ c: 'THYAO', w: 60 }, { c: 'ASELS' }, { c: '<script>', w: 5 }, { c: 'BIMAS', w: 900 }, 'x']
+  });
+  assert.match(note, /sayfa=profile/);
+  assert.match(note, /THYAO %60, ASELS, BIMAS\./);
+  assert.ok(!note.includes('script'));
+});
+
 test('chat: only POST, only from the site', async () => {
   const { default: chat } = await import('../api/chat.mjs');
   assert.equal((await call(chat, { method: 'GET' })).status, 405);

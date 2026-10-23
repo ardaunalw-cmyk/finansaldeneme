@@ -281,7 +281,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: history,
-          context: { view: state.activeView || null, stock: state.currentStock || null }
+          context: {
+            view: state.activeView || null,
+            stock: state.currentStock || null,
+            portfolio: window.Profile ? Profile.chatContext() : null
+          }
         })
       });
       const data = await res.json().catch(() => ({}));
