@@ -4,8 +4,10 @@
 // variable on the server. It is never sent to the browser, never logged and
 // never included in error responses. The browser only talks to this endpoint.
 import Anthropic from '@anthropic-ai/sdk';
+import { TOOLS, runTool } from './_chat-tools.mjs';
 
 const MODEL = 'claude-haiku-5-5';
+const MAX_TOOL_ROUNDS = 4;      // model calls per user message, so a loop can't run up costs
 const MAX_TURNS = 20;           // history the client may send
 const MAX_CHARS_PER_MESSAGE = 2000;
 const MAX_TOTAL_CHARS = 16000;
@@ -21,7 +23,8 @@ const SYSTEM_PROMPT = `Sen "Verity Asistan"sın: Verity adlı Borsa İstanbul (B
 
 - Kullanıcıya Türkçe, kısa ve net cevap ver (genelde 2-6 cümle). Gerekirse kısa madde işaretleri kullan.
 - Konuların: BIST hisseleri, bilanço okuma, finansal rasyolar (F/K, PD/DD, FD/FAVÖK, ROE vb.), temel ve teknik analiz kavramları, sitenin nasıl kullanılacağı.
-- Sitedeki veriler gerçek kaynaklardan gelir: fiyatlar Yahoo Finance'ten gecikmeli, bilançolar KAP raporlarından, bildirimler KAP'tan. Sen bu verilere erişemezsin; güncel fiyat, rasyo veya haber sorulursa bunu açıkça söyle, sayı uydurma ve kullanıcıyı sitedeki ilgili bölüme yönlendir.
+- Sitedeki veriler gerçek kaynaklardan gelir: fiyatlar Yahoo Finance'ten gecikmeli, bilançolar KAP raporlarından, temettüler Yahoo Finance'ten. Bir hissenin fiyatı, rasyoları, bilançosu, temettüsü veya sektör karşılaştırması sorulduğunda araçlarla bu veriyi al ve sayıları oradan ver; şirket adıyla anıldıysa önce hisse_ara ile kodunu bul. Bilanço döneminin ve fiyatın gecikmeli olduğunu belirt. Bir değer araçtan null geldiyse hesaplanamadığını söyle, asla tahmin etme veya sayı uydurma.
+- Haber ve KAP bildirimlerine erişimin yok; bunlar sorulursa kullanıcıyı sitedeki ilgili bölüme yönlendir.
 - Kişiye özel yatırım tavsiyesi verme ("al", "sat", "tut" önerisi yok). SPK mevzuatı gereği yanıtların genel bilgilendirme amaçlıdır; gerektiğinde bunu kısaca hatırlat.
 - Finans dışı isteklere kibarca, sitenin konusuna dönerek yanıt ver.`;
 
@@ -127,13 +130,31 @@ export default async function handler(req, res) {
 
   try {
     const client = new Anthropic();
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 2048,
-      output_config: { effort: 'low' },
-      system,
-      messages
-    });
+    let response;
+    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+      response = await client.messages.create({
+        model: MODEL,
+        max_tokens: 2048,
+        output_config: { effort: 'low' },
+        system,
+        tools: TOOLS,
+        messages
+      });
+      if (response.stop_reason !== 'tool_use') break;
+
+      // Full content goes back unchanged (thinking blocks included); all results in one user turn
+      messages.push({ role: 'assistant', content: response.content });
+      const calls = response.content.filter((block) => block.type === 'tool_use');
+      const results = await Promise.all(calls.map(async (call) => {
+        try {
+          return { type: 'tool_result', tool_use_id: call.id, content: await runTool(call.name, call.input) };
+        } catch (err) {
+          console.error('[api/chat] tool failed', call.name, err && err.name);
+          return { type: 'tool_result', tool_use_id: call.id, content: 'Veri okunamadı.', is_error: true };
+        }
+      }));
+      messages.push({ role: 'user', content: results });
+    }
 
     if (response.stop_reason === 'refusal') {
       return send(res, 200, { reply: 'Bu soruya yanıt veremiyorum. Başka bir finans sorusu sormak ister misin?' });

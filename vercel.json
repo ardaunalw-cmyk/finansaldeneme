@@ -5,6 +5,7 @@
   "installCommand": "npm install",
   "outputDirectory": "dist",
   "functions": {
+    "api/chat.mjs": { "maxDuration": 30, "includeFiles": "assets/{data/*.json,js/kap-database.js}" },
     "api/financials.mjs": { "maxDuration": 30 },
     "api/statements.mjs": { "maxDuration": 30 }
   },
