@@ -409,8 +409,50 @@ const ProChart = (() => {
       }));
   }
 
+  /** Distance in pixels from point p to the segment a-b. */
+  function segmentDistance(p, a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len = dx * dx + dy * dy;
+    const t = len ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len)) : 0;
+    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+  }
+
+  /** Index of the drawing closest to a click (within 8 px on screen), or -1. */
+  function drawingAt(point) {
+    const ts = state.chart.timeScale();
+    const y = price => state.main.priceToCoordinate(price);
+    let best = -1, bestDist = 8;
+    drawings().forEach((d, i) => {
+      let dist = Infinity;
+      if (d.type === 'h') dist = Math.abs(y(d.price) - point.y);
+      else if (d.type === 'f') {
+        const span = d.b.price - d.a.price;
+        dist = Math.min(...FIB.map(r => Math.abs(y(d.b.price - span * r) - point.y)));
+      } else if (d.type === 't') {
+        const ta = snapTime(state.bars, d.a.time), tb = snapTime(state.bars, d.b.time);
+        const xa = ta == null ? null : ts.timeToCoordinate(ta), xb = tb == null ? null : ts.timeToCoordinate(tb);
+        if (xa != null && xb != null) dist = segmentDistance(point, { x: xa, y: y(d.a.price) }, { x: xb, y: y(d.b.price) });
+      }
+      if (Number.isFinite(dist) && dist < bestDist) { best = i; bestDist = dist; }
+    });
+    return best;
+  }
+
   function onClick(param) {
-    if (state.tool === 'cursor' || !param.point || param.time == null) return;
+    if (state.tool === 'cursor' || !param.point) return;
+    if (state.tool === 'x') {
+      if (activeCompare().length) { hint('Karşılaştırma açıkken çizimler gizli; önce karşılaştırmayı kapat'); return; }
+      const i = drawingAt(param.point);
+      if (i < 0) { hint('Silmek için bir çizgiye tıkla (Esc: vazgeç)'); return; }
+      const list = drawings();
+      list.splice(i, 1);
+      saveDrawings(list);
+      // Stay in delete mode while there is something left to delete
+      if (!list.length) setTool('cursor'); else hint('Silindi. Başka bir çizgiye tıklayabilir ya da Esc ile çıkabilirsin');
+      build(true);
+      return;
+    }
+    if (param.time == null) return;
     const price = state.main.coordinateToPrice(param.point.y);
     if (price == null) return;
     const point = { time: param.time, price: Math.round(price * 100) / 100 };
@@ -496,7 +538,8 @@ const ProChart = (() => {
       h: 'Yatay seviye: fiyata tıkla',
       t: 'Trend çizgisi: ilk noktaya tıkla',
       f: 'Fibonacci: dip ya da zirveye tıkla',
-      a: 'Alarm: hedef fiyata tıkla'
+      a: 'Alarm: hedef fiyata tıkla',
+      x: 'Sil: silmek istediğin çizgiye tıkla'
     }[tool] || '');
     paintToolbar();
   }
@@ -770,7 +813,8 @@ const ProChart = (() => {
     if (comparing) chart.timeScale().subscribeVisibleLogicalRangeChange(() => paintLegend(null));
     chart.subscribeClick(onClick);
     // A quick second click elsewhere arrives as a double click, not a click
-    chart.subscribeDblClick(onClick);
+    // (not for the eraser: one double click would delete two drawings)
+    chart.subscribeDblClick(param => { if (state.tool !== 'x') onClick(param); });
     if (view) chart.timeScale().setVisibleLogicalRange(view);
     else if (el.clientWidth) applyRange();
     else {
@@ -880,7 +924,10 @@ const ProChart = (() => {
     if (state.chart) build(true);
   }
 
-  return { load, current, setMarkers, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo };
+  /** Vertical position (px inside the chart) of a price on the price pane, or null. */
+  const priceToY = price => (state.main ? state.main.priceToCoordinate(price) : null);
+
+  return { load, current, setMarkers, priceToY, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo };
 })();
 
 window.ProChart = ProChart;
