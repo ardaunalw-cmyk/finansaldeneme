@@ -17,7 +17,9 @@ test('<base href="/"> comes before the first relative asset path', () => {
 });
 
 test('every non-API path is rewritten to the app', () => {
-  const rule = vercel.rewrites.find(r => r.destination === '/index.html');
+  const rule = vercel.rewrites.find(r => r.source.includes('(?!api/)'));
+  // With cleanUrls, /index.html redirects to / and a rewrite to it ends in a 404: the target is /
+  assert.equal(rule.destination, vercel.cleanUrls ? '/' : '/index.html');
   const re = new RegExp(`^${rule.source}$`);
   assert.ok(re.test('/hisse/THYAO'));
   assert.ok(!re.test('/api/quote'));
