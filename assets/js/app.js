@@ -4326,6 +4326,7 @@ function setWatchlist(list) {
   try {
     localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(list));
   } catch (e) {}
+  window.dispatchEvent(new CustomEvent('verity:data', { detail: 'watchlist' }));   // account sync
   updateWatchlistHeaderBadges();
   renderWatchlistItems();
   updateStockDetailWatchlistStar(appState.currentStock);

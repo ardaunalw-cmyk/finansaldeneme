@@ -47,6 +47,30 @@ npm run build      # dist/ (Vercel'in yaptığı build)
 Sohbet asistanının Claude ile cevap vermesi için ortamda `ANTHROPIC_API_KEY` tanımlı olmalı;
 yoksa asistan yalnızca yerel cevaplar verir.
 
+## Hesaplar (Supabase)
+
+Giriş yapan kullanıcının Profilim verileri, izleme listesi ve alarmları hesabına yazılır ve her
+cihazda aynı olur. Kurulmamışsa (`/api/config` boş döner) hesap bölümü görünmez, site her şeyi
+tarayıcıda tutmaya devam eder. Bir kerelik kurulum:
+
+1. [supabase.com](https://supabase.com)'da ücretsiz bir proje açın (bölge olarak Frankfurt önerilir).
+2. **SQL Editor → New query**: `supabase/schema.sql` dosyasının içeriğini yapıştırıp **Run**.
+   Tablo, her kullanıcının yalnızca kendi satırını görmesini sağlayan kurallar (RLS) ve
+   "hesabımı sil" fonksiyonu kurulur.
+3. **Authentication → URL Configuration**: Site URL `https://finansaldeneme.vercel.app`;
+   Redirect URLs'e `https://finansaldeneme.vercel.app/` ve `http://localhost:8080/` ekleyin.
+4. **Project Settings → API**: Project URL ve `anon` `public` anahtarını kopyalayın.
+5. **Vercel → Settings → Environment Variables**: `SUPABASE_URL` ve `SUPABASE_ANON_KEY`
+   ekleyin, sonra yeniden yayınlayın (Deployments → Redeploy). Yerelde aynı iki değişkeni
+   `npm run dev`'den önce kabukta tanımlayın.
+6. İsteğe bağlı Google ile giriş: Supabase'de **Authentication → Providers → Google**'ı açın
+   (Google Cloud'da OAuth istemcisi gerekir) ve Vercel'e `SUPABASE_GOOGLE=1` ekleyin.
+
+`anon` anahtarı herkese açık olacak şekilde tasarlanmıştır; kimin neyi okuyup yazabileceğini
+veritabanındaki RLS kuralları belirler. `service_role` anahtarını hiçbir yere koymayın.
+Supabase'in yerleşik e-posta göndericisi saatte birkaç e-postayla sınırlıdır; kullanıcı sayısı
+artınca **Authentication → SMTP Settings**'ten kendi e-posta servisinizi bağlayın.
+
 ## Veri
 
 `assets/data` altındaki dosyalar betiklerle üretilir ve repoya commit edilir:
@@ -83,6 +107,10 @@ assets/js/dividends.js  Temettü takvimi ve temettü verimi
 assets/js/compare.js    Hisse karşılaştırma
 assets/js/portfolio.js  Saf portföy hesapları: maliyet, değerleme, temettü, değer geçmişi, TWR/XIRR, risk, dengeleme, hedef planı, CSV, komutlar
 assets/js/profile.js    Profilim sayfası: portföyler, performans, sektörler, plan, gündem, incelenenler, komutlar, yedekleme
+assets/js/account.js    Hesap: Supabase ile giriş/kayıt/şifre sıfırlama ve cihazlar arası eşitleme
+assets/js/sync.js       Saf eşitleme kuralları: iki cihazın verisini kayıpsız birleştirme
+assets/lib/supabase-*/  Supabase JS istemcisi (MIT, sürüm klasör adında; yalnızca hesap kuruluysa yüklenir)
+supabase/schema.sql     Hesap verisi tablosu, RLS kuralları, hesap silme fonksiyonu
 assets/js/app.js        Görünümler, arama, tablo, grafikler, rakip kıyaslama
 api/*.mjs               Vercel fonksiyonları (Yahoo Finance, İş Yatırım, KAP, haberler, sosyal medya, sohbet)
 scripts/*.mjs           Veri üretme betikleri

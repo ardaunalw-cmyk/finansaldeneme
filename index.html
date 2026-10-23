@@ -124,7 +124,7 @@
     window.paintGotBar = function (el) {
       try {
         var cs = getComputedStyle(el), size = parseFloat(cs.fontSize);
-        var c = document.createElement('canvas'), ctx = c.getContext('2d');
+        var c = document.createElement('canvas'), ctx = c.getContext('2d', { willReadFrequently: true });
         c.width = Math.ceil(size * 1.5); c.height = Math.ceil(size * 2);
         ctx.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + size + 'px ' + cs.fontFamily;
         ctx.textBaseline = 'alphabetic';
@@ -306,8 +306,10 @@
       </button>
 
       <!-- Profil ve portföy -->
-      <a href="#profile" data-view-target="profile" aria-label="Profilim" title="Profilim ve portföyüm" class="menu-toggle-btn flex-shrink-0">
+      <a href="#profile" data-view-target="profile" aria-label="Profilim" title="Profilim ve portföyüm" class="menu-toggle-btn flex-shrink-0 relative">
         <i class="fa-solid fa-user"></i>
+        <!-- Signed in to an account (assets/js/account.js) -->
+        <span id="headerProfileDot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#070B14]"></span>
       </a>
     </div>
   </header>
@@ -2405,6 +2407,7 @@
     <div id="view-profile" class="view-panel">
       <div class="max-w-[1240px] mx-auto px-4 sm:px-6 py-8 space-y-5">
         <div id="pfHeader"></div>
+        <div id="pfAccount"></div>
         <div id="pfSwitch"></div>
         <div id="pfKpis"></div>
         <section class="rounded-2xl border border-oa-border bg-oa-card p-4 sm:p-5 pf-noprint">
@@ -3132,6 +3135,8 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/dividends.js"></script>
   <script src="assets/js/portfolio.js"></script>
   <script src="assets/js/profile.js"></script>
+  <script src="assets/js/sync.js"></script>
+  <script src="assets/js/account.js"></script>
   <script src="assets/js/chat-widget.js" defer></script>
 
   <!-- PWA Service Worker Registration -->

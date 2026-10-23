@@ -70,7 +70,8 @@ const Profile = (() => {
     v: 2, name: '', horizon: 'long', risk: 'mid', since: today(),
     portfolios: [{ id: 'main', name: 'Ana portföy' }], active: 'main',
     txs: [], seq: 0, views: [], cmds: [], saved: [], notes: {}, levels: {}, targets: {}, cash: {}, journal: [],
-    goal: { target: null, years: 10, monthly: null, rate: null, inflation: null }, hide: false
+    goal: { target: null, years: 10, monthly: null, rate: null, inflation: null }, hide: false,
+    gone: [], updatedAt: 0
   });
   /** Any saved shape (v1 had a single portfolio) -> the current one; unknown fields are dropped. */
   function migrate(j) {
@@ -88,6 +89,8 @@ const Profile = (() => {
     if (!HORIZONS[s.horizon]) s.horizon = 'long';
     if (!RISKS[s.risk]) s.risk = 'mid';
     s.hide = !!s.hide;
+    s.gone = Array.isArray(s.gone) ? s.gone.filter(x => typeof x === 'string').slice(-2000) : [];
+    s.updatedAt = Number.isFinite(s.updatedAt) ? s.updatedAt : 0;
     return s;
   }
   function read() {
@@ -98,9 +101,18 @@ const Profile = (() => {
     return blank();
   }
   let store = read();
-  function save() {
+  /** Writes the store; quiet is for data that came from the account (it is not a local change). */
+  function save(quiet = false) {
+    if (!quiet) store.updatedAt = Date.now();
     try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* private mode: kept for this visit only */ }
     paintMenu();
+    // account.js pushes local changes to the user's account
+    if (!quiet) window.dispatchEvent(new CustomEvent('verity:data', { detail: 'profile' }));
+  }
+
+  /** Remembers ids deleted on purpose, so syncing with another device does not bring them back. */
+  function forget(...ids) {
+    store.gone = [...(store.gone || []), ...ids.filter(Boolean)].slice(-2000);
   }
 
   const ui = { tab: 'portfolio', window: 5, ccy: 'TRY', lastTx: null, prefill: null, cmdIndex: -1, token: 0, rbMode: 'full', rbCash: null, perfView: 'value' };
@@ -1746,7 +1758,8 @@ const Profile = (() => {
     const av = document.getElementById('menuProfileAvatar');
     const n = Portfolio.positions(store.txs).filter(p => p.qty > 0).length;
     if (name) name.textContent = store.name.trim() || 'Profilim';
-    if (sub) sub.textContent = n ? `${n} pozisyon · ${store.portfolios.length > 1 ? `${store.portfolios.length} portföy` : 'portföy ve geçmiş'}` : 'Portföy, geçmiş ve komutlar';
+    const email = window.Account && Account.email ? Account.email() : null;
+    if (sub) sub.textContent = email || (n ? `${n} pozisyon · ${store.portfolios.length > 1 ? `${store.portfolios.length} portföy` : 'portföy ve geçmiş'}` : 'Portföy, geçmiş ve komutlar');
     if (av) av.innerHTML = initials();
   }
 
@@ -1814,6 +1827,7 @@ const Profile = (() => {
     if (!t) return;
     if (!confirm(`${t.code} ${t.type === 'buy' ? 'alış' : 'satış'} kaydı (${fq.format(t.qty)} adet, ${fullDate(t.date)}) silinsin mi?`)) return;
     store.txs = store.txs.filter(x => x.id !== id);
+    forget(id);
     save();
     invalidate();
     paintSwitcher();
@@ -1952,6 +1966,7 @@ const Profile = (() => {
           const t = ui.lastTx && store.txs.find(x => x.id === ui.lastTx);
           if (!t) { r = { ok: false, msg: 'Geri alınacak bir işlem yok (yalnızca bu ziyarette eklenen son işlem geri alınır).' }; break; }
           store.txs = store.txs.filter(x => x.id !== t.id);
+          forget(t.id);
           ui.lastTx = null;
           save();
           invalidate();
@@ -2144,6 +2159,7 @@ const Profile = (() => {
     undo() {
       if (!ui.lastTx) return;
       store.txs = store.txs.filter(t => t.id !== ui.lastTx);
+      forget(ui.lastTx);
       ui.lastTx = null;
       save();
       invalidate();
@@ -2199,6 +2215,7 @@ const Profile = (() => {
       const n = store.txs.filter(t => t.pf === id).length;
       if (!confirm(`“${pfName(id)}” portföyü${n ? ` ve ${n} işlemi` : ''} silinsin mi?`)) return;
       store.portfolios = store.portfolios.filter(p => p.id !== id);
+      forget(id, ...store.txs.filter(t => t.pf === id).map(t => t.id));
       store.txs = store.txs.filter(t => t.pf !== id);
       delete store.targets[id];
       delete store.cash[id];
@@ -2283,6 +2300,7 @@ const Profile = (() => {
     removeJournal(id) {
       if (!confirm('Bu günlük kaydı silinsin mi?')) return;
       store.journal = store.journal.filter(j => j.id !== id);
+      forget(id);
       save();
       update();
     },
@@ -2292,6 +2310,15 @@ const Profile = (() => {
       const prev = store.views.find(v => v.code === code);
       store.views = [{ code, at: Date.now(), n: (prev ? prev.n : 0) + 1 }, ...store.views.filter(v => v.code !== code)].slice(0, MAX_VIEWS);
       save();
+    },
+    /* account sync (account.js) */
+    snapshot() { return JSON.parse(JSON.stringify(store)); },
+    /** Takes data from the account: replaces the store without counting it as a local change. */
+    replace(data) {
+      store = migrate(data && (data.v === 1 || data.v === 2) ? data : blank());
+      save(true);
+      invalidate();
+      if (appState.activeView === 'profile') rebuild();
     },
     /** Holdings and weights for the chat assistant's page context (codes and % only). */
     chatContext() {

@@ -14,6 +14,7 @@ import statementsHandler from './api/statements.mjs';
 import disclosuresHandler from './api/disclosures.mjs';
 import newsHandler from './api/news.mjs';
 import socialHandler from './api/social.mjs';
+import configHandler from './api/config.mjs';
 
 const PORT = Number(process.env.PORT) || 8080;
 const ROOT = resolve('.');
@@ -85,6 +86,11 @@ createServer(async (req, res) => {
     }
     if (path === '/api/quote') {
       await quoteHandler(req, res);
+      return;
+    }
+    // Accounts: needs SUPABASE_URL and SUPABASE_ANON_KEY in this shell
+    if (path === '/api/config') {
+      configHandler(req, res);
       return;
     }
     if (path.endsWith('/')) path += 'index.html';
