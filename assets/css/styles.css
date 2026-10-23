@@ -1607,20 +1607,72 @@ html.intro-active, html.intro-active body { overflow: hidden; }
   text-shadow: 0 0 24px rgba(79, 134, 255, .35);
   position: relative;
 }
-/* Blue line drawn through the middle of VERITY once the letters are in (right edge skips the trailing letter-spacing) */
-.intro-word::after {
-  content: ""; position: absolute; left: -.08em; right: .02em; top: 50%;
-  height: 4px; margin-top: -2px; border-radius: 2px;
-  background: linear-gradient(90deg, #0A2FD0, #2468FF 45%, #4F86FF);
-  box-shadow: 0 0 14px rgba(36, 104, 255, .8);
-  transform: scaleX(0); transform-origin: 0 50%;
-  animation: intro-strike .6s var(--ease) 3.05s forwards;
+/* Game of Thrones style wordmark: the T's crossbar runs over the whole word, a little above the
+   other letters, and only the T's stem reaches up to it (the T is drawn as a stem, .got-t, so an I
+   under the bar still reads as an I). Positions come from the rendered font (paintGotBar in
+   index.html): --bar-top / --bar-h on the word, --stem-* on the T. The bar overshoots and tapers. */
+.got-word { position: relative; }
+.got-word::before {
+  content: ""; position: absolute; z-index: 1; pointer-events: none;
+  left: -.08em; right: calc(var(--got-track, 0em) - .08em);
+  top: var(--bar-top, -.1em); height: var(--bar-h, .13em);
+  background: currentColor;
+  clip-path: polygon(0 50%, 1.6% 0, 98.4% 0, 100% 50%, 98.4% 100%, 1.6% 100%);
 }
+.got-t { position: relative; display: inline-block; }
+.got-t::before {
+  content: ""; position: absolute; pointer-events: none;
+  left: var(--stem-l, .05em); width: var(--stem-w, .14em);
+  top: var(--stem-top, -.2em); height: var(--stem-h, .3em);
+  background: currentColor;
+}
+/* A point of light running along the bar: a flat ellipse centred on it */
+.got-word::after {
+  content: ""; position: absolute; z-index: 2; pointer-events: none;
+  left: -.08em; right: calc(var(--got-track, 0em) - .08em);
+  top: calc(var(--bar-top, -.1em) + var(--bar-h, .13em) / 2 - .09em); height: .18em;
+  background: radial-gradient(closest-side, rgba(220, 232, 255, 1), rgba(79, 134, 255, .55) 45%, transparent) no-repeat;
+  background-size: 1.6em 100%; background-position: -20% 0;
+  mix-blend-mode: screen; opacity: 0;
+}
+.brand-got { --got-track: .08em; }
+.group:hover .brand-got::after { animation: got-shine .9s ease-out; }
+
+.intro-text { display: flex; flex-direction: column; align-items: flex-start; }
+.intro-word.got-word { --got-track: .1em; }
+/* Glow on the whole word, bar included (the bar's clip-path would cut a glow of its own) */
+.intro-word.got-word { text-shadow: none; filter: drop-shadow(0 0 14px rgba(79, 134, 255, .5)); }
+.intro-word.got-word::before {
+  transform: scaleX(0); transform-origin: var(--bar-origin, 70%) 50%;
+  animation: intro-strike .7s cubic-bezier(.2, .9, .25, 1.12) 3.05s forwards;
+}
+.intro-word.got-word::after { animation: got-shine 1.1s ease-out 3.7s forwards; }
+/* The T's stem rises to meet the bar just before the bar spreads out from it */
+.intro-word .got-t::before {
+  transform: scaleY(0); transform-origin: 50% 100%;
+  animation: intro-rise .35s var(--ease) 2.8s forwards;
+}
+@keyframes intro-rise { to { transform: scaleY(1); } }
 .intro-word span {
   display: inline-block; opacity: 0;
-  transform: translateX(-14px); filter: blur(6px);
-  animation: intro-letter .7s var(--ease) calc(2.5s + var(--i) * .065s) forwards;
+  transform: translateY(-.35em); filter: blur(6px);
+  animation: intro-letter .7s var(--ease) calc(2.45s + var(--i) * .07s) forwards;
 }
+/* The T arrives first and a touch brighter: the bar grows out of it */
+.intro-word .got-t { animation-delay: 2.35s; }
+.intro-tag {
+  margin-top: .9em; font-family: var(--font-mono, ui-monospace, monospace); font-weight: 700;
+  font-size: 13px; letter-spacing: .9em; color: #4F86FF; white-space: nowrap;
+  opacity: 0; filter: blur(4px);
+  animation: intro-tag 1s var(--ease) 3.55s forwards;
+}
+@keyframes got-shine {
+  0% { opacity: 0; background-position: -20% 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; background-position: 120% 0; }
+}
+@keyframes intro-tag { to { opacity: 1; letter-spacing: .42em; filter: blur(0); } }
 @keyframes intro-bar { to { transform: scaleY(1); opacity: 1; } }
 @keyframes intro-draw { to { stroke-dashoffset: 0; } }
 @keyframes intro-head { to { transform: scale(1); opacity: 1; } }
@@ -1629,10 +1681,11 @@ html.intro-active, html.intro-active body { overflow: hidden; }
 @keyframes intro-strike { to { transform: scaleX(1); } }
 @media (max-width: 767px) {
   .intro-mark { width: 104px; height: 104px; }
-  .intro-word::after { height: 3px; margin-top: -1.5px; }
   .intro-word { font-size: 40px; }
+  .intro-tag { font-size: 8.5px; }
   .intro-lockup { column-gap: 12px; }
 }
+@media (prefers-reduced-motion: reduce) { .group:hover .brand-got::after { animation: none; } }
 
 .oa-chat-actions { margin-top: 10px; }
 .oa-chat-action { padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(79,134,255,0.5); background: rgba(47,107,255,0.15); color: #CFE0FF; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .15s ease; }
