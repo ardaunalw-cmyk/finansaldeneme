@@ -4,7 +4,8 @@
 // technical indicators from these bars.
 import { toYahoo, yahooChart } from './_yahoo.mjs';
 
-const RANGES = new Set(['1d', '5d', '1mo', '3mo', '6mo', 'ytd', '1y', '2y', '5y']);
+// 60d is Yahoo's limit for 5m-30m bars; 10y is for weekly bars
+const RANGES = new Set(['1d', '5d', '1mo', '60d', '3mo', '6mo', 'ytd', '1y', '2y', '5y', '10y']);
 const INTERVALS = new Set(['5m', '15m', '30m', '60m', '1d', '1wk']);
 
 const cache = new Map();   // key -> { at, body }
@@ -44,7 +45,9 @@ export default async function handler(req, res) {
     v.push(quote.volume?.[i] ?? 0);
   });
 
-  const body = { symbol, range, interval, source: 'Yahoo Finance', delayed: true, fetchedAt: Date.now(), t, o, h, l, c, v };
+  // gmtoffset (seconds) lets the chart show exchange-local times; Istanbul is UTC+3 all year
+  const gmtoffset = Number.isFinite(result.meta?.gmtoffset) ? result.meta.gmtoffset : 10800;
+  const body = { symbol, range, interval, source: 'Yahoo Finance', delayed: true, fetchedAt: Date.now(), gmtoffset, t, o, h, l, c, v };
   cache.set(key, { at: Date.now(), body });
   return send(200, body, { 'Cache-Control': `public, s-maxage=${intraday ? 60 : 600}` });
 }

@@ -36,6 +36,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Alert notifications (app.js notifyAlert): a click brings the site forward on that stock
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const ticker = event.notification.data && event.notification.data.ticker;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const client = clients[0];
+      if (client) {
+        client.postMessage({ type: 'open-stock', ticker });
+        return client.focus();
+      }
+      return self.clients.openWindow('./');
+    })
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 

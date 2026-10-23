@@ -1691,116 +1691,151 @@
                SUBTAB 4: TEKNİK ANALİZ and KIYASLAMA
                ================================================================ -->
           <div id="stockSubtab-technical" data-stock-subtab="technical" class="stock-subtab-pane space-y-6 hidden">
-            <!-- Technical Charts Grid: Fiyat and Hareketli Ortalamalar + Momentum and Osilatörler -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Technical Price Chart -->
-            <div class="utl-card p-6 space-y-4">
+            <!-- Interactive price chart (assets/js/pro-chart.js, TradingView Lightweight Charts) -->
+            <!-- Legend and toolbar are compact labels, so the app-wide glossary skips them -->
+            <div id="proChartCard" class="utl-card p-4 sm:p-6 space-y-3 flex flex-col" data-no-glossary>
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#1A2540]">
                 <div>
-                  <h4 class="font-serif font-bold text-white text-base">Mum Grafiği (OHLC) ve Hareketli Ortalamalar</h4>
+                  <h4 class="font-serif font-bold text-white text-base">Fiyat Grafiği</h4>
                   <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span id="techCurrentPriceLabel" class="text-xs font-mono font-bold text-red-400">—</span>
                     <span id="techCurrentChangeLabel" class="text-[11px] font-mono text-emerald-400"></span>
-                    <span class="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/60 text-slate-300 text-[9px] font-mono font-bold" title="Açılış, Yüksek, Düşük, Kapanış mum grafiği">MUM • OHLC</span>
                     <i id="techDataNote" class="data-badge live">YÜKLENİYOR</i>
                   </div>
                 </div>
+                <div id="techPatternName" class="text-xs text-emerald-400 font-mono font-bold"></div>
+              </div>
 
-                <!-- Timeframe Selector -->
-                <div class="flex items-center bg-[#070B14] p-1 rounded-xl text-xs font-semibold border border-[#1A2540]">
-                  <button id="btnTimeframe1M" onclick="setTechnicalTimeframe('1M')" class="px-2.5 py-0.5 rounded-lg text-white font-bold bg-[#2F6BFF] transition-all">1A</button>
-                  <button id="btnTimeframe3M" onclick="setTechnicalTimeframe('3M')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">3A</button>
-                  <button id="btnTimeframe6M" onclick="setTechnicalTimeframe('6M')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">6A</button>
-                  <button id="btnTimeframe1Y" onclick="setTechnicalTimeframe('1Y')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">1Y</button>
+              <!-- Toolbar: range, chart type, indicators, drawing tools (handled by pro-chart.js) -->
+              <div id="proChartToolbar" class="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] font-mono">
+                <div class="flex flex-wrap items-center gap-1 max-w-full" role="group" aria-label="Zaman dilimi (bir mumun süresi)">
+                  <button type="button" data-pc="iv:5m" title="5 dakikalık mumlar (son ~60 gün)">5dk</button>
+                  <button type="button" data-pc="iv:15m" title="15 dakikalık mumlar (son ~60 gün)">15dk</button>
+                  <button type="button" data-pc="iv:30m" title="30 dakikalık mumlar (son ~60 gün)">30dk</button>
+                  <button type="button" data-pc="iv:1h" title="Saatlik mumlar (son 2 yıl)">1s</button>
+                  <button type="button" data-pc="iv:4h" title="4 saatlik mumlar (son 2 yıl)">4s</button>
+                  <button type="button" data-pc="iv:1d" title="Günlük mumlar (son 5 yıl)">G</button>
+                  <button type="button" data-pc="iv:1wk" title="Haftalık mumlar (son 10 yıl)">H</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-1 max-w-full" role="group" aria-label="Görünen aralık">
+                  <button type="button" data-pc="range:1G" title="Son işlem günü">1G</button>
+                  <button type="button" data-pc="range:5G" title="Son 5 işlem günü">5G</button>
+                  <button type="button" data-pc="range:1A">1A</button>
+                  <button type="button" data-pc="range:3A">3A</button>
+                  <button type="button" data-pc="range:6A">6A</button>
+                  <button type="button" data-pc="range:1Y">1Y</button>
+                  <button type="button" data-pc="range:5Y">5Y</button>
+                  <button type="button" data-pc="range:all" title="Yüklenen tüm geçmiş">Tümü</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-1 max-w-full" role="group" aria-label="Grafik tipi">
+                  <button type="button" data-pc="type:candle" title="Mum grafiği">Mum</button>
+                  <button type="button" data-pc="type:heikin" title="Heikin-Ashi mumları">Heikin-Ashi</button>
+                  <button type="button" data-pc="type:line" title="Kapanış çizgisi">Çizgi</button>
+                  <button type="button" data-pc="type:area" title="Alan grafiği">Alan</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-1 max-w-full" role="group" aria-label="İndikatörler">
+                  <button type="button" data-pc="ind:sma20">SMA 20</button>
+                  <button type="button" data-pc="ind:sma50">SMA 50</button>
+                  <button type="button" data-pc="ind:sma200">SMA 200</button>
+                  <button type="button" data-pc="ind:ema9">EMA 9</button>
+                  <button type="button" data-pc="ind:ema21">EMA 21</button>
+                  <button type="button" data-pc="ind:bb">Bollinger</button>
+                  <button type="button" data-pc="ind:volume">Hacim</button>
+                  <button type="button" data-pc="ind:rsi">RSI</button>
+                  <button type="button" data-pc="ind:macd">MACD</button>
+                  <button type="button" data-pc="ind:stoch">Stokastik</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-1 max-w-full" role="group" aria-label="Çizim araçları">
+                  <button type="button" data-pc="tool:h" title="Yatay seviye çiz"><i class="fa-solid fa-grip-lines text-[10px] mr-1"></i>Seviye</button>
+                  <button type="button" data-pc="tool:t" title="İki nokta arasında trend çizgisi"><i class="fa-solid fa-chart-line text-[10px] mr-1"></i>Trend</button>
+                  <button type="button" data-pc="tool:f" title="İki nokta arasında Fibonacci düzeltmesi"><i class="fa-solid fa-bezier-curve text-[10px] mr-1"></i>Fibonacci</button>
+                  <button type="button" data-pc="tool:a" title="Tıkladığın fiyata alarm kur"><i class="fa-solid fa-bell text-[10px] mr-1"></i>Alarm</button>
+                  <button type="button" data-pc="undo" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Son çizimi geri al"><i class="fa-solid fa-rotate-left text-[10px]"></i></button>
+                  <button type="button" data-pc="clear" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Bu hissedeki tüm çizimleri sil"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
+                </div>
+                <div class="flex items-center gap-1 ml-auto">
+                  <button type="button" data-pc="shot" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Grafiği PNG olarak indir"><i class="fa-solid fa-camera text-[10px]"></i></button>
+                  <button type="button" data-pc="full" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Tam ekran"><i class="fa-solid fa-expand text-[10px]"></i></button>
                 </div>
               </div>
 
-              <!-- Indicators Header Pills -->
-              <div class="flex items-center gap-2 text-[10px] font-mono flex-wrap">
-                <span class="px-2 py-0.5 rounded bg-red-950/40 border border-red-800/40 text-red-300">SMA 20: <strong id="valSMA20">₺308,10</strong></span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">SMA 50: <strong id="valSMA50">₺298,40</strong></span>
-                <span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-800/40 text-emerald-300">SMA 200: <strong id="valSMA200">₺274,20</strong></span>
-                <span class="px-2 py-0.5 rounded bg-sky-950 border border-sky-800/40 text-sky-300">HACİM: <strong id="valVolumeSummary">₺3.45 Mlr</strong></span>
+              <div class="relative w-full h-[520px] pro-chart-wrap">
+                <div id="proChart" class="absolute inset-0"></div>
+                <div id="proChartLegend" class="absolute top-1 left-2 right-20 z-10 pointer-events-none text-[11px] font-mono text-slate-300"></div>
+                <div id="proChartHint" class="hidden absolute top-1 right-16 z-10 pointer-events-none text-[11px] font-mono text-amber-300 bg-[#070B14]/90 border border-amber-800/50 rounded px-2 py-0.5"></div>
               </div>
-
-              <!-- Fibonacci Retracement Ribbon -->
-              <div id="techFibonacciRibbon" class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap bg-[#070B14] p-2 rounded-lg border border-[#1A2540]">
-                <span class="text-red-400 font-bold uppercase mr-1 flex items-center gap-1"><i class="fa-solid fa-bezier-curve text-[9px]"></i> FIBO:</span>
-                <span class="px-1.5 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800/40">0.0%: <strong id="fibLvl0">₺0,00</strong></span>
-                <span class="px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800/40">23.6%: <strong id="fibLvl236">₺0,00</strong></span>
-                <span class="px-1.5 py-0.5 rounded bg-yellow-950/60 text-yellow-300 border border-yellow-800/40">38.2%: <strong id="fibLvl382">₺0,00</strong></span>
-                <span class="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/40">50.0%: <strong id="fibLvl500">₺0,00</strong></span>
-                <span class="px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 font-bold">61.8% (Altın): <strong id="fibLvl618">₺0,00</strong></span>
-                <span class="px-1.5 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">100.0%: <strong id="fibLvl100">₺0,00</strong></span>
-              </div>
-
-              <!-- Canvas -->
-              <div class="relative h-64 w-full">
-                <canvas id="technicalPriceChart"></canvas>
-              </div>
-
-              <!-- Overlay Layers -->
-              <div class="flex items-center justify-between text-xs pt-3 border-t border-[#1A2540] flex-wrap gap-2">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <button id="toggleLayerSMA" onclick="toggleTechnicalLayer('sma')" class="px-2.5 py-1 rounded-lg bg-red-950/40 text-red-300 border border-red-800/50 text-[11px] font-semibold transition-all">SMA</button>
-                  <button id="toggleLayerBB" onclick="toggleTechnicalLayer('bollinger')" class="px-2.5 py-1 rounded-lg bg-red-950/40 text-red-300 border border-red-800/50 text-[11px] font-semibold transition-all">Bollinger</button>
-                  <button id="toggleLayerFib" onclick="toggleTechnicalLayer('fibonacci')" class="px-2.5 py-1 rounded-lg bg-red-950/40 text-red-300 border border-red-800/50 text-[11px] font-semibold transition-all"><i class="fa-solid fa-bezier-curve text-[10px] mr-1"></i>Fibonacci</button>
-                  <button id="toggleLayerVolume" onclick="toggleTechnicalLayer('volume')" class="px-2.5 py-1 rounded-lg bg-red-950/40 text-red-300 border border-red-800/50 text-[11px] font-semibold transition-all"><i class="fa-solid fa-chart-column text-[10px] mr-1"></i>Hacim (Volume)</button>
-                  <span class="hidden sm:flex items-center gap-1 text-[10px] font-mono text-slate-500 ml-1">
-                    <span class="w-2 h-2 rounded-sm bg-emerald-400"></span> Yükseliş
-                    <span class="w-2 h-2 rounded-sm bg-rose-400 ml-1"></span> Düşüş
-                  </span>
-                </div>
-                <div id="techPatternName" class="text-xs text-emerald-400 font-mono font-bold">Yükselen Üçgen Formasyonu</div>
-              </div>
+              <p class="text-[10px] text-slate-500 font-mono">Saatler İstanbul saatidir; fiyatlar Yahoo Finance'ten gecikmeli gelir, grafik dakikada bir yenilenir. Fare tekerleğiyle yakınlaştır, sürükleyerek kaydır; panelleri aradaki çizgiden boyutlandır. Çizimler yalnızca bu tarayıcıda saklanır; trend çizgisi, iki ucu yüklenen geçmişin içindeyse diğer zaman dilimlerinde de görünür. Esc çizim aracını kapatır.</p>
             </div>
 
-            <!-- Indicator panel next to the candlestick chart: all indicators | oscillator chart -->
-            <div class="utl-card p-6 space-y-4 flex flex-col">
-              <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#1A2540]">
-                <div class="flex items-center bg-[#070B14] p-1 rounded-xl text-xs font-semibold border border-[#1A2540]" role="tablist">
-                  <button id="techPanelTab-list" type="button" role="tab" onclick="setTechPanelTab('list')" class="tech-panel-tab px-3 py-1 rounded-lg bg-[#2F6BFF] text-white font-bold transition-all">
-                    <i class="fa-solid fa-list-check text-[10px] mr-1"></i>İndikatörler <span id="techIndicatorCount" class="opacity-80">(—)</span>
-                  </button>
-                  <button id="techPanelTab-chart" type="button" role="tab" onclick="setTechPanelTab('chart')" class="tech-panel-tab px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">
-                    <i class="fa-solid fa-wave-square text-[10px] mr-1"></i>Osilatör Grafiği
-                  </button>
+            <!-- Strategy backtest on the chart's stock and timeframe (assets/js/backtest.js, backtest-ui.js) -->
+            <div id="btCard" class="utl-card p-4 sm:p-6 space-y-4" data-no-glossary>
+              <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-3 border-b border-[#1A2540]">
+                <div>
+                  <h4 class="font-serif font-bold text-white text-base"><i class="fa-solid fa-flask text-[12px] mr-1 text-slate-400"></i>Strateji Testi (Geri Test)</h4>
+                  <p class="text-xs text-slate-400 mt-0.5">Bir kuralı grafikteki hisse ve zaman diliminin geçmişine uygular; sonucu al ve tut ile karşılaştırır.</p>
                 </div>
-                <span id="techConsensusBadge" class="text-[11px] font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg">HESAPLANIYOR</span>
+                <span id="btContext" class="text-[10px] font-mono text-slate-500"></span>
               </div>
 
-              <!-- Tab: every indicator, grouped -->
-              <div id="techPanel-list" class="space-y-3 flex-1 flex flex-col">
+              <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] gap-4 text-xs font-mono">
+                <div class="space-y-3">
+                  <label class="block">
+                    <span class="text-[10px] text-slate-400 block mb-1">Strateji</span>
+                    <select id="btStrategy" class="w-full px-2.5 py-1.5 bg-[#070B14] border border-[#1A2540] rounded-lg text-white text-xs"></select>
+                  </label>
+                  <p id="btDesc" class="text-[11px] text-slate-400 font-sans leading-snug"></p>
+                  <div id="btParams" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+                </div>
+                <div class="space-y-3">
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <label class="block"><span class="text-[10px] text-slate-400 block mb-1">Komisyon (%, her yön)</span>
+                      <input id="btCommission" type="number" min="0" step="0.01" value="0.1" class="w-full px-2.5 py-1.5 bg-[#070B14] border border-[#1A2540] rounded-lg text-white text-xs"></label>
+                    <label class="block"><span class="text-[10px] text-slate-400 block mb-1">Zarar-kes (%)</span>
+                      <input id="btStop" type="number" min="0" step="0.5" placeholder="yok" class="w-full px-2.5 py-1.5 bg-[#070B14] border border-[#1A2540] rounded-lg text-white text-xs"></label>
+                    <label class="block"><span class="text-[10px] text-slate-400 block mb-1">Kâr-al (%)</span>
+                      <input id="btTarget" type="number" min="0" step="0.5" placeholder="yok" class="w-full px-2.5 py-1.5 bg-[#070B14] border border-[#1A2540] rounded-lg text-white text-xs"></label>
+                    <label class="block"><span class="text-[10px] text-slate-400 block mb-1">Başlangıç (₺)</span>
+                      <input id="btCapital" type="number" min="1" step="1000" value="100000" class="w-full px-2.5 py-1.5 bg-[#070B14] border border-[#1A2540] rounded-lg text-white text-xs"></label>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-3">
+                    <button id="btRun" type="button" class="px-4 py-1.5 rounded-lg bg-[#2F6BFF] hover:bg-[#2558d6] text-white font-bold text-xs transition-colors"><i class="fa-solid fa-play text-[10px] mr-1"></i>Testi çalıştır</button>
+                    <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                      <input id="btShowMarkers" type="checkbox" checked class="accent-[#2F6BFF]"> İşlemleri fiyat grafiğinde göster
+                    </label>
+                    <span id="btMessage" class="text-[11px] text-amber-300" role="status"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="btResult" class="hidden space-y-4">
+                <p id="btStale" class="hidden text-[11px] font-mono text-amber-300">Grafikte zaman dilimi değişti; aşağıdaki sonuç önceki dilim için. Yeniden çalıştırabilirsin.</p>
+                <div id="btSummary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2"></div>
+                <div class="space-y-1.5">
+                  <div id="btEquityLegend" class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-mono"></div>
+                  <div class="relative w-full h-[260px]"><div id="btEquity" class="absolute inset-0"></div></div>
+                </div>
+                <div>
+                  <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wide mb-1">İşlemler (yeniden eskiye)</div>
+                  <div id="btTrades" class="max-h-72 overflow-y-auto pr-1"></div>
+                </div>
+              </div>
+
+              <p class="text-[10px] text-slate-500 font-mono leading-relaxed">Sinyal mum kapanışında okunur, işlem bir sonraki mumun açılışında yapılır; tek pozisyon, tüm sermaye, yalnızca alım yönü. Komisyon dahildir; kayma, vergi ve temettü hesaba katılmaz. Geçmiş sonuç gelecek için garanti değildir; yatırım tavsiyesi değildir.</p>
+            </div>
+
+            <!-- Indicator scorecard -->
+            <div class="utl-card p-6 space-y-4 flex flex-col">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#1A2540]">
+                <h4 class="font-serif font-bold text-white text-base"><i class="fa-solid fa-list-check text-[12px] mr-1 text-slate-400"></i>İndikatörler <span id="techIndicatorCount" class="text-slate-400 text-sm">(—)</span></h4>
+                <span id="techConsensusBadge" class="text-[11px] font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg">HESAPLANIYOR</span>
+              </div>
+              <div class="space-y-3 flex-1 flex flex-col">
                 <div id="techGroupFilter" class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap"></div>
                 <div id="techIndicatorList" class="tech-indicator-list flex-1 overflow-y-auto pr-1 space-y-1.5">
                   <div class="py-6 text-center text-slate-500 text-xs font-mono">Göstergeler gerçek fiyat geçmişinden hesaplanıyor...</div>
                 </div>
                 <p class="text-[10px] text-slate-500 font-mono">Gerçek günlük fiyatlardan (Yahoo Finance, gecikmeli) kural tabanlı hesaplanır; yatırım tavsiyesi değildir.</p>
               </div>
-
-              <!-- Tab: oscillator chart -->
-              <div id="techPanel-chart" class="space-y-4 hidden">
-                <div class="flex items-center justify-between gap-2 flex-wrap">
-                  <p class="text-xs text-slate-400">RSI 14 &bull; MACD 12,26,9 &bull; Stokastik</p>
-                  <div class="flex items-center bg-[#070B14] p-1 rounded-xl text-xs font-semibold border border-[#1A2540]">
-                    <button id="btnOscRSI" onclick="setTechnicalOscillator('rsi')" class="px-2.5 py-0.5 rounded-lg bg-[#2F6BFF] text-white font-bold transition-all">RSI (14)</button>
-                    <button id="btnOscMACD" onclick="setTechnicalOscillator('macd')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">MACD (12,26,9)</button>
-                    <button id="btnOscStoch" onclick="setTechnicalOscillator('stoch')" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">Stokastik</button>
-                  </div>
-                </div>
-
-                <!-- Canvas -->
-                <div class="relative h-64 w-full">
-                  <canvas id="technicalOscillatorChart"></canvas>
-                </div>
-
-                <!-- Indicator Note -->
-                <div class="flex items-center justify-between text-xs pt-3 border-t border-[#1A2540] text-slate-400">
-                  <div id="techOscillatorStatus" class="font-mono text-xs font-bold text-emerald-400">—</div>
-                  <span id="techOscillatorNote" class="text-emerald-400 font-mono font-bold"></span>
-                </div>
-              </div>
-            </div>
             </div>
 
           <!-- Section: technical report evaluation (written reading of every indicator) -->
@@ -2779,7 +2814,10 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
       <div class="p-3 border-b border-[#1A2540] bg-[#0C1322]/60 space-y-2.5">
         <div class="flex items-center justify-between text-[11px] font-mono text-amber-400 font-bold">
           <span><i class="fa-solid fa-circle-plus mr-1"></i> YENİ ALARM OLUŞTUR</span>
-          <span class="text-[10px] text-slate-500">Canlı Simülasyon Takibi</span>
+          <button type="button" id="alertNotifyStatus" onclick="requestAlertNotifications()" class="text-[10px] font-mono text-slate-500">Bildirimler</button>
+        </div>
+        <div class="text-[10px] text-slate-500 font-mono leading-snug">
+          Gerçek (gecikmeli) fiyatlarla dakikada bir kontrol edilir. Site açıkken çalışır; sekme arka plandaysa sistem bildirimi gelir.
         </div>
         <div class="grid grid-cols-2 gap-2 text-xs font-mono">
           <div>
@@ -2893,6 +2931,10 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/app.js"></script>
   <script src="assets/js/indicators.js"></script>
   <script src="assets/js/technicals.js"></script>
+  <script src="assets/lib/lightweight-charts-5.2.1/lightweight-charts.standalone.production.js"></script>
+  <script src="assets/js/pro-chart.js"></script>
+  <script src="assets/js/backtest.js"></script>
+  <script src="assets/js/backtest-ui.js"></script>
   <script src="assets/js/statements.js"></script>
   <script src="assets/js/fin-health.js"></script>
   <script src="assets/js/disclosures.js"></script>

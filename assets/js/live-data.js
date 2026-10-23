@@ -386,7 +386,8 @@ const LiveData = (() => {
     refreshTicker();
     setTimeout(checkAlerts, 4000);
     setInterval(() => {
-      if (document.hidden) return;
+      // In a background tab only the alerts keep running (they can raise a system notification)
+      if (document.hidden) { checkAlerts(); return; }
       refreshTicker();
       checkAlerts();
       misses.clear();

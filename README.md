@@ -15,7 +15,10 @@ Canlı site Vercel'de; `main` dalına her push otomatik yayınlanır.
 | | DuPont, Altman Z'', Piotroski F | KAP bilançoları (`assets/data/statements`) |
 | | Bilanço, gelir tablosu, çeyreklik grafikler | KAP bilançoları (İş Yatırım derlemesi) |
 | | Bedelsiz potansiyeli, temettü verimi, dağıtım oranı | Bilanço, nakit akışı, `dividends.json` |
-| | Mum grafiği, yanında 27 teknik indikatör (trend, momentum, hacim, volatilite) ve yazılı teknik rapor değerlendirmesi | Yahoo Finance fiyat geçmişi |
+| | Etkileşimli fiyat grafiği (TradingView Lightweight Charts): 5dk/15dk/30dk/1s/4s/günlük/haftalık zaman dilimleri (İstanbul saatiyle, dakikada bir yenilenir); mum, Heikin-Ashi, çizgi, alan; SMA/EMA/Bollinger/hacim, RSI/MACD/Stokastik panelleri; yatay seviye, trend ve Fibonacci çizimleri (tarayıcıda saklanır) | Yahoo Finance fiyat geçmişi (gecikmeli; dakikalık 60 gün, saatlik 2 yıl, günlük 5 yıl, haftalık 10 yıl) |
+| | Strateji testi (geri test): SMA/EMA/MACD kesişimi, RSI ve Bollinger dönüşü, Donchian kırılımı; komisyon, zarar-kes, kâr-al; al ve tut karşılaştırması, sermaye eğrisi, işlem listesi ve grafikte AL/SAT işaretleri | Grafikteki hisse ve zaman diliminin fiyat geçmişi |
+| | 27 teknik indikatörlük karne ve yazılı teknik rapor değerlendirmesi | Yahoo Finance fiyat geçmişi |
+| İzleme listesi ve alarmlar | Fiyat ve RSI alarmları; grafikten tıklayarak alarm kurma, aktif alarmlar grafikte çizgi olarak; sekme arka plandayken de dakikada bir kontrol ve sistem bildirimi. Tarayıcıda saklanır, site kapalıyken çalışmaz | Yahoo Finance fiyatları (gecikmeli) |
 | | Rakip kıyaslama ve radar | Aynı KAP sektöründeki şirketlerin gerçek verisi |
 | | KAP bildirimleri | kap.org.tr |
 | Hisse karşılaştırma | En fazla 3 hisse yan yana | Fiyat + bilanço |
@@ -65,6 +68,10 @@ assets/js/statements.js Bilanço sekmesi ve finansal sağlık kartları
 assets/js/live-data.js  Fiyatlar ve fiyata bağlı oranlar
 assets/js/indicators.js Saf teknik indikatör hesapları (RSI, MACD, ADX, Ichimoku, Supertrend, MFI, ...)
 assets/js/technicals.js Fiyat geçmişi, indikatör karnesi ve teknik rapor metni
+assets/js/pro-chart.js  Etkileşimli fiyat grafiği, indikatör panelleri ve çizim araçları
+assets/js/backtest.js   Saf geri test motoru (stratejiler, emir doldurma, istatistikler)
+assets/js/backtest-ui.js Strateji Testi kartı: form, özet, sermaye eğrisi, işlem listesi
+assets/lib/lightweight-charts-*/  TradingView Lightweight Charts (Apache-2.0, sürüm klasör adında)
 assets/js/dividends.js  Temettü takvimi ve temettü verimi
 assets/js/compare.js    Hisse karşılaştırma
 assets/js/app.js        Görünümler, arama, tablo, grafikler, rakip kıyaslama

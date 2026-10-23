@@ -23,9 +23,11 @@ const TechData = (() => {
 
   const inflight = new Map();   // request key -> Promise, so tabs/buttons do not refetch
 
-  function history(symbol, range, interval) {
+  /** With fresh, skips the in-page cache (the chart's periodic refresh). */
+  function history(symbol, range, interval, fresh = false) {
     symbol = typeof tradingCode === 'function' ? tradingCode(symbol) : symbol;
     const key = `${symbol}|${range}|${interval}`;
+    if (fresh) inflight.delete(key);
     if (!inflight.has(key)) {
       const p = fetch(`/api/history?symbol=${encodeURIComponent(symbol)}&range=${range}&interval=${interval}`)
         .then(r => { if (!r.ok) throw new Error(`history ${r.status}`); return r.json(); })

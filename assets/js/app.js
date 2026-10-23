@@ -13,17 +13,6 @@ const appState = {
   currentStock: 'THYAO',
   currentCompanyData: null,
   activeView: 'overview',
-  technical: {
-    timeframe: '1M', // '1M', '3M', '6M', '1Y'
-    oscillator: 'rsi', // 'rsi', 'macd', 'stoch'
-    layers: {
-      sma: true,
-      bollinger: true,
-      fibonacci: true,
-      volume: true,
-      pattern: true
-    }
-  },
   charts: {}
 };
 
@@ -931,159 +920,39 @@ async function initBistChart() {
 }
 
 /**
- * Chart.js core does not ship a financial/candlestick controller. This local
- * plugin paints the OHLC candles directly on the chart area (before overlays
- * such as SMA, Bollinger, Fibonacci and volume), using the chart's own scales.
- * The OHLC series is attached to the chart instance as `chart.$ohlc`.
- */
-const bistCandlestickRenderer = {
-  id: 'bistCandlesticks',
-
-  beforeUpdate(chart) {
-    const ohlc = chart.$ohlc;
-    if (!ohlc || !ohlc.highs || !ohlc.highs.length) return;
-    const yOptions = chart.options.scales && chart.options.scales.y;
-    if (!yOptions) return;
-
-    let max = -Infinity;
-    let min = Infinity;
-    for (let i = 0; i < ohlc.highs.length; i++) {
-      if (Number.isFinite(ohlc.highs[i])) max = Math.max(max, ohlc.highs[i]);
-      if (Number.isFinite(ohlc.lows[i])) min = Math.min(min, ohlc.lows[i]);
-    }
-    if (!Number.isFinite(max) || !Number.isFinite(min)) return;
-
-    const pad = Math.max((max - min) * 0.06, max * 0.004);
-    yOptions.suggestedMin = min - pad;
-    yOptions.suggestedMax = max + pad;
-  },
-
-  beforeDatasetsDraw(chart) {
-    const ohlc = chart.$ohlc;
-    if (!ohlc || !ohlc.prices || !ohlc.prices.length) return;
-
-    const { ctx, chartArea, scales } = chart;
-    const xScale = scales.x;
-    const yScale = scales.y;
-    if (!ctx || !chartArea || !xScale || !yScale) return;
-
-    const count = ohlc.prices.length;
-    const step = count > 1
-      ? Math.abs(xScale.getPixelForValue(1) - xScale.getPixelForValue(0))
-      : chartArea.width / 4;
-    const bodyWidth = Math.max(2, Math.min(18, step * 0.62));
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
-    ctx.clip();
-
-    for (let i = 0; i < count; i++) {
-      const o = ohlc.opens[i];
-      const h = ohlc.highs[i];
-      const l = ohlc.lows[i];
-      const c = ohlc.prices[i];
-      if (![o, h, l, c].every(Number.isFinite)) continue;
-
-      const x = xScale.getPixelForValue(i);
-      if (!Number.isFinite(x) || x < chartArea.left - step || x > chartArea.right + step) continue;
-
-      const yOpen = yScale.getPixelForValue(o);
-      const yClose = yScale.getPixelForValue(c);
-      const yHigh = yScale.getPixelForValue(h);
-      const yLow = yScale.getPixelForValue(l);
-      const isBullish = c >= o;
-      const color = isBullish ? '#10B981' : '#F43F5E';
-      const fill = isBullish ? 'rgba(16, 185, 129, 0.92)' : 'rgba(244, 63, 94, 0.92)';
-      const bodyTop = Math.min(yOpen, yClose);
-      const bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
-
-      // Wick (high / low shadows)
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x, yHigh);
-      ctx.lineTo(x, yLow);
-      ctx.stroke();
-
-      // Body (open / close)
-      ctx.fillStyle = fill;
-      ctx.fillRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
-      ctx.strokeRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
-    }
-
-    ctx.restore();
-  }
-};
-
-/**
- * 2 & 3. technicalPriceChart & technicalOscillatorChart:
- * Candlestick OHLC price chart + overlays (SMA, Bollinger) & oscillators (RSI / MACD)
+ * Technical tab: the interactive price chart (pro-chart.js) plus the price, change and
+ * signal labels in its header, all from the same real price history.
  */
 async function initTechnicalCharts(ticker = 'THYAO', retried = false) {
-  const priceCanvas = document.getElementById('technicalPriceChart');
-  const oscCanvas = document.getElementById('technicalOscillatorChart');
-  if (!priceCanvas || !oscCanvas) return;
-
-  const tech = await MockFinancialApi.fetchTechnicalData(ticker, appState.technical.timeframe);
+  if (!document.getElementById('proChart')) return;
 
   const techNote = document.getElementById('techDataNote');
-  if (!tech && !retried) {
+  const [shown, tech] = await Promise.all([
+    window.ProChart ? ProChart.load(ticker) : false,
+    MockFinancialApi.fetchTechnicalData(ticker, '6M')
+  ]);
+  if (appState.currentStock !== ticker) return;
+
+  if (!shown && !retried) {
     // One quiet retry: the history request sometimes fails while many quotes load at once
     setTimeout(() => { if (appState.currentStock === ticker) initTechnicalCharts(ticker, true); }, 4000);
     return;
   }
-  if (!tech) {
+  if (!shown) {
     if (techNote) { techNote.className = 'data-badge sample'; techNote.textContent = 'VERİ ALINAMADI'; }
-    ['techPrice', 'techOsc'].forEach(k => { if (appState.charts[k]) { appState.charts[k].destroy(); appState.charts[k] = null; } });
     return;
   }
   if (techNote) {
     techNote.className = 'data-badge live';
     techNote.textContent = 'GERÇEK GEÇMİŞ VERİ · YAHOO FINANCE · GECİKMELİ';
   }
+  if (!tech) return;
 
-  // Update DOM Labels in Technical Header
   const priceLabel = document.getElementById('techCurrentPriceLabel');
   const changeLabel = document.getElementById('techCurrentChangeLabel');
-  const vSMA20 = document.getElementById('valSMA20');
-  const vSMA50 = document.getElementById('valSMA50');
-  const vSMA200 = document.getElementById('valSMA200');
-
   if (priceLabel) priceLabel.textContent = `₺${_trFmt2.format(tech.currentPrice)}`;
   if (changeLabel) changeLabel.textContent = tech.changePercent;
-  const lastVal = arr => { const v = arr[arr.length - 1]; return v == null ? 'N/A' : `₺${_trFmt2.format(v)}`; };
-  if (vSMA20) vSMA20.textContent = lastVal(tech.sma20);
-  if (vSMA50) vSMA50.textContent = lastVal(tech.sma50);
-  if (vSMA200) vSMA200.textContent = lastVal(tech.sma200);
 
-  // Update Volume Summary in Header
-  const volSummaryEl = document.getElementById('valVolumeSummary');
-  if (volSummaryEl && tech.volumes && tech.volumes.length) {
-    const lastVol = tech.volumes[tech.volumes.length - 1];
-    const volFormatted = (lastVol >= 1000000) 
-      ? `${(lastVol / 1000000).toFixed(2)}M Lot` 
-      : `${(lastVol / 1000).toFixed(0)}K Lot`;
-    volSummaryEl.textContent = volFormatted;
-  }
-
-  // Update Fibonacci Ribbon in DOM
-  if (tech.fib) {
-    const f0El = document.getElementById('fibLvl0');
-    const f236El = document.getElementById('fibLvl236');
-    const f382El = document.getElementById('fibLvl382');
-    const f500El = document.getElementById('fibLvl500');
-    const f618El = document.getElementById('fibLvl618');
-    const f100El = document.getElementById('fibLvl100');
-    if (f0El) f0El.textContent = `₺${_trFmt2.format(tech.fib.f0)}`;
-    if (f236El) f236El.textContent = `₺${_trFmt2.format(tech.fib.f236)}`;
-    if (f382El) f382El.textContent = `₺${_trFmt2.format(tech.fib.f382)}`;
-    if (f500El) f500El.textContent = `₺${_trFmt2.format(tech.fib.f500)}`;
-    if (f618El) f618El.textContent = `₺${_trFmt2.format(tech.fib.f618)}`;
-    if (f100El) f100El.textContent = `₺${_trFmt2.format(tech.fib.f100)}`;
-  }
-
-  // Pattern Card Injections
   const patName = document.getElementById('techPatternName');
   const patTarget = document.getElementById('techPatternTarget');
   const patReliability = document.getElementById('techPatternReliability');
@@ -1092,493 +961,6 @@ async function initTechnicalCharts(ticker = 'THYAO', retried = false) {
   if (patTarget) patTarget.textContent = tech.pattern.target;
   if (patReliability) patReliability.textContent = tech.pattern.reliability;
   if (patDesc) patDesc.textContent = tech.pattern.desc;
-
-  // --- Render Chart 2: technicalPriceChart ---
-  const priceDatasets = [
-    {
-      type: 'line',
-      label: 'Kapanış (Mum)',
-      data: tech.prices,
-      borderColor: 'rgba(56, 189, 248, 0)',
-      backgroundColor: 'transparent',
-      fill: false,
-      borderWidth: 0,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      yAxisID: 'y'
-    }
-  ];
-
-  // 1. Moving Averages Layer
-  if (appState.technical.layers.sma) {
-    priceDatasets.push(
-      {
-        type: 'line',
-        label: 'SMA 20 (Kısa Vade)',
-        data: tech.sma20,
-        borderColor: '#2F6BFF', // brand cobalt
-        borderWidth: 1.8,
-        pointRadius: 0,
-        fill: false,
-        tension: 0.3,
-        yAxisID: 'y'
-      },
-      {
-        type: 'line',
-        label: 'SMA 50 (Orta Vade)',
-        data: tech.sma50,
-        borderColor: '#F59E0B', // amber
-        borderWidth: 1.8,
-        pointRadius: 0,
-        fill: false,
-        tension: 0.3,
-        yAxisID: 'y'
-      },
-      {
-        type: 'line',
-        label: 'SMA 200 (Ana Trend)',
-        data: tech.sma200,
-        borderColor: '#10B981', // emerald
-        borderDash: [4, 4],
-        borderWidth: 1.6,
-        pointRadius: 0,
-        fill: false,
-        tension: 0.3,
-        yAxisID: 'y'
-      }
-    );
-  }
-
-  // 2. Bollinger Bands Layer
-  if (appState.technical.layers.bollinger) {
-    priceDatasets.push(
-      {
-        type: 'line',
-        label: 'Bollinger Üst Bant',
-        data: tech.bbUpper,
-        borderColor: '#64748B',
-        borderDash: [3, 3],
-        borderWidth: 1.2,
-        pointRadius: 0,
-        fill: false,
-        yAxisID: 'y'
-      },
-      {
-        type: 'line',
-        label: 'Bollinger Alt Bant',
-        data: tech.bbLower,
-        borderColor: '#64748B',
-        borderDash: [3, 3],
-        borderWidth: 1.2,
-        pointRadius: 0,
-        fill: '-1',
-        backgroundColor: 'rgba(47, 107, 255, 0.05)',
-        yAxisID: 'y'
-      }
-    );
-  }
-
-  // 3. Fibonacci Retracement Levels Layer
-  if (appState.technical.layers.fibonacci && tech.fib) {
-    const n = tech.dates.length;
-    const fibDatasets = [
-      { label: 'Fib %0.0 (Zirve)', val: tech.fib.f0, color: '#F43F5E', dash: [3, 3], width: 1.2 },
-      { label: 'Fib %23.6', val: tech.fib.f236, color: '#F59E0B', dash: [4, 4], width: 1.1 },
-      { label: 'Fib %38.2', val: tech.fib.f382, color: '#EAB308', dash: [4, 4], width: 1.1 },
-      { label: 'Fib %50.0 (Denge)', val: tech.fib.f500, color: '#94A3B8', dash: [2, 2], width: 1.2 },
-      { label: 'Fib %61.8 (Altın Oran)', val: tech.fib.f618, color: '#10B981', dash: [5, 3], width: 1.8 },
-      { label: 'Fib %100.0 (Dip)', val: tech.fib.f100, color: '#38BDF8', dash: [3, 3], width: 1.2 }
-    ];
-
-    fibDatasets.forEach(f => {
-      priceDatasets.push({
-        type: 'line',
-        label: f.label,
-        data: new Array(n).fill(f.val),
-        borderColor: f.color,
-        borderDash: f.dash,
-        borderWidth: f.width,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        fill: false,
-        tension: 0,
-        yAxisID: 'y'
-      });
-    });
-  }
-
-  // 4. Transaction Volume (Hacim) Bar Layer
-  if (appState.technical.layers.volume && tech.volumes) {
-    priceDatasets.push({
-      type: 'bar',
-      label: 'İşlem Hacmi (Lot)',
-      data: tech.volumes,
-      backgroundColor: tech.volumes.map((v, i) => {
-        const isUp = (i === 0) ? true : (tech.prices[i] >= tech.prices[i - 1]);
-        return isUp ? 'rgba(16, 185, 129, 0.45)' : 'rgba(244, 63, 94, 0.45)';
-      }),
-      hoverBackgroundColor: tech.volumes.map((v, i) => {
-        const isUp = (i === 0) ? true : (tech.prices[i] >= tech.prices[i - 1]);
-        return isUp ? '#10B981' : '#F43F5E';
-      }),
-      borderRadius: 3,
-      barPercentage: 0.65,
-      categoryPercentage: 0.8,
-      yAxisID: 'yVolume'
-    });
-  }
-
-  if (appState.charts.techPrice) {
-    appState.charts.techPrice.destroy();
-  }
-
-  const maxVol = (tech.volumes && tech.volumes.length) ? Math.max(...tech.volumes) : 1000;
-
-  appState.charts.techPrice = new Chart(priceCanvas.getContext('2d'), {
-    plugins: [bistCandlestickRenderer],
-    data: {
-      labels: tech.dates,
-      datasets: priceDatasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0E1626',
-          borderColor: '#1E2B45',
-          borderWidth: 1,
-          titleColor: '#F8FAFC',
-          bodyColor: '#38BDF8',
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            label: context => {
-              if (context.datasetIndex === 0) {
-                const ohlc = context.chart.$ohlc;
-                const i = context.dataIndex;
-                if (ohlc && ohlc.prices && Number.isFinite(ohlc.prices[i])) {
-                  const fmt = v => `₺${_trFmt2.format(v)}`;
-                  const isBullish = ohlc.prices[i] >= ohlc.opens[i];
-                  return [
-                    `Açılış: ${fmt(ohlc.opens[i])}`,
-                    `Yüksek: ${fmt(ohlc.highs[i])}`,
-                    `Düşük: ${fmt(ohlc.lows[i])}`,
-                    `Kapanış: ${fmt(ohlc.prices[i])} (${isBullish ? 'Yeşil mum' : 'Kırmızı mum'})`
-                  ];
-                }
-              }
-              if (context.dataset.yAxisID === 'yVolume') {
-                const v = context.parsed.y;
-                const formatted = (v >= 1000000) ? `${(v / 1000000).toFixed(2)}M Lot` : `${(v / 1000).toFixed(0)}K Lot`;
-                return `Hacim: ${formatted}`;
-              }
-              return `${context.dataset.label}: ₺${_trFmt2.format(context.parsed.y)}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          offset: true,
-          grid: { display: false },
-          ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#94A3B8' }
-        },
-        y: {
-          position: 'left',
-          grid: { color: '#1E2B45' },
-          ticks: {
-            font: { family: 'JetBrains Mono', size: 10 },
-            color: '#94A3B8',
-            callback: value => `₺${value.toLocaleString('tr-TR', { minimumFractionDigits: 1 })}`
-          }
-        },
-        yVolume: {
-          position: 'right',
-          display: !!(appState.technical.layers.volume),
-          grid: { display: false },
-          max: maxVol * 3.8, // Keeps volume bars in lower 26% zone
-          ticks: {
-            font: { size: 9, family: 'JetBrains Mono' },
-            color: '#64748B',
-            callback: v => {
-              if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
-              if (v >= 1000) return `${(v / 1000).toFixed(0)}K`;
-              return v;
-            }
-          }
-        }
-      }
-    }
-  });
-
-  // Attach the OHLC series used by the candlestick renderer and repaint once.
-  appState.charts.techPrice.$ohlc = {
-    opens: tech.opens,
-    highs: tech.highs,
-    lows: tech.lows,
-    prices: tech.prices
-  };
-  appState.charts.techPrice.$maxPoints = tech.prices.length;
-  appState.charts.techPrice.update('none');
-
-  // --- Render Chart 3: technicalOscillatorChart (RSI, MACD, or Stochastic) ---
-  const oscCtx = oscCanvas.getContext('2d');
-  if (appState.charts.techOsc) {
-    appState.charts.techOsc.destroy();
-  }
-
-  const activeOsc = appState.technical.oscillator || 'rsi';
-  const oscStatus = document.getElementById('techOscillatorStatus');
-  const oscNote = document.getElementById('techOscillatorNote');
-  const nPoints = tech.dates.length;
-
-  if (activeOsc === 'rsi') {
-    const lastRsi = tech.rsi[tech.rsi.length - 1];
-    if (oscStatus) {
-      oscStatus.innerHTML = `RSI (14): <span class="font-mono">${lastRsi}</span> (${lastRsi > 70 ? 'Aşırı Alım' : lastRsi < 30 ? 'Aşırı Satım' : 'Nötr Bölge'})`;
-      oscStatus.className = `font-mono text-xs font-bold ${lastRsi > 70 ? 'text-rose-400' : lastRsi < 30 ? 'text-emerald-400' : 'text-red-400'}`;
-    }
-    if (oscNote) {
-      oscNote.textContent = lastRsi > 70 ? 'DİKKAT (AŞIRI ALIM)' : lastRsi < 30 ? 'GÜÇLÜ ALIM FIRSATI' : 'AL SİNYALİ';
-      oscNote.className = `font-mono font-bold text-xs ${lastRsi > 70 ? 'text-rose-400' : 'text-emerald-400'}`;
-    }
-
-    const rsiGradient = oscCtx.createLinearGradient(0, 0, 0, 180);
-    rsiGradient.addColorStop(0, 'rgba(47, 107, 255, 0.35)');
-    rsiGradient.addColorStop(1, 'rgba(47, 107, 255, 0.02)');
-
-    appState.charts.techOsc = new Chart(oscCtx, {
-      data: {
-        labels: tech.dates,
-        datasets: [
-          {
-            type: 'line',
-            label: 'RSI (14)',
-            data: tech.rsi,
-            borderColor: '#2F6BFF', // brand cobalt
-            backgroundColor: rsiGradient,
-            fill: true,
-            borderWidth: 2.2,
-            pointRadius: 0,
-            tension: 0.25
-          },
-          {
-            type: 'line',
-            label: 'Aşırı Alım (70)',
-            data: new Array(nPoints).fill(70),
-            borderColor: '#F43F5E',
-            borderDash: [4, 4],
-            borderWidth: 1.2,
-            pointRadius: 0,
-            fill: false
-          },
-          {
-            type: 'line',
-            label: 'Aşırı Satım (30)',
-            data: new Array(nPoints).fill(30),
-            borderColor: '#10B981',
-            borderDash: [4, 4],
-            borderWidth: 1.2,
-            pointRadius: 0,
-            fill: false
-          },
-          {
-            type: 'line',
-            label: 'Denge (50)',
-            data: new Array(nPoints).fill(50),
-            borderColor: '#475569',
-            borderDash: [2, 2],
-            borderWidth: 1,
-            pointRadius: 0,
-            fill: false
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#0E1626',
-            borderColor: '#1E2B45',
-            borderWidth: 1,
-            titleColor: '#F8FAFC',
-            bodyColor: '#38BDF8',
-            callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}` }
-          }
-        },
-        scales: {
-          x: { display: false },
-          y: {
-            min: 15,
-            max: 85,
-            grid: { color: '#1E2B45' },
-            ticks: {
-              stepSize: 15,
-              font: { size: 9, family: 'JetBrains Mono' },
-              color: '#94A3B8'
-            }
-          }
-        }
-      }
-    });
-  } else if (activeOsc === 'macd') {
-    // MACD Mode
-    const lastHist = tech.macd.histogram[tech.macd.histogram.length - 1];
-    if (oscStatus) {
-      oscStatus.innerHTML = `MACD (12,26,9): <span class="font-mono ${lastHist >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${lastHist >= 0 ? '+ Pozitif Momentum' : '- Negatif Momentum'}</span>`;
-      oscStatus.className = `font-mono text-xs font-bold ${lastHist >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-    }
-    if (oscNote) {
-      oscNote.textContent = lastHist >= 0 ? 'GÜÇLÜ AL SİNYALİ' : 'İZLEMEDE KAL';
-      oscNote.className = `font-mono font-bold text-xs ${lastHist >= 0 ? 'text-emerald-400' : 'text-amber-400'}`;
-    }
-
-    const histColors = tech.macd.histogram.map(v => v >= 0 ? '#10B981' : '#F43F5E');
-
-    appState.charts.techOsc = new Chart(oscCtx, {
-      data: {
-        labels: tech.dates,
-        datasets: [
-          {
-            type: 'bar',
-            label: 'Histogram',
-            data: tech.macd.histogram,
-            backgroundColor: histColors,
-            borderRadius: 2,
-            barPercentage: 0.6
-          },
-          {
-            type: 'line',
-            label: 'MACD Hattı (12, 26)',
-            data: tech.macd.line,
-            borderColor: '#38BDF8',
-            borderWidth: 2,
-            pointRadius: 0
-          },
-          {
-            type: 'line',
-            label: 'Sinyal Hattı (9)',
-            data: tech.macd.signal,
-            borderColor: '#F59E0B',
-            borderWidth: 1.8,
-            pointRadius: 0
-          },
-          {
-            type: 'line',
-            label: 'Sıfır Çizgisi',
-            data: new Array(nPoints).fill(0),
-            borderColor: '#64748B',
-            borderDash: [3, 3],
-            borderWidth: 1,
-            pointRadius: 0,
-            fill: false
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#0E1626',
-            borderColor: '#1E2B45',
-            borderWidth: 1,
-            titleColor: '#F8FAFC',
-            bodyColor: '#38BDF8'
-          }
-        },
-        scales: {
-          x: { display: false },
-          y: { grid: { color: '#1E2B45' }, ticks: { font: { size: 9, family: 'JetBrains Mono' }, color: '#94A3B8' } }
-        }
-      }
-    });
-  } else {
-    // Stochastic Oscillator Mode
-    const lastK = tech.stoch ? tech.stoch.k[tech.stoch.k.length - 1] : 65;
-    const lastD = tech.stoch ? tech.stoch.d[tech.stoch.d.length - 1] : 62;
-    if (oscStatus) {
-      oscStatus.innerHTML = `Stokastik: %K=<span class="font-mono text-cyan-400">${lastK}</span> %D=<span class="font-mono text-purple-400">${lastD}</span>`;
-      oscStatus.className = 'font-mono text-xs font-bold text-slate-200';
-    }
-    if (oscNote) {
-      oscNote.textContent = lastK > 80 ? 'AŞIRI ALIM (80+)' : lastK < 20 ? 'AŞIRI SATIM (DİP)' : 'DENGELİ AL';
-      oscNote.className = `font-mono font-bold text-xs ${lastK > 80 ? 'text-rose-400' : 'text-emerald-400'}`;
-    }
-
-    appState.charts.techOsc = new Chart(oscCtx, {
-      data: {
-        labels: tech.dates,
-        datasets: [
-          {
-            type: 'line',
-            label: '%K Hattı (14)',
-            data: tech.stoch ? tech.stoch.k : tech.rsi,
-            borderColor: '#38BDF8',
-            borderWidth: 2,
-            pointRadius: 0
-          },
-          {
-            type: 'line',
-            label: '%D Hattı (3)',
-            data: tech.stoch ? tech.stoch.d : tech.rsi,
-            borderColor: '#C084FC',
-            borderWidth: 1.8,
-            pointRadius: 0
-          },
-          {
-            type: 'line',
-            label: 'Üst Sınır (80)',
-            data: new Array(nPoints).fill(80),
-            borderColor: '#F43F5E',
-            borderDash: [3, 3],
-            borderWidth: 1,
-            pointRadius: 0,
-            fill: false
-          },
-          {
-            type: 'line',
-            label: 'Alt Sınır (20)',
-            data: new Array(nPoints).fill(20),
-            borderColor: '#10B981',
-            borderDash: [3, 3],
-            borderWidth: 1,
-            pointRadius: 0,
-            fill: false
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#0E1626',
-            borderColor: '#1E2B45',
-            borderWidth: 1,
-            titleColor: '#F8FAFC',
-            bodyColor: '#38BDF8'
-          }
-        },
-        scales: {
-          x: { display: false },
-          y: {
-            min: 10,
-            max: 90,
-            grid: { color: '#1E2B45' },
-            ticks: { font: { size: 9, family: 'JetBrains Mono' }, color: '#94A3B8' }
-          }
-        }
-      }
-    });
-  }
 }
 
 /**
@@ -1987,10 +1369,6 @@ function switchView(viewName, stockCode = null) {
       } else if (typeof switchStockSubTab === 'function') {
         switchStockSubTab(appState.currentStockSubTab || 'summary');
       } else {
-        if (appState.charts.techPrice) appState.charts.techPrice.resize();
-        else initTechnicalCharts(appState.currentStock);
-
-        if (appState.charts.techOsc) appState.charts.techOsc.resize();
         if (appState.charts.stockIncome) appState.charts.stockIncome.resize();
         else initStockIncomeChart();
 
@@ -2041,21 +1419,6 @@ function copySupportEmail() {
 }
 window.copySupportEmail = copySupportEmail;
 
-
-/**
- * Indicator panel next to the candlestick chart: "list" shows every indicator, "chart" the
- * oscillator chart (resized on show, since Chart.js cannot measure a hidden canvas).
- */
-function setTechPanelTab(tab) {
-  ['list', 'chart'].forEach(t => {
-    const btn = document.getElementById(`techPanelTab-${t}`);
-    const pane = document.getElementById(`techPanel-${t}`);
-    if (pane) pane.classList.toggle('hidden', t !== tab);
-    if (btn) btn.className = `tech-panel-tab px-3 py-1 rounded-lg transition-all ${t === tab ? 'bg-[#2F6BFF] text-white font-bold' : 'text-slate-400 hover:text-white'}`;
-  });
-  if (tab === 'chart' && appState.charts.techOsc) appState.charts.techOsc.resize();
-}
-window.setTechPanelTab = setTechPanelTab;
 
 let techScorecard = null;      // last scorecard shown, so the group filter can repaint without refetching
 let techGroupFilter = 'all';
@@ -2434,8 +1797,6 @@ function resizeStockDetailCharts(tabName) {
     if (appState.charts.projection) charts.push(appState.charts.projection);
   }
   if (tabName === 'technical' || tabName === 'all') {
-    if (appState.charts.techPrice) charts.push(appState.charts.techPrice);
-    if (appState.charts.techOsc) charts.push(appState.charts.techOsc);
     if (appState.charts.peerRadar) charts.push(appState.charts.peerRadar);
   }
 
@@ -3343,72 +2704,6 @@ async function renderCorrelationHeatmap() {
 
 window.renderCorrelationHeatmap = renderCorrelationHeatmap;
 
-/* ==============================================================================
-   7. Technical Layer & Oscillator Toggles
-   ============================================================================== */
-function toggleTechnicalLayer(layer) {
-  if (appState.technical.layers.hasOwnProperty(layer)) {
-    appState.technical.layers[layer] = !appState.technical.layers[layer];
-    
-    // Toggle active button style
-    const btnMap = {
-      sma: 'toggleLayerSMA',
-      bollinger: 'toggleLayerBB',
-      fibonacci: 'toggleLayerFib',
-      volume: 'toggleLayerVolume',
-      pattern: 'toggleLayerPattern'
-    };
-    const btn = document.getElementById(btnMap[layer]);
-    if (btn) {
-      if (appState.technical.layers[layer]) {
-        btn.classList.add('border-red-500/50', 'bg-red-950/40', 'text-red-400');
-        btn.classList.remove('opacity-50');
-      } else {
-        btn.classList.remove('border-red-500/50', 'bg-red-950/40', 'text-red-400');
-        btn.classList.add('opacity-50');
-      }
-    }
-
-    initTechnicalCharts(appState.currentStock);
-  }
-}
-
-function setTechnicalOscillator(osc) {
-  appState.technical.oscillator = osc;
-  const btns = [
-    { id: 'btnOscRSI', key: 'rsi' },
-    { id: 'btnOscMACD', key: 'macd' },
-    { id: 'btnOscStoch', key: 'stoch' }
-  ];
-
-  btns.forEach(b => {
-    const el = document.getElementById(b.id);
-    if (!el) return;
-    if (b.key === osc) {
-      el.className = 'px-2.5 py-0.5 rounded text-xs font-bold bg-[#2F6BFF] text-white shadow-sm shadow-red-500/20 transition-all';
-    } else {
-      el.className = 'px-2.5 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white transition-all';
-    }
-  });
-
-  initTechnicalCharts(appState.currentStock);
-}
-
-function setTechnicalTimeframe(tf) {
-  appState.technical.timeframe = tf;
-  ['1M', '3M', '6M', '1Y'].forEach(t => {
-    const el = document.getElementById(`btnTimeframe${t}`);
-    if (el) {
-      if (t === tf) {
-        el.className = 'px-2.5 py-1 rounded-md text-white font-bold bg-[#2F6BFF] shadow-sm shadow-red-500/20 transition-all';
-      } else {
-        el.className = 'px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition-all';
-      }
-    }
-  });
-
-  initTechnicalCharts(appState.currentStock);
-}
 
 
 /* ==============================================================================
@@ -4333,9 +3628,6 @@ window.renderPeerComparisonModule = renderPeerComparisonModule;
 window.selectPeerStock = selectPeerStock;
 window.handleCustomPeerSubmit = handleCustomPeerSubmit;
 window.renderCapitalAndDividendIntelligence = renderCapitalAndDividendIntelligence;
-window.toggleTechnicalLayer = toggleTechnicalLayer;
-window.setTechnicalOscillator = setTechnicalOscillator;
-window.setTechnicalTimeframe = setTechnicalTimeframe;
 window.showToast = showToast;
 window.loadStockDetails = loadStockDetails;
 window.refreshLiveKapDisclosures = refreshLiveKapDisclosures;
@@ -4988,6 +4280,9 @@ function getAlerts() {
   return [];
 }
 
+/** Tells other modules (the price chart draws alert lines) that the alert list changed. */
+const announceAlerts = () => window.dispatchEvent(new Event('verity:alerts'));
+
 function saveAlert(alertObj) {
   const alerts = getAlerts();
   alerts.unshift(alertObj);
@@ -4996,6 +4291,8 @@ function saveAlert(alertObj) {
   } catch (e) {}
   renderAlertsItems();
   updateWatchlistHeaderBadges();
+  announceAlerts();
+  requestAlertNotifications();
   if (window.LiveData) LiveData.checkAlerts();
 }
 
@@ -5007,8 +4304,62 @@ function deleteAlert(id) {
   } catch (e) {}
   renderAlertsItems();
   updateWatchlistHeaderBadges();
+  announceAlerts();
 }
 window.deleteAlert = deleteAlert;
+
+/* ----- System notifications for triggered alerts (shown when the page is not in front) ----- */
+
+const alertNotificationsSupported = () => 'Notification' in window;
+
+/** Asks for notification permission; browsers only allow this from a click, so call it from one. */
+function requestAlertNotifications() {
+  if (!alertNotificationsSupported() || Notification.permission !== 'default') return;
+  try {
+    Promise.resolve(Notification.requestPermission()).then(paintAlertNotifyStatus);
+  } catch (e) { /* very old browsers: the toast and sound still work */ }
+}
+window.requestAlertNotifications = requestAlertNotifications;
+
+function paintAlertNotifyStatus() {
+  const el = document.getElementById('alertNotifyStatus');
+  if (!el) return;
+  const p = alertNotificationsSupported() ? Notification.permission : 'unsupported';
+  const view = {
+    default: ['Bildirimlere izin ver', 'text-amber-300 hover:text-white underline decoration-dotted cursor-pointer'],
+    granted: ['Sistem bildirimleri açık', 'text-emerald-400 cursor-default'],
+    denied: ['Bildirimler tarayıcıda engelli', 'text-slate-500 cursor-default'],
+    unsupported: ['Tarayıcı bildirim desteklemiyor', 'text-slate-500 cursor-default']
+  }[p];
+  el.textContent = view[0];
+  el.className = `text-[10px] font-mono ${view[1]}`;
+  el.title = p === 'denied' ? 'Site ayarlarından bildirim iznini açabilirsiniz.' : 'Alarm tetiklendiğinde sekme arka plandaysa sistem bildirimi gösterilir.';
+}
+
+function openStockFromAlert(ticker) {
+  if (!ticker) return;
+  switchView('stock-detail');
+  loadStockDetails(ticker);
+}
+
+async function notifyAlert(title, body, ticker) {
+  if (!alertNotificationsSupported() || Notification.permission !== 'granted') return;
+  const options = { body, tag: `verity-alert-${ticker}`, icon: '/assets/icons/icon-192.svg', data: { ticker } };
+  try {
+    // Through the service worker where there is one: Android Chrome refuses `new Notification`
+    const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
+    if (reg) { await reg.showNotification(title, options); return; }
+    const n = new Notification(title, options);
+    n.onclick = () => { window.focus(); openStockFromAlert(ticker); n.close(); };
+  } catch (e) { /* the toast and sound still show */ }
+}
+
+// A click on a notification shown by the service worker (sw.js) comes back here
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'open-stock') openStockFromAlert(e.data.ticker);
+  });
+}
 
 function handleSaveNewAlert() {
   const tickerEl = document.getElementById('alertInputTicker');
@@ -5046,10 +4397,12 @@ function handleSaveNewAlert() {
 }
 window.handleSaveNewAlert = handleSaveNewAlert;
 
-function openSetAlertModal(ticker) {
+/** preset: { value, type } from a click on the price chart's alarm tool. */
+function openSetAlertModal(ticker, preset) {
   const modal = document.getElementById('setAlertQuickModal');
   const sub = document.getElementById('quickAlertStockSubtitle');
   const valInput = document.getElementById('quickAlertValue');
+  const condEl = document.getElementById('quickAlertCondition');
   if (!modal) return;
 
   const t = (ticker || appState.currentStock || 'THYAO').toUpperCase();
@@ -5057,7 +4410,12 @@ function openSetAlertModal(ticker) {
   if (sub) sub.textContent = `${t} için canlı fiyat ve RSI alarmı`;
 
   const fin = getOrGenerateStockFinancials(t);
-  if (valInput) valInput.value = fin.priceNum > 0 ? (fin.priceNum * 1.04).toFixed(2) : ''; // %4 yukarı hedef hazırla
+  if (preset && preset.value > 0) {
+    if (valInput) valInput.value = Number(preset.value).toFixed(2);
+    if (condEl && preset.type) condEl.value = preset.type;
+  } else if (valInput) {
+    valInput.value = fin.priceNum > 0 ? (fin.priceNum * 1.04).toFixed(2) : ''; // %4 yukarı hedef hazırla
+  }
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -5106,6 +4464,7 @@ function submitQuickAlert() {
 window.submitQuickAlert = submitQuickAlert;
 
 function renderAlertsItems() {
+  paintAlertNotifyStatus();
   const container = document.getElementById('alertsItemsContainer');
   if (!container) return;
 
@@ -5209,6 +4568,8 @@ function checkActivePriceAlerts(ticker, currentPrice, currentRsi) {
 
       // Show Toast Notification
       showTerminalToast(`FİYAT ALARMI: ${t}`, `${hitText} &bull; ${alt.note || 'Canlı BIST Seansı'}`, t, 'alert');
+      // and a system notification when nobody is looking at the page
+      if (document.hidden || !document.hasFocus()) notifyAlert(`Verity alarmı: ${t}`, `${hitText}${alt.note ? ` · ${alt.note}` : ''}`, t);
     }
   });
 
@@ -5218,6 +4579,7 @@ function checkActivePriceAlerts(ticker, currentPrice, currentRsi) {
     } catch (e) {}
     renderAlertsItems();
     updateWatchlistHeaderBadges();
+    announceAlerts();
   }
 }
 window.checkActivePriceAlerts = checkActivePriceAlerts;
