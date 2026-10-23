@@ -3024,9 +3024,78 @@ const overviewTableState = {
     fdFavokMax: null,
     roeMin: null,
     netDebtMax: null,
-    scoreMin: 5.0
+    scoreMin: 5.0,
+    // Technical criteria, matched against assets/data/technicals.json (daily close)
+    rsiMin: null,
+    rsiMax: null,
+    sma50: 'any',      // 'any' | 'above' | 'below'
+    sma200: 'any',
+    hi52Max: null,     // at most this many % under the 52-week high
+    m1Min: null,       // 1-month return at least (%)
+    volMin: null,      // last volume / 20-day average at least
+    macd: 'any'        // 'any' | 'up' | 'down'
   }
 };
+
+/**
+ * Daily technical snapshot for the screener, loaded the first time a technical criterion is
+ * used. Rows are arrays in the order of `fields` (scripts/fetch-technicals.mjs).
+ */
+const TechSnapshot = (() => {
+  let rows = null, fields = null, meta = null, loading = null;
+  function load() {
+    if (!loading) {
+      loading = fetch('/assets/data/technicals.json')
+        .then(r => { if (!r.ok) throw new Error(`technicals ${r.status}`); return r.json(); })
+        .then(j => {
+          rows = j.data; fields = j.fields; meta = { asOf: j.asOf, generatedAt: j.generatedAt, count: Object.keys(j.data).length };
+          paintTechScreenerNote();
+          renderOverviewStockTable();
+        })
+        .catch(e => { console.warn('[Screener] technical snapshot unavailable:', e.message); loading = null; paintTechScreenerNote(e); });
+    }
+    return loading;
+  }
+  /** { close, d1, ..., macd } for a code, or null when the snapshot has no row for it. */
+  function get(code) {
+    const r = rows && rows[code];
+    if (!r) return null;
+    const o = {};
+    fields.forEach((f, i) => { o[f] = r[i]; });
+    return o;
+  }
+  return { load, get, ready: () => !!rows, meta: () => meta };
+})();
+window.TechSnapshot = TechSnapshot;
+
+const techCriteriaActive = sc => sc.rsiMin !== null || sc.rsiMax !== null || sc.sma50 !== 'any' || sc.sma200 !== 'any'
+  || sc.hi52Max !== null || sc.m1Min !== null || sc.volMin !== null || sc.macd !== 'any';
+
+/** Does a stock's snapshot row pass every technical criterion that is set? */
+function passesTechCriteria(t, sc) {
+  if (!t) return false;
+  const has = v => v != null && Number.isFinite(v);
+  if (sc.rsiMin !== null && !(has(t.rsi) && t.rsi >= sc.rsiMin)) return false;
+  if (sc.rsiMax !== null && !(has(t.rsi) && t.rsi <= sc.rsiMax)) return false;
+  if (sc.sma50 !== 'any' && !(has(t.s50) && (sc.sma50 === 'above' ? t.s50 > 0 : t.s50 < 0))) return false;
+  if (sc.sma200 !== 'any' && !(has(t.s200) && (sc.sma200 === 'above' ? t.s200 > 0 : t.s200 < 0))) return false;
+  if (sc.hi52Max !== null && !(has(t.hi52) && -t.hi52 <= sc.hi52Max)) return false;
+  if (sc.m1Min !== null && !(has(t.m1) && t.m1 >= sc.m1Min)) return false;
+  if (sc.volMin !== null && !(has(t.vol) && t.vol >= sc.volMin)) return false;
+  if (sc.macd !== 'any' && t.macd !== (sc.macd === 'up' ? 1 : -1)) return false;
+  return true;
+}
+window.passesTechCriteria = passesTechCriteria;
+
+function paintTechScreenerNote(error) {
+  const el = document.getElementById('screenerTechNote');
+  if (!el) return;
+  const m = TechSnapshot.meta();
+  if (error) { el.textContent = 'Teknik veriler şu an yüklenemedi.'; return; }
+  if (!m) { el.textContent = 'Teknik veriler ilk teknik koşulda yüklenir.'; return; }
+  const day = m.asOf ? new Date(`${m.asOf}T12:00:00Z`).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+  el.textContent = `${m.count} hisse · ${day} kapanışı (Yahoo Finance, gecikmeli). Verisi olmayan hisseler teknik koşulda elenir.`;
+}
 
 let overviewTableRenderRaf = null;
 
@@ -3077,6 +3146,19 @@ function onScreenerInputChange() {
   overviewTableState.screener.roeMin = (roeMinEl && roeMinEl.value !== '') ? parseFloat(roeMinEl.value) : null;
   overviewTableState.screener.netDebtMax = (netDebtMaxEl && netDebtMaxEl.value !== '') ? parseFloat(netDebtMaxEl.value) : null;
 
+  const num = id => { const el = document.getElementById(id); const v = el && el.value !== '' ? parseFloat(el.value) : NaN; return Number.isFinite(v) ? v : null; };
+  const pick = id => { const el = document.getElementById(id); return el ? el.value : 'any'; };
+  const sc = overviewTableState.screener;
+  sc.rsiMin = num('screenerRsiMin');
+  sc.rsiMax = num('screenerRsiMax');
+  sc.sma50 = pick('screenerSma50');
+  sc.sma200 = pick('screenerSma200');
+  sc.hi52Max = num('screenerHi52Max');
+  sc.m1Min = num('screenerM1Min');
+  sc.volMin = num('screenerVolMin');
+  sc.macd = pick('screenerMacd');
+  if (techCriteriaActive(sc)) TechSnapshot.load();
+
   updateScreenerActiveBadge();
   overviewTableState.currentPage = 1;
   renderOverviewStockTable();
@@ -3113,6 +3195,8 @@ function updateScreenerActiveBadge() {
   if (s.roeMin !== null) activeCount++;
   if (s.netDebtMax !== null) activeCount++;
   if (s.scoreMin > 5.0) activeCount++;
+  ['rsiMin', 'rsiMax', 'hi52Max', 'm1Min', 'volMin'].forEach(k => { if (s[k] !== null) activeCount++; });
+  ['sma50', 'sma200', 'macd'].forEach(k => { if (s[k] !== 'any') activeCount++; });
 
   if (activeCount > 0) {
     badge.textContent = activeCount;
@@ -3149,10 +3233,26 @@ function applyScreenerPreset(presetName) {
     // Yüksek Kârlı Büyüme: ROE >= %35, Skor >= 8.5
     setScreenerInputValue('screenerRoeMin', 35.0);
     setScreenerScoreSliderValue(8.5);
+  } else if (presetName === 'oversoldValue') {
+    // Aşırı satımda ucuz: RSI <= 30, F/K <= 8
+    setScreenerInputValue('screenerRsiMax', 30);
+    setScreenerInputValue('screenerFkMax', 8);
+  } else if (presetName === 'uptrend') {
+    // Yükseliş trendi: SMA 50 ve SMA 200 üzerinde, RSI 50-70, MACD pozitif
+    setScreenerSelectValue('screenerSma50', 'above');
+    setScreenerSelectValue('screenerSma200', 'above');
+    setScreenerInputValue('screenerRsiMin', 50);
+    setScreenerInputValue('screenerRsiMax', 70);
+    setScreenerSelectValue('screenerMacd', 'up');
+  } else if (presetName === 'nearHigh') {
+    // 52 haftalık zirveye yakın, hacimli: zirveye en fazla %5, hacim ortalamanın 1,5 katı
+    setScreenerInputValue('screenerHi52Max', 5);
+    setScreenerInputValue('screenerVolMin', 1.5);
   }
 
   onScreenerInputChange();
-  showToast(`Tarama Şablonu uygulandı: ${presetName}`);
+  const PRESET_NAMES = { dividend: 'Temettü Ödeyenler', cashRich: 'Net Nakitte Olanlar', valueIndustrial: 'Ucuz Sanayi', qualityGrowth: 'Yüksek Kârlı Büyüme', oversoldValue: 'Aşırı Satımda Ucuz', uptrend: 'Yükseliş Trendi', nearHigh: 'Zirveye Yakın' };
+  showToast(`Tarama şablonu uygulandı: ${PRESET_NAMES[presetName] || presetName}`);
 }
 
 function setScreenerInputValue(id, val) {
@@ -3182,10 +3282,12 @@ function resetScreenerFilters() {
 }
 
 function resetScreenerFormInputs() {
-  ['screenerFkMin', 'screenerFkMax', 'screenerPdddMin', 'screenerPdddMax', 'screenerFdFavokMax', 'screenerRoeMin', 'screenerNetDebtMax'].forEach(id => {
+  ['screenerFkMin', 'screenerFkMax', 'screenerPdddMin', 'screenerPdddMax', 'screenerFdFavokMax', 'screenerRoeMin', 'screenerNetDebtMax',
+    'screenerRsiMin', 'screenerRsiMax', 'screenerHi52Max', 'screenerM1Min', 'screenerVolMin'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  ['screenerSma50', 'screenerSma200', 'screenerMacd'].forEach(id => setScreenerSelectValue(id, 'any'));
   const secEl = document.getElementById('screenerSector');
   if (secEl) secEl.value = 'all';
   setScreenerScoreSliderValue(5.0);
@@ -3364,6 +3466,11 @@ function getFilteredAndSortedStocks(allStocks) {
 
         return true;
       });
+    }
+
+    // Technical criteria wait for the snapshot (TechSnapshot.load re-renders the table)
+    if (techCriteriaActive(sc)) {
+      list = TechSnapshot.ready() ? list.filter(s => passesTechCriteria(TechSnapshot.get(s.code), sc)) : [];
     }
   }
 

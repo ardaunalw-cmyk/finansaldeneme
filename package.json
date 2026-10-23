@@ -8,7 +8,8 @@
     "data": "node scripts/fetch-fundamentals.mjs",
     "data:multiples": "node scripts/fetch-sector-multiples.mjs",
     "data:statements": "node scripts/fetch-statements.mjs",
-    "data:dividends": "node scripts/fetch-dividends.mjs"
+    "data:dividends": "node scripts/fetch-dividends.mjs",
+    "data:technicals": "node scripts/fetch-technicals.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

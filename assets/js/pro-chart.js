@@ -19,15 +19,21 @@ const ProChart = (() => {
   const DAY = 86400;
 
   /** Timeframes: the /api/history request behind each, and the window shown when picked. */
+  // tol: how far (seconds) a compared symbol's bar may sit from the stock's bar it is matched to
   const INTERVALS = {
-    '5m': { api: '5m', range: '60d', intraday: true, view: '1G' },
-    '15m': { api: '15m', range: '60d', intraday: true, view: '5G' },
-    '30m': { api: '30m', range: '60d', intraday: true, view: '5G' },
-    '1h': { api: '60m', range: '2y', intraday: true, view: '1A' },
-    '4h': { api: '60m', range: '2y', intraday: true, view: '3A', group: 4 },
-    '1d': { api: '1d', range: '5y', view: '6A' },
-    '1wk': { api: '1wk', range: '10y', view: '5Y' }
+    '5m': { api: '5m', range: '60d', intraday: true, view: '1G', tol: 150 },
+    '15m': { api: '15m', range: '60d', intraday: true, view: '5G', tol: 450 },
+    '30m': { api: '30m', range: '60d', intraday: true, view: '5G', tol: 900 },
+    '1h': { api: '60m', range: '2y', intraday: true, view: '1A', tol: 1800 },
+    '4h': { api: '60m', range: '2y', intraday: true, view: '3A', group: 4, tol: 7200 },
+    '1d': { api: '1d', range: '5y', view: '6A', tol: 12 * 3600 },
+    '1wk': { api: '1wk', range: '10y', view: '5Y', tol: 3.5 * 86400 }
   };
+  /** Compare mode: up to three symbols, each keeping its colour (validated on the dark card). */
+  const COMPARE_COLORS = ['#2F6BFF', '#D97706', '#A855F7'];
+  const MAX_COMPARE = 3;
+  const QUICK_COMPARE = { BIST100: 'BIST 100', USDTRY: 'USD/TRY', ALTIN: 'Altın ($/ons)' };
+  const compareLabel = s => QUICK_COMPARE[s] || s;
   /** Visible windows: trading days for 1G/5G, calendar days for the rest. */
   const SPANS = { '1G': { trading: 1 }, '5G': { trading: 5 }, '1A': 30, '3A': 91, '6A': 182, '1Y': 365, '5Y': 1826, all: Infinity };
   const FIB = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
@@ -48,6 +54,47 @@ const ProChart = (() => {
   };
   const DEFAULT_ON = ['sma20', 'sma50', 'sma200', 'volume', 'rsi'];
 
+  /**
+   * Inputs of each indicator, editable in the settings panel. The keys stay sma20, ema9, ...
+   * (saved toggles use them); the periods behind them are whatever the viewer set.
+   */
+  const period = (def, max = 500) => ({ key: 'n', label: 'Periyot', def, min: 1, max });
+  const SETTINGS = {
+    sma20: [period(20)], sma50: [period(50)], sma200: [period(200)],
+    ema9: [period(9)], ema21: [period(21)],
+    bb: [{ ...period(20, 200), min: 2 }, { key: 'k', label: 'Sapma (σ)', def: 2, min: 0.5, max: 5, step: 0.1 }],
+    rsi: [{ ...period(14, 100), min: 2 }, { key: 'upper', label: 'Üst çizgi', def: 70, min: 1, max: 99 }, { key: 'lower', label: 'Alt çizgi', def: 30, min: 1, max: 99 }],
+    macd: [{ key: 'fast', label: 'Hızlı', def: 12, min: 2, max: 100 }, { key: 'slow', label: 'Yavaş', def: 26, min: 3, max: 200 }, { key: 'signal', label: 'Sinyal', def: 9, min: 2, max: 100 }],
+    stoch: [{ key: 'k', label: '%K periyodu', def: 14, min: 2, max: 100 }, { key: 'd', label: '%D düzleştirme', def: 3, min: 1, max: 20 },
+      { key: 'upper', label: 'Üst çizgi', def: 80, min: 1, max: 99 }, { key: 'lower', label: 'Alt çizgi', def: 20, min: 1, max: 99 }]
+  };
+
+  /** Settings clamped to their limits; anything missing or invalid takes the default. */
+  function cleanSettings(saved = {}) {
+    const out = {};
+    Object.entries(SETTINGS).forEach(([ind, fields]) => {
+      out[ind] = {};
+      fields.forEach(f => {
+        const v = Number(saved[ind] && saved[ind][f.key]);
+        out[ind][f.key] = Number.isFinite(v) ? Math.min(f.max, Math.max(f.min, f.step ? v : Math.round(v))) : f.def;
+      });
+    });
+    return out;
+  }
+
+  /** Toolbar and legend name of an indicator with its current inputs, e.g. "SMA 34". */
+  function indLabel(key, cfg) {
+    const c = cfg[key] || {};
+    if (key.startsWith('sma')) return `SMA ${c.n}`;
+    if (key.startsWith('ema')) return `EMA ${c.n}`;
+    if (key === 'bb') return `BB ${c.n},${fmtNum(c.k)}`;
+    if (key === 'rsi') return `RSI ${c.n}`;
+    if (key === 'macd') return `MACD ${c.fast},${c.slow},${c.signal}`;
+    if (key === 'stoch') return `Stok ${c.k},${c.d}`;
+    return INDICATORS[key].label;
+  }
+  const fmtNum = v => String(v).replace('.', ',');
+
   const store = {
     get(key, fallback) { try { const v = localStorage.getItem(`verity.chart.${key}`); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
     set(key, value) { try { localStorage.setItem(`verity.chart.${key}`, JSON.stringify(value)); } catch { /* private mode: keep in memory only */ } }
@@ -61,6 +108,10 @@ const ProChart = (() => {
     interval: INTERVALS[savedInterval] ? savedInterval : '1d',
     type: store.get('type', 'candle'),
     on: new Set(store.get('indicators', DEFAULT_ON)),
+    cfg: cleanSettings(store.get('settings', {})),
+    compare: store.get('compare', []).filter(s => /^[A-Z0-9]{2,8}$/.test(s)).slice(0, MAX_COMPARE),
+    compareBars: { key: null, data: {} },   // bars of the compared symbols for state.barsKey
+    compareOpen: false,
     range: SPANS[savedRange] ? savedRange : '6A',
     tool: 'cursor',
     pending: null,              // first click of a two-point drawing
@@ -157,6 +208,42 @@ const ProChart = (() => {
     return bars[lo].time;
   }
 
+  /**
+   * A compared symbol's closes on the stock's bar times: each bar goes to the nearest stock bar
+   * within `tol` seconds (an index or currency stamps its bars a little differently, and a
+   * currency trades outside the exchange's hours); bars with no match are dropped.
+   */
+  function alignTo(main, other, tol) {
+    const out = [];
+    if (!main.length) return out;
+    other.forEach(b => {
+      let lo = 0, hi = main.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (main[mid].time < b.time) lo = mid + 1; else hi = mid;
+      }
+      if (lo > 0 && b.time - main[lo - 1].time < main[lo].time - b.time) lo--;
+      const t = main[lo].time;
+      if (Math.abs(t - b.time) > tol) return;
+      if (out.length && out[out.length - 1].time === t) out[out.length - 1].value = b.close;   // later bar wins
+      else out.push({ time: t, value: b.close });
+    });
+    return out;
+  }
+
+  async function fetchCompare(ticker, interval, fresh = false) {
+    const data = {};
+    await Promise.all(state.compare.filter(s => s !== ticker).map(async s => {
+      try { data[s] = await fetchBars(s, interval, fresh); } catch { /* left out; the panel says so */ }
+    }));
+    return data;
+  }
+
+  /** Compared symbols that have bars for what the chart shows now. */
+  const activeCompare = () => (state.compareBars.key === state.barsKey
+    ? state.compare.filter(s => s !== state.ticker && state.compareBars.data[s] && state.compareBars.data[s].length)
+    : []);
+
   async function fetchBars(ticker, interval, fresh = false) {
     const cfg = INTERVALS[interval];
     const h = await TechData.history(ticker, cfg.range, cfg.api, fresh);
@@ -219,24 +306,29 @@ const ProChart = (() => {
     return state.type === 'heikin' ? heikinAshi(state.bars) : state.bars;
   }
 
-  function addIndicators(chart) {
+  /** comparing: the price axis is in percent, so indicators drawn on the price are left out. */
+  function addIndicators(chart, comparing) {
     const closes = () => state.bars.map(b => b.close);
     const highs = () => state.bars.map(b => b.high);
     const lows = () => state.bars.map(b => b.low);
     const overlay = (key, compute, opts = {}) =>
       bind(chart.addSeries(L.LineSeries, { color: INDICATORS[key].color, lineWidth: 1.5, ...quiet, ...opts }), () => line(compute()));
     const legend = (label, color, series) => state.legendSeries.push({ label, color, series });
+    const cfg = state.cfg;
+    const name = key => indLabel(key, cfg);
 
-    [['sma20', 20], ['sma50', 50], ['sma200', 200]].forEach(([key, n]) => {
-      if (state.on.has(key)) legend(INDICATORS[key].label, INDICATORS[key].color, overlay(key, () => Ind.sma(closes(), n), n === 200 ? { lineStyle: L.LineStyle.Dashed } : {}));
+    const onPrice = key => state.on.has(key) && !comparing;
+    ['sma20', 'sma50', 'sma200'].forEach(key => {
+      if (onPrice(key)) legend(name(key), INDICATORS[key].color, overlay(key, () => Ind.sma(closes(), cfg[key].n), key === 'sma200' ? { lineStyle: L.LineStyle.Dashed } : {}));
     });
-    [['ema9', 9], ['ema21', 21]].forEach(([key, n]) => {
-      if (state.on.has(key)) legend(INDICATORS[key].label, INDICATORS[key].color, overlay(key, () => Ind.ema(closes(), n)));
+    ['ema9', 'ema21'].forEach(key => {
+      if (onPrice(key)) legend(name(key), INDICATORS[key].color, overlay(key, () => Ind.ema(closes(), cfg[key].n)));
     });
-    if (state.on.has('bb')) {
-      overlay('bb', () => Ind.bollinger(closes()).upper, { lineStyle: L.LineStyle.Dotted });
-      legend('BB orta', COLORS.slate, overlay('bb', () => Ind.bollinger(closes()).mid, { lineWidth: 1 }));
-      overlay('bb', () => Ind.bollinger(closes()).lower, { lineStyle: L.LineStyle.Dotted });
+    if (onPrice('bb')) {
+      const bands = () => Ind.bollinger(closes(), cfg.bb.n, cfg.bb.k);
+      overlay('bb', () => bands().upper, { lineStyle: L.LineStyle.Dotted });
+      legend(`${name('bb')} orta`, COLORS.slate, overlay('bb', () => bands().mid, { lineWidth: 1 }));
+      overlay('bb', () => bands().lower, { lineStyle: L.LineStyle.Dotted });
     }
     if (state.on.has('volume')) {
       const vol = chart.addSeries(L.HistogramSeries, { priceScaleId: 'vol', priceFormat: { type: 'volume' }, ...quiet });
@@ -252,23 +344,25 @@ const ProChart = (() => {
       bind(chart.addSeries(L.LineSeries, { color, lineWidth: 1.5, priceLineVisible: false }, pane), () => line(compute()));
     if (state.on.has('rsi')) {
       pane++;
-      const s = paneLine(COLORS.brand, () => Ind.rsi(closes()));
-      guide(s, 70, COLORS.down); guide(s, 30, COLORS.up);
-      legend('RSI', COLORS.brand, s);
+      const s = paneLine(COLORS.brand, () => Ind.rsi(closes(), cfg.rsi.n));
+      guide(s, cfg.rsi.upper, COLORS.down); guide(s, cfg.rsi.lower, COLORS.up);
+      legend(name('rsi'), COLORS.brand, s);
     }
     if (state.on.has('macd')) {
       pane++;
+      const m = () => Ind.macd(closes(), cfg.macd.fast, cfg.macd.slow, cfg.macd.signal);
       const hist = chart.addSeries(L.HistogramSeries, { ...quiet }, pane);
-      bind(hist, () => line(Ind.macd(closes()).histogram).map(p => ({ ...p, color: p.value >= 0 ? COLORS.upSoft : COLORS.downSoft })));
-      const ml = paneLine(COLORS.sky, () => Ind.macd(closes()).line);
-      const sl = paneLine(COLORS.amber, () => Ind.macd(closes()).signal);
-      legend('MACD', COLORS.sky, ml); legend('Sinyal', COLORS.amber, sl);
+      bind(hist, () => line(m().histogram).map(p => ({ ...p, color: p.value >= 0 ? COLORS.upSoft : COLORS.downSoft })));
+      const ml = paneLine(COLORS.sky, () => m().line);
+      const sl = paneLine(COLORS.amber, () => m().signal);
+      legend(name('macd'), COLORS.sky, ml); legend('Sinyal', COLORS.amber, sl);
     }
     if (state.on.has('stoch')) {
       pane++;
-      const k = paneLine(COLORS.sky, () => Ind.stochastic(highs(), lows(), closes()).k);
-      const d = paneLine(COLORS.violet, () => Ind.stochastic(highs(), lows(), closes()).d);
-      guide(k, 80, COLORS.down); guide(k, 20, COLORS.up);
+      const st = () => Ind.stochastic(highs(), lows(), closes(), cfg.stoch.k, cfg.stoch.d);
+      const k = paneLine(COLORS.sky, () => st().k);
+      const d = paneLine(COLORS.violet, () => st().d);
+      guide(k, cfg.stoch.upper, COLORS.down); guide(k, cfg.stoch.lower, COLORS.up);
       legend('%K', COLORS.sky, k); legend('%D', COLORS.violet, d);
     }
     // Price pane keeps most of the height; each oscillator pane gets a share of it
@@ -359,12 +453,19 @@ const ProChart = (() => {
     const when = new Date(b.time * 1000).toLocaleString('tr-TR', INTERVALS[state.interval].intraday
       ? { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }
       : { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
-    const values = state.legendSeries.map(({ label, color, series }) => {
+    // Compare mode: change since the first visible bar, the same base the percent axis uses
+    const comparing = state.legendSeries.some(x => x.compare);
+    const range = comparing && state.chart ? state.chart.timeScale().getVisibleLogicalRange() : null;
+    const first = range ? Math.min(state.bars.length - 1, Math.max(0, Math.ceil(range.from))) : null;
+    const sinceFirst = (v, base) => (base > 0 ? ` <span class="${v >= base ? 'text-emerald-400' : 'text-rose-400'}">${v >= base ? '+' : ''}${fmt2.format((v / base - 1) * 100)}%</span>` : '');
+    const values = state.legendSeries.map(({ label, color, series, compare }) => {
       const p = param && param.seriesData ? param.seriesData.get(series) : null;
       const data = series.data();
       const v = p ? p.value : data.length ? data[data.length - 1].value : null;
       if (v == null) return '';
-      return `<span style="color:${color}">${label} ${label === 'Hacim' ? fmtVol(v) : fmt2.format(v)}</span>`;
+      const base = compare && first != null ? (series.dataByIndex(first, L.MismatchDirection.NearestRight) || {}).value : null;
+      // Identity from the swatch; the text stays in the legend's own ink
+      return `<span class="inline-flex items-center gap-1"><span class="inline-block w-2.5 h-0.5 rounded" style="background:${color}"></span>${label} ${label === 'Hacim' ? fmtVol(v) : fmt2.format(v)}${compare ? sinceFirst(v, base) : ''}</span>`;
     }).filter(Boolean).join(' ');
     el.innerHTML = `
       <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -374,6 +475,7 @@ const ProChart = (() => {
         <span>D <b class="${tone}">${fmt2.format(b.low)}</b></span>
         <span>K <b class="${tone}">${fmt2.format(b.close)}</b></span>
         <b class="${chg >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${chg >= 0 ? '+' : ''}${fmt2.format(chg)}%</b>
+        ${first != null ? `<span class="text-slate-400">görünen başlangıçtan${sinceFirst(b.close, state.bars[first].close)}</span>` : ''}
       </div>
       <div class="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">${values}</div>`;
   }
@@ -400,6 +502,7 @@ const ProChart = (() => {
   }
 
   function paintToolbar() {
+    const comparing = activeCompare().length > 0;
     const on = 'bg-[#2F6BFF] text-white border-[#2F6BFF]';
     const off = 'text-slate-400 border-[#1A2540] hover:text-white';
     document.querySelectorAll('#proChartToolbar [data-pc]').forEach(btn => {
@@ -410,7 +513,140 @@ const ProChart = (() => {
         btn.className = `px-2 py-0.5 rounded-md border text-[11px] font-semibold transition-all ${active ? on : off}`;
         btn.setAttribute('aria-pressed', String(active));
       }
+      if (kind === 'ind' && SETTINGS[value]) btn.textContent = indLabel(value, state.cfg);
+      // Price overlays are not drawn while comparing (the axis is in percent)
+      if (kind === 'ind' && PRICE_OVERLAYS.includes(value)) {
+        const hidden = comparing;
+        btn.classList.toggle('opacity-40', hidden);
+        btn.title = hidden ? 'Karşılaştırma açıkken gizli' : '';
+      }
     });
+  }
+  const PRICE_OVERLAYS = ['sma20', 'sma50', 'sma200', 'ema9', 'ema21', 'bb'];
+
+  /* ---------- indicator settings panel ---------- */
+
+  const PANEL_NAMES = { sma20: '1. SMA', sma50: '2. SMA', sma200: '3. SMA', ema9: '1. EMA', ema21: '2. EMA', bb: 'Bollinger', rsi: 'RSI', macd: 'MACD', stoch: 'Stokastik' };
+
+  function paintSettings() {
+    const el = $('proChartSettings');
+    if (!el) return;
+    el.innerHTML = `
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        ${Object.entries(SETTINGS).map(([ind, fields]) => `
+          <fieldset class="p-2 rounded-lg border border-[#1A2540] bg-[#070B14] min-w-0">
+            <legend class="px-1 text-[10px] text-slate-300 font-bold">${PANEL_NAMES[ind]}</legend>
+            <div class="grid grid-cols-2 gap-2">
+              ${fields.map(f => `
+                <label class="block min-w-0"><span class="text-[10px] text-slate-500 block">${f.label}</span>
+                  <input type="number" data-pc-set="${ind}.${f.key}" value="${state.cfg[ind][f.key]}" min="${f.min}" max="${f.max}" step="${f.step || 1}"
+                    class="w-full px-2 py-1 bg-[#0C1322] border border-[#1A2540] rounded text-white text-[11px] font-mono"></label>`).join('')}
+            </div>
+          </fieldset>`).join('')}
+      </div>
+      <div class="flex items-center justify-between gap-2 mt-2">
+        <span class="text-[10px] text-slate-500">Değerler her zaman diliminde mum sayısıdır (5 dakikalıkta SMA 20 = son 20 beş dakikalık mum).</span>
+        <button type="button" data-pc="defaults" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white text-[11px]">Varsayılana dön</button>
+      </div>`;
+  }
+
+  /* ---------- compare panel ---------- */
+
+  function paintCompare() {
+    const el = $('proChartCompare');
+    if (!el) return;
+    const shown = state.compareOpen || state.compare.length > 0;
+    el.classList.toggle('hidden', !shown);
+    if (!shown) return;
+    const active = activeCompare();
+    const chips = state.compare.map(s => {
+      const color = COMPARE_COLORS[state.compare.indexOf(s) % COMPARE_COLORS.length];
+      const loading = s !== state.ticker && state.compareBars.key === state.barsKey && state.compareBars.data[s] === undefined;
+      const missing = !loading && !active.includes(s);
+      return `<span class="inline-flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-md border border-[#1A2540] bg-[#070B14] text-slate-200">
+          <span class="inline-block w-3 h-0.5 rounded" style="background:${color}"></span>${compareLabel(s)}
+          ${loading ? '<span class="text-slate-500" title="Yükleniyor">…</span>' : ''}
+          ${missing ? `<span class="text-amber-300" title="${s === state.ticker ? 'Grafikteki hisseyle aynı' : 'Bu zaman dilimi için veri yok'}">!</span>` : ''}
+          <button type="button" data-pc="cmp-del:${s}" class="px-1 text-slate-500 hover:text-white" aria-label="${compareLabel(s)} karşılaştırmasını kaldır">×</button>
+        </span>`;
+    }).join('');
+    const quick = Object.keys(QUICK_COMPARE).filter(s => !state.compare.includes(s))
+      .map(s => `<button type="button" data-pc="cmp-add:${s}" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white">+ ${QUICK_COMPARE[s]}</button>`).join('');
+    const canAdd = state.compare.length < MAX_COMPARE;
+    el.innerHTML = `
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-[10px] text-slate-400">Karşılaştır:</span>
+        ${chips}
+        ${canAdd ? `
+          <input id="proChartCompareInput" type="text" maxlength="8" placeholder="Hisse kodu" aria-label="Karşılaştırılacak hisse kodu"
+            class="w-24 px-2 py-0.5 bg-[#070B14] border border-[#1A2540] rounded text-white uppercase text-[11px]">
+          <button type="button" data-pc="cmp-input" class="px-2 py-0.5 rounded-md border border-[#2F6BFF] text-white bg-[#2F6BFF]/20 hover:bg-[#2F6BFF]/40">Ekle</button>
+          ${quick}` : `<span class="text-[10px] text-slate-500">En fazla ${MAX_COMPARE} seri</span>`}
+      </div>
+      ${active.length ? `<p class="text-[10px] text-slate-500 mt-1.5">Eksen, görünen ilk mumdan bu yana yüzde değişimi gösterir. Karşılaştırma açıkken fiyat üstü indikatörler, çizimler ve alarm çizgileri gizlenir.</p>` : ''}`;
+  }
+
+  const compareFetching = new Set();   // 'SYMBOL|TICKER|interval' requests in flight
+
+  /**
+   * Fetches compared symbols that have no bars yet for what the chart shows (just added, or added
+   * while a load was running). A symbol with no history stays listed with an empty series.
+   */
+  function ensureCompare() {
+    const key = state.barsKey;
+    if (!key || state.compareBars.key !== key) return;
+    const interval = key.split('|')[1];
+    state.compare.filter(s => s !== state.ticker && !state.compareBars.data[s]).forEach(s => {
+      const tag = `${s}|${key}`;
+      if (compareFetching.has(tag)) return;
+      compareFetching.add(tag);
+      fetchBars(s, interval)
+        .then(bars => {
+          if (state.compareBars.key !== key || !state.compare.includes(s)) return;
+          state.compareBars.data[s] = bars;
+          if (bars.length) build(true); else paintCompare();
+        })
+        .catch(() => {
+          if (state.compareBars.key !== key) return;
+          state.compareBars.data[s] = [];
+          paintCompare();
+          hint(`${s} için fiyat geçmişi alınamadı`);
+          setTimeout(() => { if (state.tool === 'cursor') hint(''); }, 4000);
+        })
+        .finally(() => compareFetching.delete(tag));
+    });
+  }
+
+  function addCompare(raw) {
+    const s = String(raw || '').toLocaleUpperCase('tr-TR').trim();
+    if (!/^[A-Z0-9]{2,8}$/.test(s)) { hint('Geçerli bir hisse kodu yaz (ör. GARAN)'); return; }
+    if (s === state.ticker) { hint('Grafikteki hisseyle aynı'); return; }
+    if (state.compare.includes(s) || state.compare.length >= MAX_COMPARE) return;
+    state.compare.push(s);
+    store.set('compare', state.compare);
+    paintCompare();
+    ensureCompare();
+  }
+
+  function removeCompare(s) {
+    state.compare = state.compare.filter(x => x !== s);
+    store.set('compare', state.compare);
+    delete state.compareBars.data[s];
+    build(true);
+  }
+
+  let settingsTimer = null;
+  function onSettingsInput(e) {
+    const input = e.target.closest('[data-pc-set]');
+    if (!input) return;
+    const [ind, key] = input.dataset.pcSet.split('.');
+    const next = JSON.parse(JSON.stringify(state.cfg));
+    next[ind][key] = parseFloat(input.value);
+    state.cfg = cleanSettings(next);
+    store.set('settings', state.cfg);
+    // Typing "21" passes through "2": redraw once the viewer pauses
+    clearTimeout(settingsTimer);
+    settingsTimer = setTimeout(() => build(true), 350);
   }
 
   function applyRange() {
@@ -452,6 +688,30 @@ const ProChart = (() => {
       return;
     }
     if (kind === 'tool') { setTool(state.tool === value ? 'cursor' : value); return; }
+    if (kind === 'compare') {
+      state.compareOpen = !state.compareOpen;
+      btn.setAttribute('aria-expanded', String(state.compareOpen));
+      paintCompare();
+      if (state.compareOpen && $('proChartCompareInput')) $('proChartCompareInput').focus();
+      return;
+    }
+    if (kind === 'cmp-add') { addCompare(value); return; }
+    if (kind === 'cmp-input') { addCompare($('proChartCompareInput') && $('proChartCompareInput').value); return; }
+    if (kind === 'cmp-del') { removeCompare(value); return; }
+    if (kind === 'settings') {
+      const panel = $('proChartSettings');
+      const open = panel.classList.toggle('hidden') === false;
+      btn.setAttribute('aria-expanded', String(open));
+      if (open) paintSettings();
+      return;
+    }
+    if (kind === 'defaults') {
+      state.cfg = cleanSettings({});
+      store.set('settings', state.cfg);
+      paintSettings();
+      build(true);
+      return;
+    }
     if (kind === 'undo') { const list = drawings(); list.pop(); saveDrawings(list); build(true); return; }
     if (kind === 'clear') { saveDrawings([]); build(true); return; }
     if (kind === 'shot' && state.chart) {
@@ -483,13 +743,31 @@ const ProChart = (() => {
     const main = bind(addMain(chart), mainData);
     state.chart = chart;
     state.main = main;
-    addIndicators(chart);
-    paintDrawings(chart, main);
-    paintAlerts(main);
+    const compared = activeCompare();
+    const comparing = compared.length > 0;
+    if (comparing) {
+      // Each series is rebased to its first visible bar, so the lines start together
+      chart.priceScale('right').applyOptions({ mode: L.PriceScaleMode.Percentage });
+      const tol = INTERVALS[state.interval].tol;
+      compared.forEach(s => {
+        const color = COMPARE_COLORS[state.compare.indexOf(s) % COMPARE_COLORS.length];
+        const series = bind(chart.addSeries(L.LineSeries, { color, lineWidth: 2, priceLineVisible: false, title: compareLabel(s) }),
+          () => alignTo(state.bars, state.compareBars.data[s], tol));
+        state.legendSeries.push({ label: compareLabel(s), color, series, compare: true });
+      });
+    }
+    addIndicators(chart, comparing);
+    // Levels, drawings and alert lines are prices; in percent mode they would sit in the wrong place
+    if (!comparing) {
+      paintDrawings(chart, main);
+      paintAlerts(main);
+    }
     // Backtest trades, only on the stock and timeframe they were computed for
     if (state.marks && state.marks.key === viewKey()) L.createSeriesMarkers(main, state.marks.list);
 
     chart.subscribeCrosshairMove(paintLegend);
+    // The percent base is the first visible bar, so scrolling changes the figures
+    if (comparing) chart.timeScale().subscribeVisibleLogicalRangeChange(() => paintLegend(null));
     chart.subscribeClick(onClick);
     // A quick second click elsewhere arrives as a double click, not a click
     chart.subscribeDblClick(onClick);
@@ -506,6 +784,7 @@ const ProChart = (() => {
     }
     paintLegend(null);
     paintToolbar();
+    paintCompare();
   }
 
   /** New bars every minute while the chart is on screen; series update in place, the view stays. */
@@ -514,12 +793,14 @@ const ProChart = (() => {
     if (!state.chart || !state.ticker || document.hidden || !el || !el.clientWidth || state.pending) return;
     const { ticker, interval } = state;
     if (state.barsKey !== `${ticker}|${interval}`) return;     // a timeframe or stock is still loading
-    let bars;
-    try { bars = await fetchBars(ticker, interval, true); } catch { return; }
+    let bars, cmp;
+    try { [bars, cmp] = await Promise.all([fetchBars(ticker, interval, true), fetchCompare(ticker, interval, true)]); } catch { return; }
     if (ticker !== state.ticker || interval !== state.interval || state.barsKey !== `${ticker}|${interval}` || bars.length < 2) return;
     const a = state.bars[state.bars.length - 1], b = bars[bars.length - 1];
     if (bars.length === state.bars.length && a.time === b.time && a.close === b.close && a.volume === b.volume) return;
     state.bars = bars;
+    // Keep a compared symbol's old bars if its refresh failed; the series list must not change here
+    activeCompare().forEach(s => { if (cmp[s] && cmp[s].length) state.compareBars.data[s] = cmp[s]; });
     state.binds.forEach(apply => apply());
     paintLegend(null);
   }
@@ -535,6 +816,16 @@ const ProChart = (() => {
     if (!wired) {
       const bar = $('proChartToolbar');
       if (bar) bar.addEventListener('click', onToolbar);
+      const panel = $('proChartSettings');
+      if (panel) {
+        panel.addEventListener('click', onToolbar);
+        panel.addEventListener('input', onSettingsInput);
+      }
+      const cmp = $('proChartCompare');
+      if (cmp) {
+        cmp.addEventListener('click', onToolbar);
+        cmp.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'proChartCompareInput') addCompare(e.target.value); });
+      }
       // Capture phase: the site's own shortcuts stop Escape before it bubbles up
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.tool !== 'cursor') setTool('cursor'); }, true);
       setInterval(refresh, REFRESH_MS);
@@ -545,6 +836,7 @@ const ProChart = (() => {
     const id = ++state.request;
     const interval = state.interval;
     hint('Yükleniyor...');
+    const comparePromise = fetchCompare(ticker, interval);
     let bars;
     try {
       bars = await fetchBars(ticker, interval);
@@ -556,6 +848,7 @@ const ProChart = (() => {
       console.warn('[ProChart] history unavailable:', e.message);
       return false;
     }
+    const compareData = await comparePromise;
     if (id !== state.request) return false;
     hint('');
     if (bars.length < 2) return false;
@@ -563,8 +856,10 @@ const ProChart = (() => {
     state.ticker = ticker;
     state.bars = bars;
     state.barsKey = `${ticker}|${interval}`;
+    state.compareBars = { key: state.barsKey, data: compareData };
     if (changed) setTool('cursor');
     build(!changed && !reframe);
+    ensureCompare();
     window.dispatchEvent(new CustomEvent('verity:chart', { detail: { ticker, interval } }));
     return true;
   }
@@ -585,7 +880,7 @@ const ProChart = (() => {
     if (state.chart) build(true);
   }
 
-  return { load, current, setMarkers, heikinAshi, toBars, groupBars, startIndex, snapTime };
+  return { load, current, setMarkers, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo };
 })();
 
 window.ProChart = ProChart;

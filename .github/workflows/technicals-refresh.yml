@@ -1,0 +1,45 @@
+# Daily technical snapshot for the screener (RSI, moving averages, 52-week range, returns),
+# regenerated after each Borsa Istanbul session and committed to main (Vercel then deploys it).
+# scripts/check-data.mjs blocks the commit when the data source failed and the file shrank.
+name: Technicals refresh
+
+on:
+  schedule:
+    - cron: '45 15 * * 1-5'   # weekdays 15:45 UTC (18:45 Istanbul, after the close)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: Technical snapshot
+        run: npm run data:technicals
+      - name: Check that no dataset collapsed
+        run: node scripts/check-data.mjs
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/data/technicals.json
+          if git diff --cached --quiet; then
+            echo "No data changes."
+          else
+            git commit -m "chore(data): technicals $(date -u +%Y-%m-%d)"
+            git push
+          fi

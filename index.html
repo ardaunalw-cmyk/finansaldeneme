@@ -599,7 +599,7 @@
                 </div>
                 <div>
                   <h4 class="font-serif font-bold text-white text-sm">Çoklu Kriterli Kantitatif Tarayıcı (Multi-Factor Screener)</h4>
-                  <p class="text-[11px] text-slate-400">1048 BIST hissesini değerleme, kârlılık, kaldıraç ve skor filtreleriyle tarayın</p>
+                  <p class="text-[11px] text-slate-400">BIST hisselerini değerleme, kârlılık, kaldıraç, skor ve teknik koşullarla tarayın</p>
                 </div>
               </div>
 
@@ -617,6 +617,15 @@
                 </button>
                 <button type="button" onclick="applyScreenerPreset('qualityGrowth')" class="px-2.5 py-1 rounded-lg bg-[#0C1322] border border-[#1A2540] hover:border-amber-500 hover:text-amber-300 text-slate-300 text-[11px] transition-all">
                   <i class="fa-solid fa-arrow-trend-up text-amber-400 text-[10px] mr-1"></i>Yüksek Kârlı Büyüme
+                </button>
+                <button type="button" onclick="applyScreenerPreset('oversoldValue')" class="px-2.5 py-1 rounded-lg bg-[#0C1322] border border-[#1A2540] hover:border-emerald-500 hover:text-emerald-300 text-slate-300 text-[11px] transition-all">
+                  <i class="fa-solid fa-arrow-down-wide-short text-emerald-400 text-[10px] mr-1"></i>Aşırı Satımda Ucuz
+                </button>
+                <button type="button" onclick="applyScreenerPreset('uptrend')" class="px-2.5 py-1 rounded-lg bg-[#0C1322] border border-[#1A2540] hover:border-sky-500 hover:text-sky-300 text-slate-300 text-[11px] transition-all">
+                  <i class="fa-solid fa-chart-line text-sky-400 text-[10px] mr-1"></i>Yükseliş Trendi
+                </button>
+                <button type="button" onclick="applyScreenerPreset('nearHigh')" class="px-2.5 py-1 rounded-lg bg-[#0C1322] border border-[#1A2540] hover:border-amber-500 hover:text-amber-300 text-slate-300 text-[11px] transition-all">
+                  <i class="fa-solid fa-mountain text-amber-400 text-[10px] mr-1"></i>Zirveye Yakın
                 </button>
                 <button type="button" onclick="resetScreenerFilters()" class="px-2 py-1 rounded-lg bg-rose-950/60 border border-rose-800/40 hover:bg-rose-900/60 text-rose-300 text-[11px] transition-all">
                   <i class="fa-solid fa-rotate-left mr-1"></i>Sıfırla
@@ -682,6 +691,53 @@
                 <input type="number" id="screenerNetDebtMax" oninput="onScreenerInputChange()" placeholder="Örn: 2.0x" step="0.2" class="w-full px-2.5 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs text-white font-mono text-center focus:outline-none focus:border-red-600">
               </div>
 
+            </div>
+
+            <!-- Technical criteria (daily snapshot, assets/data/technicals.json) -->
+            <div class="pt-3 border-t border-[#1A2540] space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="text-[10px] font-mono font-bold text-slate-400 uppercase">Teknik Koşullar</span>
+                <span id="screenerTechNote" class="text-[10px] font-mono text-slate-500">Teknik veriler ilk teknik koşulda yüklenir.</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase">RSI (14)</label>
+                  <div class="grid grid-cols-2 gap-1 font-mono">
+                    <input type="number" id="screenerRsiMin" oninput="onScreenerInputChange()" placeholder="Min" step="5" min="0" max="100" class="w-full px-2 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-lg text-xs text-white text-center focus:outline-none focus:border-red-600">
+                    <input type="number" id="screenerRsiMax" oninput="onScreenerInputChange()" placeholder="Max" step="5" min="0" max="100" class="w-full px-2 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-lg text-xs text-white text-center focus:outline-none focus:border-red-600">
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase">Fiyat / SMA 50</label>
+                  <select id="screenerSma50" onchange="onScreenerInputChange()" class="w-full px-2 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs text-white">
+                    <option value="any">Fark etmez</option><option value="above">Üzerinde</option><option value="below">Altında</option>
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase">Fiyat / SMA 200</label>
+                  <select id="screenerSma200" onchange="onScreenerInputChange()" class="w-full px-2 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs text-white">
+                    <option value="any">Fark etmez</option><option value="above">Üzerinde</option><option value="below">Altında</option>
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase">52H zirveye en fazla (%)</label>
+                  <input type="number" id="screenerHi52Max" oninput="onScreenerInputChange()" placeholder="Örn: 5" step="1" min="0" class="w-full px-2.5 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs text-white font-mono text-center focus:outline-none focus:border-red-600">
+                </div>
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase">Min 1 ay getiri (%)</label>
+                  <input type="number" id="screenerM1Min" oninput="onScreenerInputChange()" placeholder="Örn: 10" step="1" class="w-full px-2.5 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs text-white font-mono text-center focus:outline-none focus:border-red-600">
+                </div>
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase">Min hacim / 20g ort. (x)</label>
+                  <input type="number" id="screenerVolMin" oninput="onScreenerInputChange()" placeholder="Örn: 1.5" step="0.1" min="0" class="w-full px-2.5 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs text-white font-mono text-center focus:outline-none focus:border-red-600">
+                </div>
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase">MACD histogram</label>
+                  <select id="screenerMacd" onchange="onScreenerInputChange()" class="w-full px-2 py-1.5 bg-[#0C1322] border border-[#1A2540] rounded-xl text-xs text-white">
+                    <option value="any">Fark etmez</option><option value="up">Pozitif</option><option value="down">Negatif</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             <!-- Screener Footer / Active Filters Summary -->
@@ -1754,10 +1810,18 @@
                   <button type="button" data-pc="clear" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Bu hissedeki tüm çizimleri sil"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
                 </div>
                 <div class="flex items-center gap-1 ml-auto">
+                  <button type="button" data-pc="compare" aria-expanded="false" aria-controls="proChartCompare" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Başka bir hisse, BIST 100, dolar veya altınla karşılaştır"><i class="fa-solid fa-code-compare text-[10px] mr-1"></i>Karşılaştır</button>
+                  <button type="button" data-pc="settings" aria-expanded="false" aria-controls="proChartSettings" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="İndikatör ayarları (periyotlar, eşikler)"><i class="fa-solid fa-sliders text-[10px]"></i></button>
                   <button type="button" data-pc="shot" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Grafiği PNG olarak indir"><i class="fa-solid fa-camera text-[10px]"></i></button>
                   <button type="button" data-pc="full" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Tam ekran"><i class="fa-solid fa-expand text-[10px]"></i></button>
                 </div>
               </div>
+
+              <!-- Compare mode: symbols drawn against the stock in percent (pro-chart.js) -->
+              <div id="proChartCompare" class="hidden text-[11px] font-mono"></div>
+
+              <!-- Indicator settings, filled by pro-chart.js when opened -->
+              <div id="proChartSettings" class="hidden p-3 rounded-xl border border-[#1A2540] bg-[#0A101C] text-[11px] font-mono"></div>
 
               <div class="relative w-full h-[520px] pro-chart-wrap">
                 <div id="proChart" class="absolute inset-0"></div>

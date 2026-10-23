@@ -10,7 +10,7 @@ Canlı site Vercel'de; `main` dalına her push otomatik yayınlanır.
 
 | Bölüm | İçerik | Veri |
 |---|---|---|
-| Piyasa özeti | BIST 100 grafiği ve seviyeleri, USD/TL, tüm hisseler tablosu ve tarayıcı | Yahoo Finance (gecikmeli), `fundamentals.json` |
+| Piyasa özeti | BIST 100 grafiği ve seviyeleri, USD/TL, tüm hisseler tablosu ve tarayıcı (değerleme, kârlılık ve teknik koşullar: RSI, SMA 50/200, 52 hafta zirvesi, 1 ay getiri, hacim, MACD) | Yahoo Finance (gecikmeli), `fundamentals.json`, `technicals.json` |
 | Hisse sayfası | Fiyat, F/K, PD/DD, FD/FAVÖK, ROE, Verity skoru ve model değer | Fiyat + gerçek bilanço, sektör medyanları |
 | | DuPont, Altman Z'', Piotroski F | KAP bilançoları (`assets/data/statements`) |
 | | Bilanço, gelir tablosu, çeyreklik grafikler | KAP bilançoları (İş Yatırım derlemesi) |
@@ -51,9 +51,11 @@ npm run data                       # fundamentals.json: şirket başına son 12 
 npm run data:statements -- --force # statements/<KOD>.json: tam bilançolar (son 6 dönem)
 npm run data:multiples             # sector-multiples.json: sektör medyan F/K ve PD/DD
 npm run data:dividends             # dividends.json: son 2 yılın nakit temettüleri
+npm run data:technicals            # technicals.json: tarayıcı için günlük teknik özet
 node scripts/check-data.mjs        # bir veri kaynağı çöktüyse dosyaların boşalmadığını kontrol eder
 ```
 
+Teknik özet her iş günü kapanıştan sonra ayrıca yenilenir (`.github/workflows/technicals-refresh.yml`).
 GitHub Actions bunları her pazar otomatik çalıştırır (`.github/workflows/data-refresh.yml`);
 kontrol geçerse değişiklikleri commit eder, Vercel de yayınlar. Elle başlatmak için Actions
 sekmesinden "Data refresh" iş akışını çalıştırın.

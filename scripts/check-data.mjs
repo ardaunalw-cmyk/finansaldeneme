@@ -9,12 +9,14 @@ import { execFileSync } from 'node:child_process';
 const MAX_DROP = 0.1;   // fail when more than 10% of the entries disappear
 
 const committed = path => {
-  try { return execFileSync('git', ['show', `HEAD:${path}`], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }); } catch { return null; }
+  // A file new in this refresh is not in HEAD yet: no baseline, and no git error on the console
+  try { return execFileSync('git', ['show', `HEAD:${path}`], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return null; }
 };
 const count = {
   'assets/data/fundamentals.json': s => Object.keys(JSON.parse(s).data).length,
   'assets/data/dividends.json': s => Object.keys(JSON.parse(s).data).length,
-  'assets/data/sector-multiples.json': s => Object.keys(JSON.parse(s).sectors).length
+  'assets/data/sector-multiples.json': s => Object.keys(JSON.parse(s).sectors).length,
+  'assets/data/technicals.json': s => Object.keys(JSON.parse(s).data).length
 };
 
 let failed = false;

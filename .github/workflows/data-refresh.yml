@@ -35,6 +35,8 @@ jobs:
         run: npm run data:multiples
       - name: Dividends
         run: npm run data:dividends
+      - name: Technical snapshot
+        run: npm run data:technicals
 
       - name: Check that no dataset collapsed
         run: node scripts/check-data.mjs

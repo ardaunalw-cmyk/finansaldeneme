@@ -10,7 +10,7 @@ import vm from 'node:vm';
 const context = { window: {} };
 vm.createContext(context);
 vm.runInContext(readFileSync(new URL('../assets/js/pro-chart.js', import.meta.url), 'utf8'), context);
-const { toBars, heikinAshi, groupBars, startIndex, snapTime } = context.window.ProChart;
+const { toBars, heikinAshi, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo } = context.window.ProChart;
 // Arrays from the vm context have another realm's prototype, so compare plain copies
 const plain = v => JSON.parse(JSON.stringify(v));
 
@@ -72,6 +72,37 @@ test('visible windows count trading days for 1G/5G and calendar days otherwise',
   const daily = Array.from({ length: 20 }, (_, i) => bar(i * DAY, 1, 1, 1, 1));
   assert.equal(startIndex(daily, '1G'), 10);
   assert.equal(startIndex(daily, '1A'), 0);
+});
+
+test('compared closes land on the stock bar times within the tolerance', () => {
+  // Stock: daily bars at 09:30; index: bars stamped 10:00, plus one day the stock did not trade
+  const stock = [1, 2, 4].map(d => bar(d * DAY + 9.5 * H, 1, 1, 1, 1));
+  const index = [1, 2, 3, 4].map(d => bar(d * DAY + 10 * H, 1, 1, 1, 100 + d));
+  assert.deepEqual(plain(alignTo(stock, index, 12 * H)), [
+    { time: stock[0].time, value: 101 },
+    { time: stock[1].time, value: 102 },
+    { time: stock[2].time, value: 104 }
+  ]);
+  // A currency's 24-hour 5-minute bars: only those on the stock's bars are kept, the later wins
+  const s5 = [0, 300, 600].map(t => bar(t, 1, 1, 1, 1));
+  const fx = [-600, 0, 120, 300, 9000].map((t, i) => bar(t, 1, 1, 1, 30 + i));
+  assert.deepEqual(plain(alignTo(s5, fx, 150)), [{ time: 0, value: 32 }, { time: 300, value: 33 }]);
+  assert.deepEqual(plain(alignTo([], fx, 150)), []);
+});
+
+test('indicator settings fall back to defaults, are clamped, and name the indicator', () => {
+  const d = plain(cleanSettings({}));
+  assert.equal(d.sma20.n, 20);
+  assert.deepEqual(d.macd, { fast: 12, slow: 26, signal: 9 });
+  const s = plain(cleanSettings({ sma20: { n: 34.4 }, rsi: { n: 0, upper: 'x' }, bb: { k: 2.5 } }));
+  assert.equal(s.sma20.n, 34);
+  assert.equal(s.rsi.n, 2);
+  assert.equal(s.rsi.upper, 70);
+  assert.equal(s.bb.k, 2.5);
+  assert.equal(indLabel('sma20', s), 'SMA 34');
+  assert.equal(indLabel('bb', s), 'BB 20,2,5');
+  assert.equal(indLabel('macd', s), 'MACD 12,26,9');
+  assert.equal(indLabel('volume', s), 'Hacim');
 });
 
 test('drawing points snap to the nearest bar, and outside the loaded bars to nothing', () => {
