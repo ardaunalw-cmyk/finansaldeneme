@@ -10,7 +10,7 @@ import { createRequire } from 'node:module';
 import { decodeEntities, htmlToText, parseMastodon, parseRedditAtom, parseTelegram } from '../api/_social-parse.mjs';
 
 const require = createRequire(import.meta.url);
-const { extractTickers, topMentions } = require('../assets/js/social-tags.js');
+const { extractTickers, topMentions, topicsOf, summarize } = require('../assets/js/social-tags.js');
 
 const tgPost = (id, datetime, text) => `<div class="tgme_widget_message_wrap js-widget_message_wrap"><div class="tgme_widget_message js-widget_message" data-post="ornekkanal/${id}" data-view="x">
   <div class="tgme_widget_message_author accent_color"><a class="tgme_widget_message_owner_name" href="https://t.me/ornekkanal"><span dir="auto">Örnek &amp; Kanal</span></a></div>
@@ -101,4 +101,26 @@ test('top mentions over the last 24 hours', () => {
     { code: 'SASA', count: 2 }, { code: 'ASELS', count: 1 }, { code: 'THYAO', count: 1 }
   ]);
   assert.equal(topMentions(posts, 0, 1).length, 1);
+});
+
+test('bulletin summary and topics', () => {
+  assert.deepEqual(topicsOf('TEMETTÜ tarihi ve TCMB faiz kararı'), ['Temettü ve kâr payı', 'Faiz ve para politikası']);
+  const now = Date.parse('2026-10-23T12:00:00Z');
+  const h = 3600 * 1000;
+  const post = (age, channel, tickers, text = '') => ({ date: now - age * h, channel, tickers, text });
+  const s = summarize([
+    post(1, '@a', ['SASA'], 'bedelsiz geliyor'),
+    post(2, '@b', ['SASA']),
+    post(3, 'r/Borsa', ['SASA', 'ASELS']),
+    post(4, '@a', []),
+    post(30, '@a', ['ASELS']),
+    post(31, '@a', ['ASELS']),
+    post(60, '@a', ['SASA'])   // older than two days
+  ], now);
+  assert.equal(s.total, 4);
+  assert.equal(s.prevTotal, 2);
+  assert.equal(s.withCodes, 3);
+  assert.deepEqual(s.companies.map(c => [c.code, c.count, c.prev, c.channels.length, c.surge]), [['SASA', 3, 0, 3, true], ['ASELS', 1, 2, 1, false]]);
+  assert.deepEqual(s.topics, [{ name: 'Bedelsiz / bedelli sermaye artırımı', count: 1 }]);
+  assert.deepEqual(s.channels.map(c => [c.channel, c.count, c.withCodes]), [['@a', 2, 1], ['@b', 1, 1], ['r/Borsa', 1, 1]]);
 });

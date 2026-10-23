@@ -1,5 +1,6 @@
 /**
- * BIST ticker tags for social posts: which listed codes a post mentions.
+ * BIST ticker tags for social posts: which listed codes a post mentions, and the aggregate
+ * figures (summarize) the social media bulletin is written from.
  * Pure functions (no DOM), shared by assets/js/social.js and test/social.test.mjs.
  *
  * "#ASELS", "$asels" and "ASELS.IS" always count. A bare uppercase word counts only when it is
@@ -39,7 +40,65 @@
       .map(([code, count]) => ({ code, count }));
   }
 
-  const SocialTags = { extractTickers, topMentions, WORDS };
+  // Agenda topics for the bulletin, matched on the lowercased (tr) text
+  const TOPICS = [
+    ['Temettü ve kâr payı', /temett[üu]|k[âa]r pay/],
+    ['Bedelsiz / bedelli sermaye artırımı', /bedelsiz|bedelli|sermaye art[ıi]r/],
+    ['Halka arz', /halka arz/],
+    ['Faiz ve para politikası', /faiz|tcmb|merkez bankas|ppk/],
+    ['Enflasyon', /enflasyon|tüfe|üfe/],
+    ['Döviz ve altın', /dolar|euro|döviz|altın(?!\p{L})/u],
+    ['Bilanço ve finansal sonuçlar', /bilan[çc]o|net k[âa]r|çeyrek|finansal sonu[çc]/],
+    ['BIST 100 endeksi', /bist ?100|xu100|endeks/]
+  ];
+
+  function topicsOf(text) {
+    const s = String(text || '').toLocaleLowerCase('tr');
+    return TOPICS.filter(([, re]) => re.test(s)).map(([name]) => name);
+  }
+
+  /**
+   * Figures for the bulletin: posts of the last 24 hours (to `now`) against the 24 hours before.
+   * A company is flagged `surge` when it is in 3+ posts across 2+ channels and at least twice
+   * its previous-day count, the pattern a coordinated promotion leaves.
+   */
+  function summarize(posts, now) {
+    const DAY = 24 * 60 * 60 * 1000;
+    const cur = posts.filter(p => now - p.date < DAY);
+    const prevTotal = posts.filter(p => now - p.date >= DAY && now - p.date < 2 * DAY).length;
+    const byCode = new Map();
+    const channels = new Map();
+    const topics = new Map();
+    for (const p of posts) {
+      const age = now - p.date;
+      if (age >= 2 * DAY) continue;
+      for (const c of p.tickers || []) {
+        if (!byCode.has(c)) byCode.set(c, { code: c, count: 0, prev: 0, channels: new Set() });
+        const e = byCode.get(c);
+        if (age < DAY) { e.count++; e.channels.add(p.channel); } else e.prev++;
+      }
+    }
+    for (const p of cur) {
+      const ch = channels.get(p.channel) || { channel: p.channel, count: 0, withCodes: 0 };
+      ch.count++;
+      if ((p.tickers || []).length) ch.withCodes++;
+      channels.set(p.channel, ch);
+      for (const t of topicsOf(p.text)) topics.set(t, (topics.get(t) || 0) + 1);
+    }
+    const companies = [...byCode.values()].filter(e => e.count > 0)
+      .sort((a, b) => b.count - a.count || b.channels.size - a.channels.size || a.code.localeCompare(b.code))
+      .map(e => ({ code: e.code, count: e.count, prev: e.prev, channels: [...e.channels], surge: e.count >= 3 && e.channels.size >= 2 && e.count >= 2 * Math.max(1, e.prev) }));
+    return {
+      total: cur.length,
+      prevTotal,
+      withCodes: cur.filter(p => (p.tickers || []).length).length,
+      companies,
+      topics: [...topics].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => ({ name, count })),
+      channels: [...channels.values()].sort((a, b) => b.count - a.count)
+    };
+  }
+
+  const SocialTags = { extractTickers, topMentions, topicsOf, summarize, WORDS };
   if (typeof module !== 'undefined' && module.exports) module.exports = SocialTags;
   else root.SocialTags = SocialTags;
 })(typeof window !== 'undefined' ? window : globalThis);
