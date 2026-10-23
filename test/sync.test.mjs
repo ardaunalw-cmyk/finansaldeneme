@@ -84,4 +84,7 @@ test('/api/config only hands out a well-formed Supabase project', async () => {
   assert.equal(supabaseConfig({ SUPABASE_URL: 'https://abcd.supabase.co', SUPABASE_ANON_KEY: 'short' }), null);
   assert.deepEqual(supabaseConfig({ SUPABASE_URL: 'https://abcd.supabase.co/', SUPABASE_ANON_KEY: 'eyJ.abc-def_ghi.0123456789' }), { url: 'https://abcd.supabase.co', anonKey: 'eyJ.abc-def_ghi.0123456789', google: false });
   assert.equal(supabaseConfig({ SUPABASE_URL: 'https://abcd.supabase.co', SUPABASE_ANON_KEY: 'eyJ.abc-def_ghi.0123456789', SUPABASE_GOOGLE: '1' }).google, true);
+  // Supabase's "Connect" .env names work too, and a broken SUPABASE_ANON_KEY does not hide a good one
+  const pasted = supabaseConfig({ SUPABASE_ANON_KEY: 'sb_publishable_x', NEXT_PUBLIC_SUPABASE_URL: 'https://abcd.supabase.co', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_0123456789abcdef' });
+  assert.equal(pasted.anonKey, 'sb_publishable_0123456789abcdef');
 });
