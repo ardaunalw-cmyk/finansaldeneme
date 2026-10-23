@@ -105,6 +105,57 @@
     return { paid, profit, ratio: profit > 0 ? paid / profit * 100 : null, period: d.periods[0] };
   }
 
+  /**
+   * The ratio set of the "Finansal Sağlık" tab (liquidity, activity, leverage, profitability and
+   * per-share profit) at period index i, from an industrial company's statements. Flow items are
+   * the last twelve months at i = 0 and the fiscal year itself at a year-end period; at any other
+   * period they are unknown and so are the ratios that need them. A ratio that cannot be computed
+   * (zero or negative denominator, missing flows) is null. `inputs` holds the figures behind the
+   * fractions so the page can show them.
+   */
+  function healthRatios(d, i = 0) {
+    const v = c => val(d, c, i);
+    const month = parseInt(d.periods[i].split('/')[1], 10);
+    const f = i === 0 ? c => ttm(d, c) : month === 12 ? c => val(d, c, i) : null;
+    const q = (a, b) => (a != null && b > 0 ? a / b : null);
+    // Average inventory: this period and the same period a year earlier, when both are present
+    const avgStock = i + LY < d.periods.length ? (v('1AF') + val(d, '1AF', i + LY)) / 2 : null;
+    const inputs = {
+      current: v('1A'), shortDebt: v('2A'), longDebt: v('2B'), debt: v('2A') + v('2B'),
+      stock: v('1AF'), avgStock, cash: v('1AA'), receivables: v('1AC'), assets: v('1BL'), fixed: v('1AK'),
+      equity: v('2N'), parentEquity: v('2O'), permanent: v('2N') + v('2B'), shares: v('2OA'),
+      sales: f && f('3C'), cogs: f && Math.abs(f('3CA')), gross: f && f('3D'), ebit: f && f('3DF'),
+      netIncome: f && f('3Z'), interest: f && Math.abs(f('3HC'))
+    };
+    const n = inputs;
+    const rt = q(n.sales, n.receivables);
+    const it = q(n.cogs, avgStock ?? n.stock);
+    return {
+      period: d.periods[i], ttm: i === 0 && month !== 12, inputs,
+      current: q(n.current, n.shortDebt),
+      quick: q(n.current - n.stock, n.shortDebt),
+      cash: q(n.cash, n.shortDebt),
+      receivableTurnover: rt,
+      collectionDays: rt ? 365 / rt : null,
+      inventoryTurnover: it,
+      inventoryDays: it ? 365 / it : null,
+      assetTurnover: q(n.sales, n.assets),
+      fixedTurnover: q(n.sales, n.fixed),
+      debtRatio: q(n.debt, n.assets),
+      debtToEquity: q(n.debt, n.equity),
+      shortDebtShare: q(n.shortDebt, n.debt),
+      // No financial expense at all: covered without limit (Infinity), shown as such
+      interestCover: !f ? null : n.interest > 0 ? n.ebit / n.interest : Infinity,
+      fixedToPermanent: q(n.fixed, n.permanent),
+      grossMargin: q(n.gross, n.sales),
+      operatingMargin: q(n.ebit, n.sales),
+      netMargin: q(n.netIncome, n.sales),
+      roa: q(n.netIncome, n.assets),
+      roe: q(n.netIncome, n.parentEquity),
+      eps: q(n.netIncome, n.shares)        // BIST par value is 1 TL, so paid-in capital = share count
+    };
+  }
+
   /* ---------- market ratios ---------- */
 
   /**
@@ -183,7 +234,7 @@
 
   const Calc = {
     fromFile, rowMap, has, val, ttm, flow, prevFyIdx, LY, isBank, isIns, premium, claims,
-    dupont, altman, altmanZone, piotroski, payout, ratios, dividendStats, pearson, returnCorrelations
+    dupont, altman, altmanZone, piotroski, payout, healthRatios, ratios, dividendStats, pearson, returnCorrelations
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = Calc;
   else root.Calc = Calc;

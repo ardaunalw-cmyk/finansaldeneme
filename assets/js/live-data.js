@@ -204,6 +204,7 @@ const LiveData = (() => {
         note.innerHTML = priceBadge + 'Bilanço oranları yükleniyor...';
       }
       syncFundamentals(fin, note, priceBadge);
+      if (window.FinHealth) FinHealth.render();   // market ratios need the price
     } catch {
       if (appState.currentStock !== code) return;
       // Yahoo occasionally drops a request under load; one quiet retry before giving up

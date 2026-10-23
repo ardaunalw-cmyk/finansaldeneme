@@ -2386,15 +2386,15 @@ function switchStockSubTab(tabName) {
     const target = btn.getAttribute('data-stock-tab');
     if (target === 'all') {
       if (tabName === 'all') {
-        btn.className = 'stock-subtab-btn px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 transition-all bg-[#2F6BFF] text-white shadow-lg shadow-red-600/30';
+        btn.className = 'stock-subtab-btn flex-shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 transition-all bg-[#2F6BFF] text-white shadow-lg shadow-red-600/30';
       } else {
-        btn.className = 'stock-subtab-btn px-3 py-1.5 rounded-xl text-xs font-mono font-medium flex items-center gap-1.5 transition-all text-slate-400 hover:text-white hover:bg-[#121C30] border border-transparent hover:border-[#1E2B45]';
+        btn.className = 'stock-subtab-btn flex-shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-mono font-medium flex items-center gap-1.5 transition-all text-slate-400 hover:text-white hover:bg-[#121C30] border border-transparent hover:border-[#1E2B45]';
       }
     } else {
       if (target === tabName) {
-        btn.className = 'stock-subtab-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-[#2F6BFF] text-white shadow-lg shadow-red-600/30 font-mono';
+        btn.className = 'stock-subtab-btn flex-shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-[#2F6BFF] text-white shadow-lg shadow-red-600/30 font-mono';
       } else {
-        btn.className = 'stock-subtab-btn px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-[#121C30] font-mono';
+        btn.className = 'stock-subtab-btn flex-shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-[#121C30] font-mono';
       }
     }
   });
@@ -2412,6 +2412,9 @@ function switchStockSubTab(tabName) {
       }
     });
   }
+
+  // Ratio cards use the latest price, so they are redrawn whenever the tab is opened
+  if ((tabName === 'health' || tabName === 'all') && window.FinHealth) FinHealth.render();
 
   // 3. Asynchronously trigger Chart.js resize & non-animated update to prevent 0x0 canvas distortion
   requestAnimationFrame(() => {

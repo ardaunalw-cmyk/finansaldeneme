@@ -584,6 +584,7 @@ const Statements = (() => {
     fin.equityRaw = undefined;
     setCurrencyButtons();
     renderUnavailable();
+    if (window.FinHealth) FinHealth.render();
 
     const d = await getData(code, 'TRY');
     if (state.code !== code) return;           // user moved on to another stock
@@ -592,6 +593,7 @@ const Statements = (() => {
       state.status = 'unavailable';
       state.reason = d.reason;
       renderUnavailable();
+      if (window.FinHealth) FinHealth.render();
       fin.payout = { missing: 'no-data' };
       fin.equityRaw = null;
       if (typeof renderCapitalAndDividendIntelligence === 'function') renderCapitalAndDividendIntelligence(fin);
@@ -606,6 +608,7 @@ const Statements = (() => {
     renderIncome(fin);
     renderBalance(fin);
     renderHealth();
+    if (window.FinHealth) FinHealth.render();
     if (typeof initStockIncomeChart === 'function') initStockIncomeChart();
     if (typeof initProjectionChart === 'function') initProjectionChart();
     if (typeof renderCapitalAndDividendIntelligence === 'function') renderCapitalAndDividendIntelligence(fin);
@@ -661,6 +664,7 @@ const Statements = (() => {
       // A freshly built company object has none of the derived figures yet
       if (fin.payout === undefined) { applyDerived(fin, state.data); capitalCard(); }
       renderIncome(fin); renderBalance(fin); renderHealth();
+      if (window.FinHealth) FinHealth.render();
       return;
     }
     if (state.code === fin.code && state.status === 'unavailable') {

@@ -36,6 +36,38 @@ test('ttm adds the last fiscal year and removes the same period a year earlier',
   assert.equal(Calc.ttm(fy, '3C'), 100);
 });
 
+/* ---------- Finansal Sağlık ratio set ---------- */
+
+test('health ratios reproduce the course deck cases', () => {
+  // One fiscal-year period built from the deck's mini cases (ABC Tekstil, XYZ, KMY Lojistik)
+  const d = Calc.fromFile({ periods: ['2025/12'], rows: [
+    ['1A', 'Dönen', 0, 400000], ['2A', 'KVYK', 0, 700000], ['1AF', 'Stok', 0, 850000], ['1AA', 'Nakit', 0, 50000],
+    ['1AC', 'Alacak', 0, 100000], ['3C', 'Satış', 0, 1200000], ['3CA', 'SMM', 0, -900000],
+    ['3DF', 'Faaliyet', 0, 2000000], ['3HC', 'Fin. gider', 0, -1800000], ['2B', 'UVYK', 0, 7300000],
+    ['2N', 'Özkaynak', 0, 2000000], ['2O', 'Ana ort.', 0, 2000000], ['3Z', 'Net kâr', 0, 200000], ['2OA', 'Sermaye', 0, 100000]
+  ] });
+  const r = Calc.healthRatios(d, 0);
+  near(r.current, 0.57, 0.005, 'cari oran');
+  near(r.inventoryTurnover, 900000 / 850000, 1e-9, 'stok devir hızı (ortalama yok: dönem sonu stok)');
+  near(r.inventoryDays, 345, 1, 'stok tüketim süresi');
+  near(r.debtToEquity, 4, 1e-9, 'borç / özkaynak');
+  near(r.interestCover, 2000000 / 1800000, 1e-9, 'faiz karşılama');
+  near(r.receivableTurnover, 12, 1e-9, 'alacak devir hızı');
+  near(r.eps, 2, 1e-9, 'hisse başına kâr');
+  assert.equal(r.ttm, false);
+});
+
+test('health ratios on real statements', () => {
+  const r = Calc.healthRatios(load('ASELS'), 0);
+  assert.equal(r.ttm, true);
+  near(r.current, 248765565 / 169003469, 1e-9, 'ASELS cari oran');
+  assert.ok(r.inventoryTurnover > 0 && r.grossMargin > 0 && r.roe > 0);
+  // A quarter that is not a year end has no flows, so flow ratios are unknown
+  const q = Calc.healthRatios(load('ASELS'), 1);
+  assert.equal(q.netMargin, null);
+  assert.ok(q.current > 0);
+});
+
 /* ---------- DuPont, Altman, Piotroski, payout on real companies ---------- */
 
 test('DuPont of THYAO, ARCLK and AKBNK', () => {

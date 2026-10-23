@@ -310,6 +310,43 @@ table th.font-mono,
   box-shadow: var(--shadow-card), 0 0 0 1px rgba(59, 123, 255, 0.12), 0 12px 32px -14px rgba(47, 107, 255, 0.45);
 }
 
+/* Definition box next to a term (Finansal Sağlık tab): hover, keyboard focus or tap opens it */
+.fh-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #64748b;
+  font-size: 11px;
+  cursor: help;
+  outline: none;
+}
+.fh-tip:hover, .fh-tip:focus { color: #60a5fa; }
+.fh-tip-box {
+  display: none;
+  position: absolute;
+  z-index: 60;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(260px, 70vw);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #0C1322;
+  border: 1px solid rgba(59, 123, 255, 0.45);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7);
+  color: #cbd5e1;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+  pointer-events: none;
+}
+.fh-tip:hover .fh-tip-box, .fh-tip:focus .fh-tip-box { display: block; }
+
 /* Range Bar Visualization */
 .range-track {
   height: 4px;

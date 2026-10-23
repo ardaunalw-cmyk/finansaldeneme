@@ -983,6 +983,17 @@
                 <span>Bilanço ve Temettü</span>
               </button>
 
+              <button
+                type="button"
+                id="btnSubtab-health"
+                data-stock-tab="health"
+                onclick="switchStockSubTab('health')"
+                class="stock-subtab-btn flex-shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-[#111A2E] font-mono"
+              >
+                <i class="fa-solid fa-heart-pulse text-xs"></i>
+                <span>Finansal Sağlık</span>
+              </button>
+
               <button 
                 type="button" 
                 id="btnSubtab-technical" 
@@ -1658,6 +1669,22 @@
 
             </div>
           </div>
+          </div>
+
+          <!-- ================================================================
+               SUBTAB: FİNANSAL SAĞLIK (oran analizi, assets/js/fin-health.js)
+               ================================================================ -->
+          <div id="stockSubtab-health" data-stock-subtab="health" class="stock-subtab-pane space-y-6 hidden">
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
+              <div class="space-y-1">
+                <h2 class="font-serif font-bold text-white text-xl">Finansal Sağlık — Oran Analizi</h2>
+                <p class="text-xs text-slate-400">Likidite, faaliyet, kaldıraç, kârlılık ve piyasa oranları; KAP finansal tablolarından hesaplanır. <span id="finHealthPeriod" class="font-mono text-slate-500"></span></p>
+              </div>
+            </div>
+            <div id="finHealthTabs" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+            <!-- Terms here carry their own definition boxes, so the app-wide glossary skips them -->
+            <div id="finHealthBody" class="space-y-4" data-no-glossary></div>
+            <p class="text-[11px] text-slate-500 leading-relaxed">Referans değerler genel kabul gören eşiklerdir; hiçbir oran tek başına kesin yargı vermez. Oranlar sektör ortalamaları ve yıllar arası trendle birlikte değerlendirilmelidir. Yatırım tavsiyesi değildir.</p>
           </div>
 
           <!-- ================================================================
@@ -2867,6 +2894,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/indicators.js"></script>
   <script src="assets/js/technicals.js"></script>
   <script src="assets/js/statements.js"></script>
+  <script src="assets/js/fin-health.js"></script>
   <script src="assets/js/disclosures.js"></script>
   <script src="assets/js/news.js"></script>
 <script src="assets/js/social-tags.js"></script>
