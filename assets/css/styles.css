@@ -859,6 +859,13 @@ input[type="range"]::-moz-range-thumb {
   header, footer, nav, #introSplashScreen, .no-print {
     display: none !important;
   }
+  /* Profilim prints as a report: only the open tab, on the page's dark colours */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body:has(#view-profile.active) { background: #070B14 !important; }
+  body:has(#view-profile.active) > *:not(main),
+  body:has(#view-profile.active) main > :not(#view-profile),
+  #view-profile .pf-noprint { display: none !important; }
+  #view-profile section { break-inside: avoid; }
 }
 
 /* ==========================================================================

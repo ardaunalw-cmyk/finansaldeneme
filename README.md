@@ -21,7 +21,11 @@ Canlı site Vercel'de; `main` dalına her push otomatik yayınlanır.
 | İzleme listesi ve alarmlar | Fiyat ve RSI alarmları; grafikten tıklayarak alarm kurma, aktif alarmlar grafikte çizgi olarak; sekme arka plandayken de dakikada bir kontrol ve sistem bildirimi. Tarayıcıda saklanır, site kapalıyken çalışmaz | Yahoo Finance fiyatları (gecikmeli) |
 | | Rakip kıyaslama ve radar | Aynı KAP sektöründeki şirketlerin gerçek verisi |
 | | KAP bildirimleri | kap.org.tr |
-| Profilim | Portföy (alış/satış kayıtları, ortalama maliyet, kâr/zarar, sektör dağılımı, yoğunlaşma uyarıları, portföy F/K ve PD/DD, hak kazanılan ve son 12 ay temettü); portföydeki sektörlerin 10 yıla kadar uzun dönem endeksi (TL ve dolar, BIST 100 kıyası, getiri/oynaklık/düşüş, sektör medyanları); incelenen hisseler; komut satırı (`al THYAO 100`, `sat`, `izle`, `alarm`, `not`...) ve komut geçmişi; JSON/CSV dışa aktarma. Tarayıcıda saklanır, aracı kuruma emir iletilmez | Yahoo Finance haftalık fiyat geçmişi, `fundamentals.json`, `technicals.json`, `sector-multiples.json`, `dividends.json` |
+| Profilim | Birden çok portföy; alış/satış kayıtları, ortalama maliyet, kâr/zarar, bugünkü değişim, sektör dağılımı, yoğunlaşma uyarıları, portföy F/K ve PD/DD, hak kazanılan temettü ve önümüzdeki 12 ayın tahmini | Yahoo Finance (gecikmeli), bilançolar, `dividends.json` |
+| | Performans ve risk: gerçek haftalık değer geçmişi, zaman ağırlıklı getiri ve XIRR, aynı nakit akışlarının BIST 100 / dolar / gram altına yatırılmış hali, aylık getiriler, beta, oynaklık, en derin düşüş, hisseler arası korelasyon | Yahoo Finance haftalık fiyat geçmişi (hisseler, XU100, USDTRY, GC=F) |
+| | Sektörler: portföydeki sektörlerin 10 yıla kadar eşit ağırlıklı endeksi (TL ve dolar), getiri/oynaklık/düşüş, sektör medyanları | Fiyat geçmişi, `fundamentals.json`, `technicals.json`, `sector-multiples.json` |
+| | Plan ve hedefler: hedef dağılım ve dengeleme (al-sat ya da yalnız alım), nakit, finansal hedef planı (kendi getiri/enflasyon varsayımınızla), zarar-kes ve hedef fiyat (alarm olarak) | Kullanıcının girdileri + fiyatlar |
+| | Gündem ve günlük: portföydeki şirketlerin KAP bildirimleri, yatırım günlüğü, zaman çizelgesi; incelenen hisseler; komut satırı (`al`, `sat`, `stop`, `hedef`, `ağırlık`, `nakit`, `günlük`, `geri al`...); JSON yedek, CSV içe/dışa aktarma, yazdırma, tutarları gizleme. Tarayıcıda saklanır, aracı kuruma emir iletilmez | kap.org.tr |
 | Hisse karşılaştırma | En fazla 3 hisse yan yana | Fiyat + bilanço |
 | Temettü takvimi | Son 12 ayın dağıtımları, verim sıralaması | `dividends.json` |
 | Sektör ve korelasyon | Sektör medyan F/K ve PD/DD, 8 varlığın 1 yıllık getiri korelasyonu | `sector-multiples.json`, Yahoo Finance fiyat geçmişi |
@@ -77,8 +81,8 @@ assets/js/backtest-ui.js Strateji Testi kartı: form, özet, sermaye eğrisi, i�
 assets/lib/lightweight-charts-*/  TradingView Lightweight Charts (Apache-2.0, sürüm klasör adında)
 assets/js/dividends.js  Temettü takvimi ve temettü verimi
 assets/js/compare.js    Hisse karşılaştırma
-assets/js/portfolio.js  Saf portföy hesapları: maliyet, değerleme, temettü hakkı, haftalık endeksler, komut ayrıştırma
-assets/js/profile.js    Profilim sayfası: portföy, uzun dönem sektörler, incelenenler, komutlar, yedekleme
+assets/js/portfolio.js  Saf portföy hesapları: maliyet, değerleme, temettü, değer geçmişi, TWR/XIRR, risk, dengeleme, hedef planı, CSV, komutlar
+assets/js/profile.js    Profilim sayfası: portföyler, performans, sektörler, plan, gündem, incelenenler, komutlar, yedekleme
 assets/js/app.js        Görünümler, arama, tablo, grafikler, rakip kıyaslama
 api/*.mjs               Vercel fonksiyonları (Yahoo Finance, İş Yatırım, KAP, haberler, sosyal medya, sohbet)
 scripts/*.mjs           Veri üretme betikleri

@@ -198,3 +198,148 @@ test('other commands, Turkish and ASCII spellings, and a bare code', () => {
   assert.equal(P.parseCommand('uç THYAO').ok, false);
   assert.equal(P.parseCommand('').ok, false);
 });
+
+test('new commands: levels, weights, cash, journal, tabs and portfolios', () => {
+  assert.deepEqual(P.parseCommand('stop THYAO 250'), { ok: true, action: 'stop', code: 'THYAO', price: 250 });
+  assert.deepEqual(P.parseCommand('hedef thyao sil'), { ok: true, action: 'target', code: 'THYAO', price: null });
+  assert.equal(P.parseCommand('hedef THYAO').ok, false);
+  assert.deepEqual(P.parseCommand('ağırlık THYAO %20'), { ok: true, action: 'weight', code: 'THYAO', weight: 20 });
+  assert.equal(P.parseCommand('agirlik THYAO 120').ok, false);
+  assert.deepEqual(P.parseCommand('nakit 5000'), { ok: true, action: 'cash', amount: 5000, delta: false });
+  assert.deepEqual(P.parseCommand('nakit +1000'), { ok: true, action: 'cash', amount: 1000, delta: true });
+  assert.deepEqual(P.parseCommand('nakit -500'), { ok: true, action: 'cash', amount: -500, delta: true });
+  assert.equal(P.parseCommand('nakit abc').ok, false);
+  assert.deepEqual(P.parseCommand('günlük THYAO bilanço iyi geldi'), { ok: true, action: 'journal', code: 'THYAO', text: 'bilanço iyi geldi' });
+  assert.deepEqual(P.parseCommand('gunluk piyasa sakin'), { ok: true, action: 'journal', code: null, text: 'piyasa sakin' });
+  assert.deepEqual(P.parseCommand('performans'), { ok: true, action: 'tab', tab: 'performance' });
+  assert.deepEqual(P.parseCommand('portföy Temettü sepeti'), { ok: true, action: 'portfolio', name: 'Temettü sepeti' });
+  assert.equal(P.parseCommand('gizle').hide, true);
+  assert.equal(P.parseCommand('rapor').action, 'report');
+  assert.equal(P.parseCommand('geri al').action, 'undo');
+});
+
+/* ---------- the portfolio's own history ---------- */
+
+const wk = (...pairs) => new Map(pairs);
+
+test('value history: holdings at each week close and the net money put in', () => {
+  const txs = [buy('A', 10, 10, '2021-01-05'), buy('A', 10, 12, '2021-01-13'), sell('A', 5, 15, '2021-01-20')];
+  const closes = { A: wk(['2021-01-04', 11], ['2021-01-11', 12], ['2021-01-18', 15]) };
+  const h = P.valueHistory(txs, closes, '2021-01-20');
+  assert.deepEqual(h.keys, ['2021-01-04', '2021-01-11', '2021-01-18']);
+  assert.deepEqual(h.value, [110, 240, 225]);
+  assert.deepEqual(h.invested, [100, 220, 145]);
+  assert.deepEqual(h.flow, [100, 120, -75]);
+  const t = P.twrIndex(h);
+  // Buys count from the start of their week, sales at its end
+  near(t.values[0], 110, 1e-9, 'week 1');
+  near(t.values[1], 110 * (1 + 10 / 230), 1e-9, 'week 2');
+  near(t.values[2], 110 * (1 + 10 / 230) * 1.25, 1e-9, 'week 3');
+});
+
+test('a stock without a close yet is valued at its trade price', () => {
+  const h = P.valueHistory([buy('NEW', 4, 25, '2021-01-06')], { NEW: new Map() }, '2021-01-12');
+  assert.deepEqual(h.value, [100, 100]);
+  assert.deepEqual(P.twrIndex(h).values, [100, 100]);
+});
+
+test('XIRR of simple flows', () => {
+  near(P.xirr([{ date: '2021-01-01', amount: -100 }, { date: '2022-01-01', amount: 110 }]), 10, 1e-6, 'one year');
+  near(P.xirr([{ date: '2021-01-01', amount: -100 }, { date: '2023-01-01', amount: 121 }]), 10, 0.02, 'two years');
+  assert.equal(P.xirr([{ date: '2021-01-01', amount: -100 }]), null);
+  const f = P.cashFlows([buy('A', 10, 10, '2021-01-01', 1), sell('A', 4, 12, '2021-06-01', 1)], [{ date: '2021-03-01', cash: 5 }], 80, '2022-01-01');
+  assert.deepEqual(f.map(x => x.amount), [-101, 5, 47, 80]);
+});
+
+test('replay moves the same money into a benchmark', () => {
+  const keys = ['2021-01-04', '2021-01-11'];
+  const price = wk(['2021-01-04', 10], ['2021-01-11', 20]);
+  const v = P.replay([buy('A', 10, 10, '2021-01-05'), sell('A', 5, 15, '2021-01-12')], price, keys);
+  // 100 TL buys 10 units; the 75 TL sale sells 3.75 units at 20
+  assert.deepEqual(v, [100, 125]);
+  assert.deepEqual(P.carried(wk(['2021-01-04', 1]), ['2020-12-28', '2021-01-04', '2021-01-11']), [null, 1, 1]);
+  assert.equal(P.times(wk(['k', 2000]), wk(['k', 8]), 1 / 31.1035).get('k'), 2000 * 8 / 31.1035);
+});
+
+/* ---------- risk ---------- */
+
+const zig = n => Array.from({ length: n }, (_, i) => 100 * (1 + 0.03 * Math.sin(i)) * 1.01 ** i);
+const keysOf = n => Array.from({ length: n }, (_, i) => new Date(Date.UTC(2021, 0, 4) + i * 7 * 864e5).toISOString().slice(0, 10));
+
+test('correlations, beta and drawdown', () => {
+  const ks = keysOf(30), a = zig(30);
+  const A = new Map(ks.map((k, i) => [k, a[i]]));
+  const B = new Map(ks.map((k, i) => [k, a[i] * 2]));
+  const C = new Map(ks.map((k, i) => [k, 10000 / a[i]]));
+  const c = P.correlations([A, B, C]);
+  near(c.values[0][1], 1, 1e-9, 'same moves');
+  near(c.values[0][2], -1, 1e-9, 'opposite moves');
+  assert.equal(c.weeks, 29);
+  const r = P.riskVs({ keys: ks, values: a.map(x => x * 3) }, A);
+  near(r.beta, 1, 1e-9, 'beta');
+  near(r.corr, 1, 1e-9, 'correlation');
+  assert.ok(r.vol > 0 && r.maxDD <= 0);
+  assert.equal(P.riskVs({ keys: ks.slice(0, 5), values: a.slice(0, 5) }, A), null);
+});
+
+test('monthly returns use the last week of each month', () => {
+  const idx = { keys: ['2021-01-04', '2021-01-11', '2021-01-18', '2021-01-25', '2021-02-01'], values: [100, 105, 110, 120, 132] };
+  const m = P.monthlyReturns(idx);
+  assert.deepEqual(Object.keys(m), ['2021']);
+  near(m['2021']['02'], 10, 1e-9, 'February');
+  assert.equal(m['2021']['01'], undefined);
+});
+
+/* ---------- planning ---------- */
+
+test('rebalance to target weights, with and without selling', () => {
+  const rows = [{ code: 'A', value: 600 }, { code: 'B', value: 400 }];
+  const full = P.rebalance(rows, { A: 50, B: 50 }, { A: 10, B: 20 });
+  assert.deepEqual(full.rows.map(r => [r.code, r.shares, r.trade]), [['A', -10, -100], ['B', 5, 100]]);
+  assert.equal(full.buy, 100);
+  assert.equal(full.sell, 100);
+  const withFree = P.rebalance([...rows, { code: 'C', value: 1000 }], { A: 50, B: 50 }, { A: 10, B: 20, C: 1 });
+  assert.equal(withFree.rows.find(r => r.code === 'C').trade, 0);
+  assert.equal(withFree.rows.find(r => r.code === 'B').trade, 100);
+  const buyOnly = P.rebalance(rows, { A: 50, B: 50 }, { A: 10, B: 20 }, 100, 'buy');
+  assert.deepEqual(buyOnly.rows.map(r => [r.code, r.trade]), [['A', 0], ['B', 100]]);
+  assert.equal(buyOnly.left, 0);
+  const odd = P.rebalance(rows, { A: 50, B: 50 }, { A: 10, B: 30 }, 100, 'buy');
+  assert.equal(odd.rows.find(r => r.code === 'B').trade, 90);
+  assert.equal(odd.left, 10);
+  const fresh = P.rebalance([], { X: 100 }, { X: 50 }, 1000, 'buy');
+  assert.equal(fresh.rows[0].shares, 20);
+});
+
+test('goal plan with and without growth and inflation', () => {
+  const flat = P.goalPlan({ now: 1000, monthly: 100, rate: 0, years: 1, target: 2200, inflation: 0 });
+  near(flat.fv, 2200, 1e-9, 'saved');
+  near(flat.need, 100, 1e-9, 'needed monthly');
+  assert.equal(flat.reach, 12);
+  const grow = P.goalPlan({ now: 1000, monthly: 0, rate: 12, years: 1, target: 1000, inflation: 12 });
+  near(grow.fv, 1120, 1e-9, 'a year at 12%');
+  near(grow.real, 1000, 1e-9, 'in today\'s money');
+  near(grow.targetNominal, 1120, 1e-9, 'target grows with prices');
+  assert.equal(grow.path.length, 2);
+});
+
+test('dividend forecast repeats last year\'s payments a year later', () => {
+  const divs = { A: [['2025-10-01', 5], ['2025-11-05', 2], ['2026-04-10', 1]] };
+  const f = P.dividendForecast([{ code: 'A', qty: 10 }], divs, '2026-10-23');
+  assert.equal(f.months[0].key, '2026-10');
+  assert.equal(f.months.length, 12);
+  assert.equal(f.months.find(m => m.key === '2026-11').total, 20);
+  assert.equal(f.months.find(m => m.key === '2027-04').total, 10);
+  assert.equal(f.total, 30);
+});
+
+test('CSV import: header, Turkish numbers and dates, bad lines reported', () => {
+  const bom = String.fromCharCode(0xfeff);
+  const r = P.parseCsv(`${bom}tarih;tur;kod;adet;fiyat;komisyon\r\n2026-01-05;alis;THYAO;100;280,50;5\r\n15.02.2026;satış;thyao;50;300\r\n2026-03-01;xx;THYAO;1;1\r\n`);
+  assert.deepEqual(r.txs, [
+    { date: '2026-01-05', type: 'buy', code: 'THYAO', qty: 100, price: 280.5, fee: 5 },
+    { date: '2026-02-15', type: 'sell', code: 'THYAO', qty: 50, price: 300, fee: 0 }
+  ]);
+  assert.deepEqual(r.errors, [4]);
+  assert.equal(P.parseCsv('2026-01-05,buy,ASELS,10,150.5').txs[0].price, 150.5);
+});

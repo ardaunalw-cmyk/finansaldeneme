@@ -4121,7 +4121,11 @@ function renderCommandPaletteResults(query) {
     }
 
     // K. Profile commands: /al, /sat, /izle, /not, /portföy (recorded on the profile page)
-    const profileWord = { al: 'Alış kaydı', sat: 'Satış kaydı', izle: 'İzleme listesi', not: 'Yatırım notu' }[cmd];
+    const profileWord = {
+      al: 'Alış kaydı', sat: 'Satış kaydı', izle: 'İzleme listesi', not: 'Yatırım notu', stop: 'Zarar-kes seviyesi',
+      hedef: 'Hedef fiyat', 'ağırlık': 'Hedef ağırlık', agirlik: 'Hedef ağırlık', nakit: 'Portföy nakdi',
+      'günlük': 'Yatırım günlüğü', gunluk: 'Yatırım günlüğü'
+    }[cmd];
     if (window.Profile && profileWord && arg1) {
       const line = rawQ.slice(1).trim();
       actions.push({

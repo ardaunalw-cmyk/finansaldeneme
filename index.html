@@ -2405,14 +2405,15 @@
     <div id="view-profile" class="view-panel">
       <div class="max-w-[1240px] mx-auto px-4 sm:px-6 py-8 space-y-5">
         <div id="pfHeader"></div>
+        <div id="pfSwitch"></div>
         <div id="pfKpis"></div>
-        <section class="rounded-2xl border border-oa-border bg-oa-card p-4 sm:p-5">
+        <section class="rounded-2xl border border-oa-border bg-oa-card p-4 sm:p-5 pf-noprint">
           <form id="pfCmdForm" onsubmit="Profile.submitCommand(event)" autocomplete="off">
             <label for="pfCmdInput" class="block text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">Komut satırı</label>
             <div class="flex gap-2">
               <div class="relative flex-1 min-w-0">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-[#7FA6FF] text-sm" aria-hidden="true">›</span>
-                <input id="pfCmdInput" type="text" spellcheck="false" onkeydown="Profile.cmdKey(event)" placeholder="al THYAO 100 · sat THYAO 50 · izle ASELS · alarm TUPRS 180 · yardım"
+                <input id="pfCmdInput" type="text" spellcheck="false" onkeydown="Profile.cmdKey(event)" placeholder="al THYAO 100 · sat THYAO 50 · stop THYAO 250 · nakit +5000 · günlük … · yardım"
                   class="w-full pl-8 pr-3 py-3 rounded-xl bg-[#090D18] border border-[#1A2540] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#2F6BFF] font-mono">
               </div>
               <button type="submit" class="px-4 py-3 rounded-xl bg-[#2F6BFF] hover:bg-[#4A7FFF] text-white text-sm font-semibold flex items-center gap-2"><i class="fa-solid fa-play text-xs"></i><span class="hidden sm:inline">Çalıştır</span></button>
