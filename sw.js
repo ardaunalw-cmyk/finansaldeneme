@@ -13,7 +13,7 @@ const STATIC_ASSETS = [
   './index.html',
   './manifest.json',
   './assets/lib/chart.min.js',
-  './assets/lib/fa/all.min.css?v=2',
+  // (the Font Awesome sheet carries a build hash now; the page's first request caches it)
   './assets/icons/icon-192.svg?v=2',
   './assets/icons/icon-512.svg?v=2'
 ];

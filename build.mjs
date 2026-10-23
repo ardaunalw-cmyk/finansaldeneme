@@ -64,10 +64,12 @@ execSync(
 // a changed file gets a new URL, an unchanged one is never downloaded again.
 {
   const html = readFileSync(`${OUT}/index.html`, 'utf8');
-  const stamped = html.replace(/((?:src|href)="assets\/(?:js|css)\/[^"?]+)"/g, (match, ref) => {
-    const hash = createHash('sha256').update(readFileSync(`${OUT}/${ref.split('"')[1]}`)).digest('hex').slice(0, 10);
-    return `${ref}?v=${hash}"`;
-  });
+  const stamp = ref => createHash('sha256').update(readFileSync(`${OUT}/${ref.split('"')[1]}`)).digest('hex').slice(0, 10);
+  const stamped = html
+    .replace(/((?:src|href)="assets\/(?:js|css)\/[^"?]+)"/g, (match, ref) => `${ref}?v=${stamp(ref)}"`)
+    // The Font Awesome sheet is trimmed to the icons in use above, so its content changes with the
+    // site; under a fixed ?v= and an immutable cache, visitors kept an old copy without new icons
+    .replace(/((?:src|href)="assets\/lib\/fa\/all\.min\.css)(?:\?v=[^"]*)?"/g, (match, ref) => `${ref}?v=${stamp(ref)}"`);
   writeFileSync(`${OUT}/index.html`, stamped);
 }
 
