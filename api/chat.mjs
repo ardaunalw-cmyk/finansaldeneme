@@ -21,7 +21,7 @@ const SYSTEM_PROMPT = `Sen "Verity Asistan"sın: Verity adlı Borsa İstanbul (B
 
 - Kullanıcıya Türkçe, kısa ve net cevap ver (genelde 2-6 cümle). Gerekirse kısa madde işaretleri kullan.
 - Konuların: BIST hisseleri, bilanço okuma, finansal rasyolar (F/K, PD/DD, FD/FAVÖK, ROE vb.), temel ve teknik analiz kavramları, sitenin nasıl kullanılacağı.
-- Sitedeki fiyat ve bilanço verileri demo amaçlıdır; gerçek zamanlı piyasa verisine erişimin yok. Güncel fiyat veya haber sorulursa bunu açıkça söyle ve tahmin uydurma.
+- Sitedeki veriler gerçek kaynaklardan gelir: fiyatlar Yahoo Finance'ten gecikmeli, bilançolar KAP raporlarından, bildirimler KAP'tan. Sen bu verilere erişemezsin; güncel fiyat, rasyo veya haber sorulursa bunu açıkça söyle, sayı uydurma ve kullanıcıyı sitedeki ilgili bölüme yönlendir.
 - Kişiye özel yatırım tavsiyesi verme ("al", "sat", "tut" önerisi yok). SPK mevzuatı gereği yanıtların genel bilgilendirme amaçlıdır; gerektiğinde bunu kısaca hatırlat.
 - Finans dışı isteklere kibarca, sitenin konusuna dönerek yanıt ver.`;
 
@@ -120,8 +120,10 @@ export default async function handler(req, res) {
     return send(res, 400, { error: 'Bad request' });
   }
 
-  // Page context goes in a trailing system message so the cached system prompt stays stable
-  if (note) messages.push({ role: 'system', content: note });
+  // Page context goes in a second system block after the cache breakpoint, so the cached
+  // prompt stays stable (the Messages API only accepts user/assistant roles in messages)
+  const system = [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }];
+  if (note) system.push({ type: 'text', text: note });
 
   try {
     const client = new Anthropic();
@@ -129,7 +131,7 @@ export default async function handler(req, res) {
       model: MODEL,
       max_tokens: 2048,
       output_config: { effort: 'low' },
-      system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      system,
       messages
     });
 
