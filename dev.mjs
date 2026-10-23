@@ -88,6 +88,8 @@ createServer(async (req, res) => {
       return;
     }
     if (path.endsWith('/')) path += 'index.html';
+    // Like vercel.json's rewrite: an address with no file extension (/hisse/THYAO) is the app
+    if (!extname(path)) path = '/index.html';
     const file = normalize(join(ROOT, path));
     if (!file.startsWith(ROOT)) {
       res.writeHead(403).end('403');

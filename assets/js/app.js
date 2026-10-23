@@ -547,6 +547,66 @@ function getStockLogoHtml(ticker, size = 32, extraClass = '') {
 }
 
 /* ==============================================================================
+   0.5. Addresses: /hisse/KOD for a stock page, /#view for the other views
+   (vercel.json rewrites every non-API path to index.html; <base href="/"> keeps assets working)
+   ============================================================================== */
+const STOCK_PATH = /^\/hisse\/([A-Za-z0-9]{2,8})\/?$/;
+const BASE_TITLE = document.title;
+let applyingUrl = false;   // true while the page follows the address (load, back/forward): nothing is pushed
+
+function routeFromUrl() {
+  const m = window.location.pathname.match(STOCK_PATH);
+  if (m) return { view: 'stock-detail', code: m[1].toLocaleUpperCase('tr-TR') };
+  return { view: decodeURIComponent(window.location.hash.replace('#', '')) || 'home', code: null };
+}
+
+function urlForView(view) {
+  if (view === 'stock-detail' && appState.currentStock) return `/hisse/${encodeURIComponent(appState.currentStock)}`;
+  return view === 'home' ? '/' : `/#${view}`;
+}
+
+/** Puts the current view in the address bar; 'push' for a click (a history entry), 'replace' otherwise. */
+function syncUrl(mode = 'push') {
+  if (applyingUrl) return;
+  const url = urlForView(appState.activeView);
+  if (window.location.pathname + window.location.hash !== url) {
+    try { window.history[mode === 'replace' ? 'replaceState' : 'pushState']({ view: appState.activeView }, '', url); } catch (e) { /* sandboxed frame */ }
+  }
+  updateDocumentTitle();
+}
+
+function updateDocumentTitle(name) {
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) canonical.href = `${window.location.origin}${appState.activeView === 'stock-detail' ? urlForView('stock-detail') : '/'}`;
+  if (appState.activeView !== 'stock-detail') { document.title = BASE_TITLE; return; }
+  const code = appState.currentStock;
+  const company = name || (appState.currentCompanyData && appState.currentCompanyData.code === code ? appState.currentCompanyData.name : '');
+  document.title = `${code}${company ? ` · ${company}` : ''} | Verity`;
+}
+
+window.addEventListener('popstate', () => {
+  const route = routeFromUrl();
+  applyingUrl = true;
+  try { switchView(route.view, route.code); } finally { applyingUrl = false; }
+  updateDocumentTitle();
+});
+
+/** Shares (or copies) the address of the stock page that is open. */
+async function shareCurrentStock() {
+  const url = `${window.location.origin}/hisse/${encodeURIComponent(appState.currentStock)}`;
+  const name = appState.currentCompanyData ? appState.currentCompanyData.name : appState.currentStock;
+  try {
+    if (navigator.share) { await navigator.share({ title: `${appState.currentStock} · Verity`, text: `${name} analizi`, url }); return; }
+    await navigator.clipboard.writeText(url);
+    showToast(`Bağlantı kopyalandı: ${url}`);
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;   // the viewer closed the share sheet
+    showToast(url);
+  }
+}
+window.shareCurrentStock = shareCurrentStock;
+
+/* ==============================================================================
    1. Master Application Initializer
    ============================================================================== */
 async function initApp() {
@@ -565,8 +625,10 @@ async function initApp() {
     initNavigation();
     
     // Fast First Render: Switch view immediately without blocking on heavy charts
-    const initialHash = window.location.hash.replace('#', '') || 'home';
-    switchView(initialHash);
+    const route = routeFromUrl();
+    applyingUrl = true;
+    try { switchView(route.view, route.code); } finally { applyingUrl = false; }
+    syncUrl('replace');   // canonical form, e.g. /hisse/thyao -> /hisse/THYAO
 
     initSearch();
     initStockTableFilters();
@@ -1315,6 +1377,7 @@ function switchView(viewName, stockCode = null) {
   }
 
   appState.activeView = viewName;
+  syncUrl('push');
   document.body.classList.toggle('is-home', viewName === 'home');
   closeSiteMenu();
 
@@ -1584,8 +1647,11 @@ async function renderTechScorecard(code) {
 async function loadStockDetails(ticker) {
   appState.currentStock = ticker.toUpperCase();
   appState.loadedStock = appState.currentStock;
+  // Opened from a list or search while the stock page shows: the address follows the stock
+  if (appState.activeView === 'stock-detail') syncUrl('replace');
   const fin = await MockFinancialApi.fetchFinancials(appState.currentStock);
   appState.currentCompanyData = fin;
+  if (appState.activeView === 'stock-detail' && appState.currentStock === fin.code) updateDocumentTitle(fin.name);
 
   // 1. Stock Header Elements
   const headerIcon = document.getElementById('stockDetailIcon');

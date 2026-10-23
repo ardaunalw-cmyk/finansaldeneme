@@ -2,6 +2,8 @@
 <html lang="tr" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
+  <!-- Stock pages live at /hisse/KOD: resolve every relative asset path from the site root -->
+  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <!-- iOS PWA & Standalone Fullscreen Configuration -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -920,6 +922,10 @@
                     <button id="stockDetailWatchlistStarBtn" onclick="toggleCurrentStockWatchlist()" class="px-2.5 py-0.5 rounded-lg bg-[#0C1322] hover:bg-[#162238] border border-[#1A2540] text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1.5 text-xs cursor-pointer" title="İzleme Listesine Ekle / Çıkar">
                       <i class="fa-regular fa-star text-xs" id="stockDetailWatchlistStarIcon"></i>
                       <span class="text-[11px] font-mono font-medium hidden sm:inline" id="stockDetailWatchlistStarText">İzle</span>
+                    </button>
+                    <button type="button" onclick="shareCurrentStock()" class="px-2.5 py-0.5 rounded-lg bg-[#0C1322] hover:bg-[#162238] border border-[#1A2540] text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 text-xs cursor-pointer" title="Bu hisse sayfasının bağlantısını paylaş (/hisse/KOD)">
+                      <i class="fa-solid fa-share-nodes text-xs"></i>
+                      <span class="text-[11px] font-mono font-medium hidden sm:inline">Paylaş</span>
                     </button>
 
                     <!-- Compare Button -->
@@ -2741,11 +2747,11 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
         <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 pt-2 gap-2 font-mono">
           <span>&copy; 2025-2026 Verity Inc. Tüm hakları saklıdır.</span>
           <div class="flex items-center gap-4 text-[11px]">
-            <a href="#" class="hover:text-red-400 transition-colors">Gizlilik Politikası</a>
+            <a href="#" onclick="event.preventDefault()" class="hover:text-red-400 transition-colors">Gizlilik Politikası</a>
             <span class="text-slate-700">&bull;</span>
-            <a href="#" class="hover:text-red-400 transition-colors">Kullanım Şartları</a>
+            <a href="#" onclick="event.preventDefault()" class="hover:text-red-400 transition-colors">Kullanım Şartları</a>
             <span class="text-slate-700">&bull;</span>
-            <a href="#" class="hover:text-red-400 transition-colors">KVKK Aydınlatma</a>
+            <a href="#" onclick="event.preventDefault()" class="hover:text-red-400 transition-colors">KVKK Aydınlatma</a>
           </div>
         </div>
       </div>
