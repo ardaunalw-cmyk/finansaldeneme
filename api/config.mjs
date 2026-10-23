@@ -16,6 +16,16 @@ export function supabaseConfig(env = process.env) {
   return { url, anonKey, google: env.SUPABASE_GOOGLE === '1' };
 }
 
+/** Why accounts are off, for setup (no values are revealed): missing, bad-url or bad-key. */
+export function offReason(env = process.env) {
+  const url = (env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const key = (env.SUPABASE_ANON_KEY || '').trim();
+  if (!url && !key) return 'missing';
+  if (!URL_RE.test(url)) return url ? 'bad-url' : 'missing-url';
+  if (!KEY_RE.test(key)) return key ? `bad-key (${key.length} karakter)` : 'missing-key';
+  return null;
+}
+
 export default function handler(req, res) {
   if (req.method !== 'GET') {
     res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -23,5 +33,6 @@ export default function handler(req, res) {
     return;
   }
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, s-maxage=300' });
-  res.end(JSON.stringify({ supabase: supabaseConfig() }));
+  const supabase = supabaseConfig();
+  res.end(JSON.stringify({ supabase, ...(supabase ? {} : { off: offReason() }) }));
 }
