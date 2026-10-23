@@ -1581,11 +1581,11 @@ html.intro-active, html.intro-active body { overflow: hidden; }
 .intro-splash.intro-out { opacity: 0; visibility: hidden; pointer-events: none; }
 .intro-splash.intro-out .intro-lockup { transform: scale(1.04); transition: transform .65s var(--ease); }
 .intro-lockup {
-  display: flex; align-items: center; column-gap: 18px;
+  display: flex; align-items: center; column-gap: 30px;
   transform: translateX(var(--shift, 0px));
   animation: intro-slide .95s var(--ease) 2.3s forwards;
 }
-.intro-mark { width: 132px; height: 132px; flex-shrink: 0; overflow: visible; filter: drop-shadow(0 0 22px rgba(36, 104, 255, .5)); }
+.intro-mark { width: 176px; height: 176px; flex-shrink: 0; overflow: visible; filter: drop-shadow(0 0 22px rgba(36, 104, 255, .5)); }
 .intro-bar {
   fill: rgba(36, 104, 255, .2);
   transform-box: fill-box; transform-origin: 50% 100%;
@@ -1603,6 +1603,16 @@ html.intro-active, html.intro-active body { overflow: hidden; }
   display: flex; font-family: var(--font-display); font-weight: 700;
   font-size: 64px; letter-spacing: .1em; color: #fff; line-height: 1;
   text-shadow: 0 0 24px rgba(79, 134, 255, .35);
+  position: relative;
+}
+/* Blue line drawn through the middle of VERITY once the letters are in (right edge skips the trailing letter-spacing) */
+.intro-word::after {
+  content: ""; position: absolute; left: -.08em; right: .02em; top: 50%;
+  height: 4px; margin-top: -2px; border-radius: 2px;
+  background: linear-gradient(90deg, #0A2FD0, #2468FF 45%, #4F86FF);
+  box-shadow: 0 0 14px rgba(36, 104, 255, .8);
+  transform: scaleX(0); transform-origin: 0 50%;
+  animation: intro-strike .6s var(--ease) 3.05s forwards;
 }
 .intro-word span {
   display: inline-block; opacity: 0;
@@ -1614,8 +1624,10 @@ html.intro-active, html.intro-active body { overflow: hidden; }
 @keyframes intro-head { to { transform: scale(1); opacity: 1; } }
 @keyframes intro-slide { to { transform: translateX(0); } }
 @keyframes intro-letter { to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes intro-strike { to { transform: scaleX(1); } }
 @media (max-width: 767px) {
-  .intro-mark { width: 88px; height: 88px; }
+  .intro-mark { width: 104px; height: 104px; }
+  .intro-word::after { height: 3px; margin-top: -1.5px; }
   .intro-word { font-size: 40px; }
   .intro-lockup { column-gap: 12px; }
 }
