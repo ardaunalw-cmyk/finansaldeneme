@@ -53,6 +53,13 @@ test('a board row compares with the previous close and keeps a month of closes',
   assert.ok(Math.abs(row.month - 10) < 1e-9);
   assert.deepEqual(row.spark, [100, 105, 110]);
   assert.equal(boardRow('X', null), null);
+  // The price's day has no bar yet (before the first daily bar is stamped): the last close is the previous one
+  const D = 86400;
+  const early = { meta: { regularMarketPrice: 120, regularMarketTime: 3 * D + 100, gmtoffset: 0 }, timestamp: [D, 2 * D], indicators: { quote: [{ close: [100, 110] }] } };
+  assert.equal(boardRow('K', early).prev, 110);
+  // Same day, a price a hair off the bar's close (Yahoo rounds them differently)
+  const same = { meta: { regularMarketPrice: 109.99, regularMarketTime: 2 * D + 500, gmtoffset: 0 }, timestamp: [D, 2 * D], indicators: { quote: [{ close: [100, 110] }] } };
+  assert.equal(boardRow('K', same).prev, 100);
 });
 
 test('world keys map to Yahoo symbols, BIST codes still work', () => {

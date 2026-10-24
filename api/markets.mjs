@@ -13,12 +13,21 @@ const cache = new Map();   // key -> { at, row }
 /** One board row from a Yahoo chart result (range 1mo, interval 1d); null without a price. */
 export function boardRow(key, result) {
   const meta = result?.meta;
-  const closes = (result?.indicators?.quote?.[0]?.close || []).filter(Number.isFinite);
+  const raw = result?.indicators?.quote?.[0]?.close || [];
+  const stamps = result?.timestamp || [];
+  const bars = raw.map((c, i) => ({ c, t: stamps[i] })).filter(b => Number.isFinite(b.c));
+  const closes = bars.map(b => b.c);
   const price = Number.isFinite(meta?.regularMarketPrice) ? meta.regularMarketPrice : closes[closes.length - 1];
   if (!Number.isFinite(price)) return null;
-  // The last daily close is today's while the market is open: compare with the one before it
-  const last = closes[closes.length - 1];
-  const prev = closes.length > 1 ? (Math.abs(last - price) / price < 1e-9 ? closes[closes.length - 2] : last) : meta?.chartPreviousClose;
+  // The last daily bar is the price's own day (in the exchange's time zone) once that day has a
+  // bar: then the previous close is the bar before it
+  const off = Number.isFinite(meta?.gmtoffset) ? meta.gmtoffset : 0;
+  const day = t => Math.floor((t + off) / 86400);
+  const lastBar = bars[bars.length - 1];
+  const sameDay = lastBar && Number.isFinite(lastBar.t) && Number.isFinite(meta?.regularMarketTime)
+    ? day(lastBar.t) === day(meta.regularMarketTime)
+    : true;
+  const prev = closes.length > 1 ? (sameDay ? closes[closes.length - 2] : closes[closes.length - 1]) : meta?.chartPreviousClose;
   return {
     key,
     name: meta?.longName || meta?.shortName || key,
