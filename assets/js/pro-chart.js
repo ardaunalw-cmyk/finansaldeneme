@@ -969,11 +969,85 @@ const ProChart = (() => {
       a.click();
       return;
     }
+    if (kind === 'keys') { paintKeys($('proChartKeys') && $('proChartKeys').classList.contains('hidden')); return; }
     if (kind === 'full') {
       const card = $('proChartCard');
       if (document.fullscreenElement) document.exitFullscreen();
       else if (card && card.requestFullscreen) card.requestFullscreen();
     }
+  }
+
+  /* ---------- keyboard ---------- */
+
+  /** Alt + key picks a drawing tool (e.code, so a Mac's Option characters do not matter). */
+  const TOOL_KEYS = { KeyH: 'h', KeyT: 't', KeyF: 'f', KeyY: 'y', KeyR: 'r', KeyC: 'c', KeyN: 'n', KeyM: 'm', KeyA: 'a' };
+  const IV_KEYS = Object.keys(INTERVALS);       // 1..7 -> 5dk .. H
+  const SHORTCUTS = [
+    ['A–Z', 'Hisse ara (yazmaya başla)'],
+    ['1 – 7', 'Zaman dilimi: 5dk, 15dk, 30dk, 1s, 4s, G, H'],
+    ['Alt + H / T / F', 'Seviye, trend, Fibonacci'],
+    ['Alt + Y / R / C', 'Işın, dikdörtgen, kanal'],
+    ['Alt + N / M / A', 'Not, ölç, alarm'],
+    ['Del', 'Silgi'],
+    ['Ctrl + Z', 'Son çizimi geri al'],
+    ['Alt + S', 'Grafiği PNG indir'],
+    ['Shift + F', 'Tam ekran'],
+    ['Esc', 'Aracı ve ölçümü kapat'],
+    ['?', 'Bu listeyi aç / kapat']
+  ];
+
+  function paintKeys(open) {
+    const el = $('proChartKeys');
+    if (!el) return;
+    el.classList.toggle('hidden', !open);
+    if (!open) return;
+    el.innerHTML = `
+      <div class="flex items-center justify-between gap-3 mb-1.5">
+        <span class="text-white font-bold"><i class="fa-solid fa-keyboard text-[10px] mr-1"></i>Kısayollar</span>
+        <button type="button" data-pc="keys" class="px-1 text-slate-500 hover:text-white" aria-label="Kısayolları kapat">×</button>
+      </div>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+        ${SHORTCUTS.map(([k, v]) => `<dt class="text-amber-300 whitespace-nowrap">${k}</dt><dd class="text-slate-300">${v}</dd>`).join('')}
+      </dl>`;
+  }
+
+  /** True while the chart is on screen (its tab open and some of it in view). */
+  function chartInView() {
+    const el = $('proChart');
+    if (!el || !state.chart || !el.clientWidth) return false;
+    const r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.top < window.innerHeight;
+  }
+
+  /** Opens the site search with the first letter typed on the chart. */
+  function openSearch(letter) {
+    const input = [...document.querySelectorAll('.global-search-input')].find(i => i.offsetParent !== null);
+    if (!input) return false;
+    input.focus();
+    input.value = letter;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return true;
+  }
+
+  function onKey(e) {
+    const t = e.target;
+    if (e.defaultPrevented || !chartInView()) return;
+    if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;
+    const press = sel => { const b = document.querySelector(`#proChartCard [data-pc="${sel}"]`); if (b) b.click(); };
+    let handled = true;
+    if (e.altKey && !e.ctrlKey && !e.metaKey && TOOL_KEYS[e.code]) setTool(state.tool === TOOL_KEYS[e.code] ? 'cursor' : TOOL_KEYS[e.code]);
+    else if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyS') press('shot');
+    else if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === 'KeyZ') {
+      if (!state.drawList.length) return;
+      press('undo');
+    } else if (e.ctrlKey || e.metaKey || e.altKey) handled = false;
+    else if (e.key === 'Delete') setTool(state.tool === 'x' ? 'cursor' : 'x');
+    else if (e.key === '?') paintKeys($('proChartKeys') && $('proChartKeys').classList.contains('hidden'));
+    else if (e.shiftKey && e.code === 'KeyF') press('full');
+    else if (/^[1-7]$/.test(e.key)) press(`iv:${IV_KEYS[Number(e.key) - 1]}`);
+    else if (e.key.length === 1 && /\p{L}/u.test(e.key)) handled = openSearch(e.key.toLocaleUpperCase('tr-TR'));
+    else handled = false;
+    if (handled) e.preventDefault();
   }
 
   /* ---------- build ---------- */
@@ -1085,6 +1159,9 @@ const ProChart = (() => {
         state.measure = null;
         setTool('cursor');
       }, true);
+      document.addEventListener('keydown', onKey);
+      const keys = $('proChartKeys');
+      if (keys) keys.addEventListener('click', e => { if (e.target.closest('[data-pc="keys"]')) paintKeys(false); });
       setInterval(refresh, REFRESH_MS);
       // Alert added, deleted or triggered anywhere on the site: redraw the alert lines
       window.addEventListener('verity:alerts', () => { if (state.chart && state.pending == null) build(true); });

@@ -1859,7 +1859,8 @@
                   <button type="button" data-pc="compare" aria-expanded="false" aria-controls="proChartCompare" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Başka bir hisse, BIST 100, dolar veya altınla karşılaştır"><i class="fa-solid fa-code-compare text-[10px] mr-1"></i>Karşılaştır</button>
                   <button type="button" data-pc="settings" aria-expanded="false" aria-controls="proChartSettings" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="İndikatör ayarları (periyotlar, eşikler)"><i class="fa-solid fa-sliders text-[10px]"></i></button>
                   <button type="button" data-pc="shot" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Grafiği PNG olarak indir"><i class="fa-solid fa-camera text-[10px]"></i></button>
-                  <button type="button" data-pc="full" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Tam ekran"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                  <button type="button" data-pc="keys" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Klavye kısayolları (?)" aria-controls="proChartKeys"><i class="fa-solid fa-keyboard text-[10px]"></i></button>
+                  <button type="button" data-pc="full" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Tam ekran (Shift + F)"><i class="fa-solid fa-expand text-[10px]"></i></button>
                 </div>
               </div>
 
@@ -1873,8 +1874,9 @@
                 <div id="proChart" class="absolute inset-0"></div>
                 <div id="proChartLegend" class="absolute top-1 left-2 right-20 z-10 pointer-events-none text-[11px] font-mono text-slate-300"></div>
                 <div id="proChartHint" class="hidden absolute top-1 right-16 z-10 pointer-events-none text-[11px] font-mono text-amber-300 bg-[#070B14]/90 border border-amber-800/50 rounded px-2 py-0.5"></div>
+                <div id="proChartKeys" class="hidden absolute top-8 right-16 z-20 p-3 rounded-xl border border-[#1A2540] bg-[#0A101C]/95 text-[11px] font-mono shadow-2xl"></div>
               </div>
-              <p class="text-[10px] text-slate-500 font-mono">Saatler İstanbul saatidir; fiyatlar Yahoo Finance'ten gecikmeli gelir, grafik dakikada bir yenilenir. Fare tekerleğiyle yakınlaştır, sürükleyerek kaydır; panelleri aradaki çizgiden boyutlandır. Çizimler yalnızca bu tarayıcıda saklanır; iki noktalı çizimler, uçları yüklenen geçmişin içindeyse diğer zaman dilimlerinde de görünür. Esc çizim aracını ve ölçümü kapatır.</p>
+              <p class="text-[10px] text-slate-500 font-mono">Saatler İstanbul saatidir; fiyatlar Yahoo Finance'ten gecikmeli gelir, grafik dakikada bir yenilenir. Fare tekerleğiyle yakınlaştır, sürükleyerek kaydır; panelleri aradaki çizgiden boyutlandır. Çizimler yalnızca bu tarayıcıda saklanır; iki noktalı çizimler, uçları yüklenen geçmişin içindeyse diğer zaman dilimlerinde de görünür. Esc çizim aracını ve ölçümü kapatır; tüm kısayollar için ? tuşuna bas.</p>
             </div>
 
             <!-- Strategy backtest on the chart's stock and timeframe (assets/js/backtest.js, backtest-ui.js) -->
