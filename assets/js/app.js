@@ -4591,8 +4591,8 @@ function handleSaveNewAlert() {
   const targetVal = parseFloat(valEl.value);
   const note = noteEl ? noteEl.value.trim() : '';
 
-  if (!ticker || isNaN(targetVal) || targetVal <= 0) {
-    alert('Lütfen geçerli bir hisse kodu ve hedef değer giriniz.');
+  if (!ticker || !AlertRules.validTarget(type, targetVal)) {
+    alert(alertTargetHint(type));
     return;
   }
 
@@ -4600,19 +4600,41 @@ function handleSaveNewAlert() {
     id: 'alt_' + Date.now(),
     ticker: ticker,
     type: type,
-    targetValue: targetVal,
+    targetValue: AlertRules.TYPES[type].value ? targetVal : 0,
     note: note || 'Canlı Piyasa Takibi',
     createdAt: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) + ' ' + new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
     triggered: false,
-    triggeredAt: null
+    triggeredAt: null,
+    email: !!document.getElementById('alertInputEmail')?.checked
   });
 
   tickerEl.value = '';
   valEl.value = '';
   if (noteEl) noteEl.value = '';
 
-  showTerminalToast(`Alarm Kuruldu: ${ticker}`, `${type.includes('rsi') ? 'RSI' : 'Fiyat'} ${targetVal} seviyesine alarm aktif.`, ticker, 'success');
+  showTerminalToast(`Alarm Kuruldu: ${ticker}`, `${AlertRules.badge({ type, targetValue: targetVal })} alarmı aktif.`, ticker, 'success');
 }
+
+/** Why a target was refused, per condition (alerts form and quick modal). */
+function alertTargetHint(type) {
+  const kind = AlertRules.TYPES[type] && AlertRules.TYPES[type].value;
+  if (kind === 'rsi') return 'Lütfen 1 ile 99 arasında bir RSI seviyesi giriniz.';
+  if (kind === 'period') return 'Lütfen 2 ile 400 arasında bir SMA periyodu giriniz (ör. 50).';
+  return 'Lütfen geçerli bir hisse kodu ve hedef değer giriniz.';
+}
+
+/** The target field follows the condition: price, RSI level, SMA period, or not needed. */
+function syncAlertValueField(selectId, inputId) {
+  const sel = document.getElementById(selectId), input = document.getElementById(inputId);
+  if (!sel || !input) return;
+  const kind = AlertRules.TYPES[sel.value] && AlertRules.TYPES[sel.value].value;
+  input.disabled = !kind;
+  input.placeholder = { price: '320.0', rsi: '30', period: '50' }[kind] || 'Gerekmez';
+  input.step = kind === 'period' ? '1' : '0.1';
+  if (!kind) input.value = '';
+  else if (kind === 'period' && !(Number(input.value) >= 2 && Number(input.value) <= 400 && Number.isInteger(Number(input.value)))) input.value = '50';
+}
+window.syncAlertValueField = syncAlertValueField;
 window.handleSaveNewAlert = handleSaveNewAlert;
 
 /** preset: { value, type } from a click on the price chart's alarm tool. */
@@ -4629,11 +4651,13 @@ function openSetAlertModal(ticker, preset) {
 
   const fin = getOrGenerateStockFinancials(t);
   if (preset && preset.value > 0) {
-    if (valInput) valInput.value = Number(preset.value).toFixed(2);
     if (condEl && preset.type) condEl.value = preset.type;
+    if (valInput) valInput.value = Number(preset.value).toFixed(2);
   } else if (valInput) {
+    if (condEl) condEl.value = 'price_above';
     valInput.value = fin.priceNum > 0 ? (fin.priceNum * 1.04).toFixed(2) : ''; // %4 yukarı hedef hazırla
   }
+  syncAlertValueField('quickAlertCondition', 'quickAlertValue');
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -4660,8 +4684,8 @@ function submitQuickAlert() {
   const val = parseFloat(valEl.value);
   const note = noteEl ? noteEl.value.trim() : '';
 
-  if (isNaN(val) || val <= 0) {
-    alert('Lütfen geçerli bir hedef değer giriniz.');
+  if (!AlertRules.validTarget(cond, val)) {
+    alert(alertTargetHint(cond));
     return;
   }
 
@@ -4669,15 +4693,16 @@ function submitQuickAlert() {
     id: 'alt_' + Date.now(),
     ticker: ticker,
     type: cond,
-    targetValue: val,
+    targetValue: AlertRules.TYPES[cond].value ? val : 0,
     note: note || 'Hızlı Terminal Alarmı',
     createdAt: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) + ' ' + new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
     triggered: false,
-    triggeredAt: null
+    triggeredAt: null,
+    email: !!document.getElementById('quickAlertEmail')?.checked
   });
 
   closeQuickAlertModal();
-  showTerminalToast(`Alarm Kuruldu: ${ticker}`, `${ticker} için hedef değer ${val} olarak ayarlandı.`, ticker, 'success');
+  showTerminalToast(`Alarm Kuruldu: ${ticker}`, `${ticker} için ${AlertRules.badge({ type: cond, targetValue: val })} alarmı ayarlandı.`, ticker, 'success');
 }
 window.submitQuickAlert = submitQuickAlert;
 
@@ -4702,28 +4727,29 @@ function renderAlertsItems() {
     const fin = getOrGenerateStockFinancials(alt.ticker);
     const curP = fin.priceNum || 0;
     const target = parseFloat(alt.targetValue);
-    const isPrice = alt.type.includes('price');
-    const isRsi = alt.type.includes('rsi');
+    const kind = AlertRules.TYPES[alt.type] ? AlertRules.TYPES[alt.type].value : 'price';
+    const isPrice = kind === 'price';
 
     let distText = '';
     if (isPrice && curP > 0) {
       const diffPct = ((target - curP) / curP) * 100;
       const sign = diffPct >= 0 ? '+' : '';
       distText = `Mevcut: ₺${curP.toFixed(2)} (${sign}%${Math.abs(diffPct).toFixed(1)})`;
-    } else if (isRsi) {
+    } else if (kind === 'rsi') {
       distText = `Hedef RSI Seviyesi: ${target}`;
+    } else {
+      distText = 'Günlük kapanışlarla kontrol edilir';
     }
 
-    let typeBadge = 'Fiyat >= Hedef';
-    if (alt.type === 'price_below') typeBadge = 'Fiyat <= Hedef';
-    else if (alt.type === 'rsi_above') typeBadge = 'RSI >= Hedef';
-    else if (alt.type === 'rsi_below') typeBadge = 'RSI <= Hedef';
+    const typeBadge = AlertRules.badge(alt);
+    const shown = isPrice ? '₺' + target.toFixed(2) : kind === 'rsi' ? target : kind === 'period' ? `SMA ${target}` : '';
 
     return `
       <div class="p-3 bg-[#0E1626] border ${alt.triggered ? 'border-amber-500/40 bg-amber-950/10' : 'border-[#1E2B45]'} rounded-xl transition-all space-y-2">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2">
             <span class="font-mono font-bold text-xs text-white">${alt.ticker}</span>
+            ${alt.email ? '<i class="fa-solid fa-envelope text-[10px] text-sky-400" title="Site kapalıyken e-posta ile de bildirilir (hesap gerekli)"></i>' : ''}
             <span class="text-[9px] font-mono px-1.5 py-px rounded ${alt.triggered ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-red-950/40 text-red-300 border border-red-800/40'} font-bold">
               ${alt.triggered ? 'TETİKLENDİ (' + (alt.triggeredAt || 'Bugün') + ')' : typeBadge}
             </span>
@@ -4736,7 +4762,7 @@ function renderAlertsItems() {
         <div class="flex items-baseline justify-between font-mono text-xs">
           <span class="text-slate-400 text-[11px]">${distText}</span>
           <span class="font-bold ${alt.triggered ? 'text-amber-400' : 'text-white'} text-sm">
-            ${isPrice ? '₺' + target.toFixed(2) : target}
+            ${shown}
           </span>
         </div>
 
@@ -4747,10 +4773,11 @@ function renderAlertsItems() {
 }
 
 /**
- * Checks all active alerts against the current price and RSI in real time.
+ * Checks all active alerts of a stock against its current price, RSI and daily closes
+ * (conditions in alert-rules.js; closes are needed by the cross alerts).
  */
-function checkActivePriceAlerts(ticker, currentPrice, currentRsi) {
-  if (!ticker || (!currentPrice && !currentRsi)) return;
+function checkActivePriceAlerts(ticker, currentPrice, currentRsi, closes) {
+  if (!ticker || (!currentPrice && !currentRsi && !closes)) return;
   const t = ticker.toUpperCase();
   const alerts = getAlerts();
   let updated = false;
@@ -4758,23 +4785,9 @@ function checkActivePriceAlerts(ticker, currentPrice, currentRsi) {
   alerts.forEach(alt => {
     if (alt.triggered || alt.ticker !== t) return;
 
-    let hit = false;
-    let hitText = '';
-    const val = parseFloat(alt.targetValue);
-
-    if (alt.type === 'price_above' && currentPrice && currentPrice >= val) {
-      hit = true;
-      hitText = `Fiyat Hedefine Ulaştı: ₺${currentPrice.toFixed(2)} (Hedef: ₺${val.toFixed(2)})`;
-    } else if (alt.type === 'price_below' && currentPrice && currentPrice <= val) {
-      hit = true;
-      hitText = `Fiyat Hedefine İndi: ₺${currentPrice.toFixed(2)} (Hedef: ₺${val.toFixed(2)})`;
-    } else if (alt.type === 'rsi_above' && currentRsi && currentRsi >= val) {
-      hit = true;
-      hitText = `RSI Aşırı Alım Seviyesine Ulaştı: ${currentRsi.toFixed(1)} (Hedef: ${val})`;
-    } else if (alt.type === 'rsi_below' && currentRsi && currentRsi <= val) {
-      hit = true;
-      hitText = `RSI Aşırı Satım Seviyesine İndi: ${currentRsi.toFixed(1)} (Hedef: ${val})`;
-    }
+    const result = AlertRules.evaluate(alt, { price: currentPrice, rsi: currentRsi, closes });
+    const hit = !!result;
+    const hitText = result ? result.text : '';
 
     if (hit) {
       alt.triggered = true;

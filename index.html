@@ -2986,17 +2986,23 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
           </div>
           <div>
             <label class="text-[9px] text-slate-400 block mb-1">ŞART / TİP</label>
-            <select id="alertInputType" class="w-full px-2 py-1 bg-[#070B14] border border-[#1A2540] rounded text-white text-xs">
+            <select id="alertInputType" onchange="syncAlertValueField('alertInputType', 'alertInputValue')" class="w-full px-2 py-1 bg-[#070B14] border border-[#1A2540] rounded text-white text-xs">
               <option value="price_above">Fiyat &gt;= Hedef</option>
               <option value="price_below">Fiyat &lt;= Hedef</option>
               <option value="rsi_above">RSI &gt;= Hedef (Aşırı Alım)</option>
               <option value="rsi_below">RSI &lt;= Hedef (Aşırı Satım)</option>
+              <option value="sma_cross_up">Fiyat SMA(N) üzerine çıkarsa</option>
+              <option value="sma_cross_down">Fiyat SMA(N) altına inerse</option>
+              <option value="golden_cross">Golden cross (SMA 50 ↑ 200)</option>
+              <option value="death_cross">Death cross (SMA 50 ↓ 200)</option>
+              <option value="macd_cross_up">MACD sinyali yukarı keserse</option>
+              <option value="macd_cross_down">MACD sinyali aşağı keserse</option>
             </select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2 text-xs font-mono">
           <div>
-            <label class="text-[9px] text-slate-400 block mb-1">HEDEF DEĞER (₺ veya RSI)</label>
+            <label class="text-[9px] text-slate-400 block mb-1">HEDEF (₺, RSI ya da SMA periyodu)</label>
             <input type="number" step="0.1" id="alertInputValue" placeholder="320.0" class="w-full px-2.5 py-1 bg-[#070B14] border border-[#1A2540] rounded text-white">
           </div>
           <div>
@@ -3004,6 +3010,10 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
             <input type="text" id="alertInputNote" placeholder="Direnç kırılımı" class="w-full px-2.5 py-1 bg-[#070B14] border border-[#1A2540] rounded text-white font-sans text-xs">
           </div>
         </div>
+        <label class="flex items-start gap-2 text-[10px] text-slate-400 font-mono leading-snug cursor-pointer">
+          <input type="checkbox" id="alertInputEmail" class="mt-0.5 accent-[#2F6BFF]">
+          <span>Site kapalıyken e-posta ile de haber ver (hesabınla giriş yapmış olmalısın; işlem saatlerinde 15 dakikada bir kontrol edilir)</span>
+        </label>
         <button onclick="handleSaveNewAlert()" class="w-full py-1.5 bg-[#2F6BFF] hover:bg-red-700 text-white rounded-lg text-xs font-mono font-bold transition-colors flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-bell"></i> Alarmı Kaydet ve Başlat
         </button>
@@ -3033,7 +3043,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
             <i class="fa-solid fa-bell"></i>
           </div>
           <div>
-            <h3 class="font-serif font-bold text-white text-base">Fiyat ve RSI Alarmı Kur</h3>
+            <h3 class="font-serif font-bold text-white text-base">Fiyat ve İndikatör Alarmı Kur</h3>
             <p class="text-xs text-slate-400 font-light" id="quickAlertStockSubtitle">THYAO için canlı piyasa alarmı</p>
           </div>
         </div>
@@ -3045,16 +3055,22 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
       <div class="space-y-3 text-xs font-mono">
         <div>
           <label class="text-[10px] text-slate-400 block mb-1">ŞART / KOŞUL</label>
-          <select id="quickAlertCondition" class="w-full px-3 py-2 bg-[#070B14] border border-[#1A2540] rounded-xl text-white text-xs">
+          <select id="quickAlertCondition" onchange="syncAlertValueField('quickAlertCondition', 'quickAlertValue')" class="w-full px-3 py-2 bg-[#070B14] border border-[#1A2540] rounded-xl text-white text-xs">
             <option value="price_above">Fiyat Hedefin Üzerine Çıktığında (&gt;=)</option>
             <option value="price_below">Fiyat Hedefin Altına İndiğinde (&lt;=)</option>
             <option value="rsi_above">RSI Aşırı Alım Bölgesine Ulaştığında (RSI &gt;=)</option>
             <option value="rsi_below">RSI Aşırı Satım Bölgesine İndiğinde (RSI &lt;=)</option>
+            <option value="sma_cross_up">Fiyat SMA(N) Üzerine Çıktığında</option>
+            <option value="sma_cross_down">Fiyat SMA(N) Altına İndiğinde</option>
+            <option value="golden_cross">Golden Cross: SMA 50, SMA 200'ü Yukarı Kestiğinde</option>
+            <option value="death_cross">Death Cross: SMA 50, SMA 200'ü Aşağı Kestiğinde</option>
+            <option value="macd_cross_up">MACD Sinyal Çizgisini Yukarı Kestiğinde (Al)</option>
+            <option value="macd_cross_down">MACD Sinyal Çizgisini Aşağı Kestiğinde (Sat)</option>
           </select>
         </div>
 
         <div>
-          <label class="text-[10px] text-slate-400 block mb-1">HEDEF DEĞER (₺ veya RSI Puanı)</label>
+          <label class="text-[10px] text-slate-400 block mb-1">HEDEF (₺, RSI Puanı ya da SMA Periyodu)</label>
           <input type="number" step="0.1" id="quickAlertValue" class="w-full px-3 py-2 bg-[#070B14] border border-[#1A2540] rounded-xl text-white text-sm font-bold font-mono">
         </div>
 
@@ -3062,6 +3078,11 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
           <label class="text-[10px] text-slate-400 block mb-1">ALARM AÇIKLAMASI (İsteğe Bağlı)</label>
           <input type="text" id="quickAlertNote" placeholder="Örn: Kâr alma hedefi / Destek kırılımı" class="w-full px-3 py-2 bg-[#070B14] border border-[#1A2540] rounded-xl text-white font-sans text-xs">
         </div>
+
+        <label class="flex items-start gap-2 text-[10px] text-slate-400 leading-snug cursor-pointer">
+          <input type="checkbox" id="quickAlertEmail" class="mt-0.5 accent-[#2F6BFF]">
+          <span>Site kapalıyken e-posta ile de haber ver (hesap gerekli; işlem saatlerinde 15 dakikada bir kontrol edilir)</span>
+        </label>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#1A2540]">
@@ -3090,6 +3111,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/company-about.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/indicators.js"></script>
+  <script src="assets/js/alert-rules.js"></script>
   <script src="assets/js/technicals.js"></script>
   <script src="assets/lib/lightweight-charts-5.2.1/lightweight-charts.standalone.production.js"></script>
   <script src="assets/js/pro-chart.js"></script>

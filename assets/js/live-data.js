@@ -334,11 +334,12 @@ const LiveData = (() => {
       for (const t of tickers) {
         const q = quotes[t];
         if (!q) continue;
-        let rsiNow = null;
-        if (pending.some(a => a.ticker === t && a.type.startsWith('rsi'))) {
-          try { rsiNow = await TechData.rsiLast(t); } catch { /* RSI alerts wait for data */ }
+        // RSI and cross alerts need the daily closes (the history request is cached)
+        let closes = null;
+        if (pending.some(a => a.ticker === t && AlertRules.needsCloses(a.type))) {
+          try { closes = (await TechData.history(t, '2y', '1d')).c; } catch { /* these alerts wait for data */ }
         }
-        checkActivePriceAlerts(t, q.price, rsiNow);
+        checkActivePriceAlerts(t, q.price, null, closes);
       }
     } catch (e) {
       console.warn('[LiveData] alert check failed:', e.message);

@@ -67,7 +67,24 @@ tarayıcıda tutmaya devam eder. Bir kerelik kurulum:
    (Google Cloud'da OAuth istemcisi gerekir) ve Vercel'e `SUPABASE_GOOGLE=1` ekleyin.
 
 `anon` anahtarı herkese açık olacak şekilde tasarlanmıştır; kimin neyi okuyup yazabileceğini
-veritabanındaki RLS kuralları belirler. `service_role` anahtarını hiçbir yere koymayın.
+veritabanındaki RLS kuralları belirler. `service_role` (secret) anahtarını Vercel'e ya da koda
+koymayın; tek yeri aşağıdaki e-posta alarmları için GitHub Secrets'tır.
+
+### E-posta alarmları (site kapalıyken)
+
+Alarm kurarken "e-posta ile de haber ver" seçilirse `.github/workflows/alerts.yml` işlem
+saatlerinde 15 dakikada bir `scripts/check-alerts.mjs`'i çalıştırır: hesaplardaki bu alarmları
+sitedeki kurallarla (`assets/js/alert-rules.js`) günlük Yahoo verisinde kontrol eder, tetiklenenleri
+hesapta "tetiklendi" yapar ve kullanıcının adresine Gmail'den yazar. GitHub → Settings → Secrets
+and variables → Actions altına şunları ekleyin (eksikse iş sessizce atlanır):
+
+- `SUPABASE_URL`: proje adresi
+- `SUPABASE_SERVICE_ROLE_KEY`: Project Settings → API Keys → `service_role` ya da `secret` anahtar
+- `GMAIL_USER`: gönderen Gmail adresi
+- `GMAIL_APP_PASSWORD`: aynı hesabın uygulama şifresi (aşağıdaki doğrulama e-postalarıyla aynı)
+
+Denemek için: Actions → E-mail alerts → Run workflow; yerelde `node scripts/check-alerts.mjs --dry`
+hiçbir şey yazmadan ya da göndermeden ne gideceğini listeler.
 
 ### Doğrulama e-postaları (kod ile, kendi Gmail adresimizden)
 
