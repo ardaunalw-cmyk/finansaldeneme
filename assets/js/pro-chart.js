@@ -962,17 +962,66 @@ const ProChart = (() => {
     }
     if (kind === 'undo') { const list = drawings(); list.pop(); saveDrawings(list); build(true); return; }
     if (kind === 'clear') { saveDrawings([]); build(true); return; }
-    if (kind === 'shot' && state.chart) {
-      const a = document.createElement('a');
-      a.href = state.chart.takeScreenshot().toDataURL('image/png');
-      a.download = `${state.ticker}-${state.interval}-grafik.png`;
-      a.click();
-      return;
-    }
+    if (kind === 'shot' && state.chart) { snapshot(); return; }
     if (kind === 'keys') { paintKeys($('proChartKeys') && $('proChartKeys').classList.contains('hidden')); return; }
     if (kind === 'full') { setFull(!isFull()); return; }
     if (kind === 'go') { goTo(value); return; }
     if (kind === 'watch') { if (typeof toggleStockWatchlist === 'function') toggleStockWatchlist(state.ticker); paintWatch(); }
+  }
+
+  /* ---------- snapshot ---------- */
+
+  const IV_NAMES = { '5m': '5 dk', '15m': '15 dk', '30m': '30 dk', '1h': '1 saat', '4h': '4 saat', '1d': 'Günlük', '1wk': 'Haftalık' };
+
+  /**
+   * PNG of the chart under a caption strip (stock, timeframe, last bar, date), downloaded and,
+   * where the browser allows it, also copied to the clipboard for pasting into a message.
+   */
+  function snapshot() {
+    const shot = state.chart.takeScreenshot();
+    const head = 34 * (window.devicePixelRatio || 1);
+    const out = document.createElement('canvas');
+    out.width = shot.width;
+    out.height = shot.height + head;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#070B14';
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(shot, 0, head);
+    const b = state.bars[state.bars.length - 1], prev = state.bars[state.bars.length - 2] || b;
+    const chg = (b.close / prev.close - 1) * 100;
+    const s = head / 34;
+    ctx.textBaseline = 'middle';
+    ctx.font = `bold ${13 * s}px JetBrains Mono, ui-monospace, monospace`;
+    ctx.fillStyle = '#FFFFFF';
+    const title = `${state.ticker} · ${IV_NAMES[state.interval]}`;
+    ctx.fillText(title, 10 * s, head / 2);
+    let x = 10 * s + ctx.measureText(title).width + 12 * s;
+    ctx.font = `${12 * s}px JetBrains Mono, ui-monospace, monospace`;
+    ctx.fillStyle = chg >= 0 ? COLORS.up : COLORS.down;
+    const last = `${fmt2.format(b.close)}  ${chg >= 0 ? '+' : ''}${fmt2.format(chg)}%`;
+    ctx.fillText(last, x, head / 2);
+    x += ctx.measureText(last).width;
+    ctx.fillStyle = COLORS.text;
+    const stamp = `ONCAL · ${new Date().toLocaleString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+    ctx.textAlign = 'right';
+    ctx.fillText(stamp, out.width - 10 * s, head / 2);
+    const name = `${state.ticker}-${state.interval}-${new Date().toISOString().slice(0, 10)}.png`;
+    out.toBlob(blob => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      const copy = navigator.clipboard && window.ClipboardItem
+        ? navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => true, () => false)
+        : Promise.resolve(false);
+      copy.then(ok => {
+        hint(ok ? 'Görüntü indirildi ve panoya kopyalandı' : 'Görüntü indirildi');
+        setTimeout(() => { if (state.tool === 'cursor') hint(''); }, 3000);
+      });
+    }, 'image/png');
   }
 
   /* ---------- chart mode (full screen with tools and watchlist) ---------- */
