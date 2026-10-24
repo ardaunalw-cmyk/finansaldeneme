@@ -51,6 +51,7 @@ const ProChart = (() => {
     ema21: { label: 'EMA 21', color: COLORS.violet },
     bb: { label: 'Bollinger', color: COLORS.slate },
     volume: { label: 'Hacim', color: COLORS.slate },
+    vp: { label: 'Hacim Profili', color: COLORS.slate },
     rsi: { label: 'RSI 14', color: COLORS.brand, pane: true },
     macd: { label: 'MACD', color: COLORS.sky, pane: true },
     stoch: { label: 'Stokastik', color: COLORS.sky, pane: true }
@@ -538,11 +539,73 @@ const ProChart = (() => {
     ctx.restore();
   }
 
-  /** Series primitive that paints paintOverlay() above the candles. */
-  function makeOverlay() {
+  /* ---------- volume profile (visible range) ---------- */
+
+  /**
+   * Volume by price over `bars`: each bar's volume is spread evenly over the price rows its
+   * high-low range covers, split into up (close >= open) and down volume. poc is the row with
+   * the most volume; the value area grows from it towards the heavier neighbour until it
+   * holds 70% of the volume. Returns null when there is nothing to profile.
+   */
+  function volumeProfile(bars, rows = 24) {
+    const used = bars.filter(b => b.volume > 0);
+    if (!used.length) return null;
+    const lo = Math.min(...used.map(b => b.low)), hi = Math.max(...used.map(b => b.high));
+    if (!(hi > lo)) return null;
+    const step = (hi - lo) / rows;
+    const out = Array.from({ length: rows }, () => ({ up: 0, down: 0 }));
+    used.forEach(b => {
+      const from = Math.min(rows - 1, Math.floor((b.low - lo) / step));
+      // A high exactly on a row's floor does not reach into that row
+      const to = Math.max(from, Math.min(rows - 1, Math.ceil((b.high - lo) / step) - 1));
+      const share = b.volume / (to - from + 1);
+      for (let r = from; r <= to; r++) out[r][b.close >= b.open ? 'up' : 'down'] += share;
+    });
+    const total = out.reduce((s, r) => s + r.up + r.down, 0);
+    const vol = r => (r >= 0 && r < rows ? out[r].up + out[r].down : -1);
+    let poc = 0;
+    out.forEach((_, r) => { if (vol(r) > vol(poc)) poc = r; });
+    let a = poc, b = poc, inside = vol(poc);
+    while (inside < total * 0.7 && (a > 0 || b < rows - 1)) {
+      if (vol(b + 1) >= vol(a - 1)) inside += vol(++b); else inside += vol(--a);
+    }
+    return { lo, step, rows: out, poc, vaLow: a, vaHigh: b };
+  }
+
+  /** The profile of the bars on screen, drawn from the right edge behind the candles. */
+  function paintProfile(ctx, size) {
+    if (!state.bars || !state.main || !state.chart) return;
+    const range = state.chart.timeScale().getVisibleLogicalRange();
+    if (!range) return;
+    const from = Math.max(0, Math.floor(range.from)), to = Math.min(state.bars.length - 1, Math.ceil(range.to));
+    const p = volumeProfile(state.bars.slice(from, to + 1));
+    if (!p) return;
+    const max = Math.max(...p.rows.map(r => r.up + r.down));
+    const width = size.width * 0.25;
+    p.rows.forEach((r, i) => {
+      const yTop = state.main.priceToCoordinate(p.lo + (i + 1) * p.step), yBot = state.main.priceToCoordinate(p.lo + i * p.step);
+      if (yTop == null || yBot == null) return;
+      const h = Math.max(1, yBot - yTop - 1);
+      const inVa = i >= p.vaLow && i <= p.vaHigh;
+      const wUp = width * r.up / max, wDown = width * r.down / max;
+      ctx.fillStyle = inVa ? 'rgba(16, 185, 129, 0.38)' : 'rgba(16, 185, 129, 0.18)';
+      ctx.fillRect(size.width - wUp - wDown, yTop, wUp, h);
+      ctx.fillStyle = inVa ? 'rgba(244, 63, 94, 0.38)' : 'rgba(244, 63, 94, 0.18)';
+      ctx.fillRect(size.width - wDown, yTop, wDown, h);
+      if (i === p.poc) {
+        ctx.strokeStyle = COLORS.amber;
+        ctx.setLineDash([2, 3]);
+        ctx.beginPath(); ctx.moveTo(0, yTop + h / 2); ctx.lineTo(size.width, yTop + h / 2); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  }
+
+  /** Series primitive that paints `paint(ctx, size)` above (or behind) the candles. */
+  function makeOverlay(paint = paintOverlay, z = 'top') {
     let request = null;
-    const renderer = { draw: target => target.useMediaCoordinateSpace(({ context, mediaSize }) => paintOverlay(context, mediaSize)) };
-    const view = { renderer: () => renderer, zOrder: () => 'top' };
+    const renderer = { draw: target => target.useMediaCoordinateSpace(({ context, mediaSize }) => paint(context, mediaSize)) };
+    const view = { renderer: () => renderer, zOrder: () => z };
     return {
       attached: p => { request = p.requestUpdate; },
       detached: () => { request = null; },
@@ -770,7 +833,7 @@ const ProChart = (() => {
       }
     });
   }
-  const PRICE_OVERLAYS = ['sma20', 'sma50', 'sma200', 'ema9', 'ema21', 'bb'];
+  const PRICE_OVERLAYS = ['sma20', 'sma50', 'sma200', 'ema9', 'ema21', 'bb', 'vp'];
 
   /* ---------- indicator settings panel ---------- */
 
@@ -1235,6 +1298,7 @@ const ProChart = (() => {
       paintAlerts(main);
       state.overlay = makeOverlay();
       main.attachPrimitive(state.overlay);
+      if (state.on.has('vp')) main.attachPrimitive(makeOverlay(paintProfile, 'bottom'));
     }
     // Backtest trades, only on the stock and timeframe they were computed for
     if (state.marks && state.marks.key === viewKey()) L.createSeriesMarkers(main, state.marks.list);
@@ -1387,7 +1451,7 @@ const ProChart = (() => {
   /** Vertical position (px inside the chart) of a price on the price pane, or null. */
   const priceToY = price => (state.main ? state.main.priceToCoordinate(price) : null);
 
-  return { load, current, setMarkers, priceToY, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel };
+  return { load, current, setMarkers, priceToY, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
 })();
 
 window.ProChart = ProChart;

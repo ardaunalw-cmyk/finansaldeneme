@@ -10,7 +10,7 @@ import vm from 'node:vm';
 const context = { window: {} };
 vm.createContext(context);
 vm.runInContext(readFileSync(new URL('../assets/js/pro-chart.js', import.meta.url), 'utf8'), context);
-const { toBars, heikinAshi, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel } = context.window.ProChart;
+const { toBars, heikinAshi, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile } = context.window.ProChart;
 // Arrays from the vm context have another realm's prototype, so compare plain copies
 const plain = v => JSON.parse(JSON.stringify(v));
 
@@ -115,6 +115,20 @@ test('a ray runs to the pane edge on the side of its second point', () => {
 test('the measure label gives the change, the percent and the bar count', () => {
   assert.equal(measureLabel(100, 112.4, 23), '+12,40 (+12,40%) · 23 mum');
   assert.equal(measureLabel(200, 150, -5), '-50,00 (-25,00%) · 5 mum');
+});
+
+test('volume profile spreads each bar over its price rows and finds the POC and value area', () => {
+  // Rows of 1 between 10 and 14: an up bar over 10-12 (rows 0 and 1), a down bar over 11.5-13.5
+  // (rows 1-3) and a heavy down bar inside 13-14 (row 3)
+  const p = volumeProfile([bar(1, 10, 12, 10, 11, 300), bar(2, 13, 13.5, 11.5, 12, 600), bar(3, 14, 14, 13, 13, 500)], 4);
+  assert.equal(p.lo, 10);
+  assert.equal(p.step, 1);
+  assert.deepEqual(plain(p.rows.map(r => [r.up, r.down])), [[150, 0], [150, 200], [0, 200], [0, 700]]);
+  assert.equal(p.poc, 3);
+  // 70% of 1400 = 980: POC (700), then the heavier neighbour below (row 2: 200), then row 1 (350)
+  assert.deepEqual([p.vaLow, p.vaHigh], [1, 3]);
+  assert.equal(volumeProfile([bar(1, 1, 1, 1, 1, 0)]), null);
+  assert.equal(volumeProfile([bar(1, 5, 5, 5, 5, 10)]), null);
 });
 
 test('drawing points snap to the nearest bar, and outside the loaded bars to nothing', () => {
