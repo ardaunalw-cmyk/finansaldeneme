@@ -6,7 +6,10 @@
  * weekly; 4-hour bars are built here from hourly ones. Times are shifted to Istanbul time so
  * the axis reads like the exchange clock. Indicators are the pure functions in indicators.js;
  * oscillators get their own panes under the price. Drawings (horizontal level, trend line,
- * Fibonacci) are kept per stock in this browser only and follow the stock across timeframes.
+ * Fibonacci, ray, rectangle, parallel channel, text note) are kept per stock in this browser
+ * only and follow the stock across timeframes. Shapes the library has no series for are
+ * painted on a canvas primitive attached to the price series, which also draws the preview of
+ * an unfinished drawing and the measure tool.
  */
 const ProChart = (() => {
   const L = window.LightweightCharts;
@@ -115,6 +118,11 @@ const ProChart = (() => {
     range: SPANS[savedRange] ? savedRange : '6A',
     tool: 'cursor',
     pending: null,              // first click of a two-point drawing
+    pending2: null,             // second click of a channel (the third sets its width)
+    hover: null,                // { x, y, time, price } under the mouse while a drawing is unfinished
+    measure: null,              // { a, b } of the last measurement, shown until the next click or Esc
+    overlay: null,              // canvas primitive on the price series
+    drawList: [],               // drawings of the stock on screen, as last saved
     chart: null,
     main: null,
     binds: [],                  // re-set each series' data from state.bars (periodic refresh)
@@ -417,29 +425,194 @@ const ProChart = (() => {
     return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
   }
 
+  /* ---------- canvas drawings (ray, rectangle, channel, note, measure) ---------- */
+
+  const DRAW_FILL = 'rgba(251, 191, 36, 0.10)';
+  const NOTE_FONT = '11px JetBrains Mono, ui-monospace, monospace';
+
+  /** Screen point of a stored { time, price }, or null when its bar is not loaded. */
+  function toXY(p) {
+    const t = snapTime(state.bars, p.time);
+    const x = t == null ? null : state.chart.timeScale().timeToCoordinate(t);
+    const y = state.main.priceToCoordinate(p.price);
+    return x == null || y == null ? null : { x, y };
+  }
+
+  const yOnLine = (a, b, x) => (b.x === a.x ? a.y : a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x));
+
+  /** Where the line a->b leaves the pane on b's side: a ray runs to the edge. */
+  const rayEnd = (a, b, width) => (b.x === a.x ? b : { x: b.x > a.x ? width : 0, y: yOnLine(a, b, b.x > a.x ? width : 0) });
+
+  /** Pixel shift of a channel's parallel line (its width is kept in price units). */
+  function channelDy(d) {
+    const base = state.main.priceToCoordinate(d.a.price), moved = state.main.priceToCoordinate(d.a.price + d.off);
+    return base == null || moved == null ? 0 : moved - base;
+  }
+
+  /** Box of a note's label next to its anchor (monospace, so the width follows the length). */
+  const noteBox = (p, text) => ({ x: p.x + 6, y: p.y - 22, w: text.length * 6.7 + 12, h: 18 });
+
+  const barIndex = p => state.bars.findIndex(b => b.time === snapTime(state.bars, p.time));
+
+  /** "+12,40 (+5,31%) · 23 mum" between two prices `bars` candles apart. */
+  function measureLabel(from, to, bars) {
+    const diff = to - from;
+    const sign = diff >= 0 ? '+' : '';
+    return `${sign}${fmt2.format(diff)} (${sign}${fmt2.format(from ? diff / from * 100 : 0)}%) · ${Math.abs(bars)} mum`;
+  }
+
+  function paintOverlay(ctx, size) {
+    if (!state.bars || !state.main || !state.chart) return;
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.font = NOTE_FONT;
+    ctx.textBaseline = 'middle';
+    const seg = (a, b, dash = []) => { ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.setLineDash([]); };
+    const ink = () => { ctx.strokeStyle = COLORS.draw; ctx.fillStyle = DRAW_FILL; };
+    const rect = (a, b) => {
+      ink();
+      ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+      ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+    };
+    const channel = (a, b, dy) => {
+      ink();
+      const a2 = { x: a.x, y: a.y + dy }, b2 = { x: b.x, y: b.y + dy };
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(b2.x, b2.y); ctx.lineTo(a2.x, a2.y); ctx.closePath(); ctx.fill();
+      seg(a, b); seg(a2, b2);
+      seg({ x: a.x, y: a.y + dy / 2 }, { x: b.x, y: b.y + dy / 2 }, [4, 4]);
+    };
+    const note = (p, text) => {
+      const box = noteBox(p, text);
+      ctx.fillStyle = 'rgba(7, 11, 20, 0.92)'; ctx.strokeStyle = COLORS.draw;
+      ctx.fillRect(box.x, box.y, box.w, box.h); ctx.strokeRect(box.x, box.y, box.w, box.h);
+      ctx.fillStyle = COLORS.draw; ctx.fillText(text, box.x + 6, box.y + box.h / 2 + 0.5);
+      ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2); ctx.fill();
+    };
+    const measure = (a, b, label) => {
+      const up = b.y <= a.y;
+      ctx.strokeStyle = up ? COLORS.up : COLORS.down;
+      ctx.fillStyle = up ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)';
+      ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+      seg(a, b, [4, 3]);
+      const w = label.length * 6.7 + 12, x = (a.x + b.x) / 2 - w / 2, y = up ? Math.min(a.y, b.y) - 24 : Math.max(a.y, b.y) + 6;
+      ctx.fillStyle = up ? COLORS.up : COLORS.down;
+      ctx.fillRect(x, y, w, 18);
+      ctx.fillStyle = '#FFFFFF'; ctx.fillText(label, x + 6, y + 9.5);
+    };
+
+    state.drawList.forEach(d => {
+      if (!['r', 'y', 'c', 'n'].includes(d.type)) return;
+      const a = toXY(d.a);
+      if (!a) return;
+      if (d.type === 'n') { note(a, d.text); return; }
+      const b = toXY(d.b);
+      if (!b) return;
+      if (d.type === 'r') rect(a, b);
+      else if (d.type === 'y') { ink(); seg(a, rayEnd(a, b, size.width)); }
+      else channel(a, b, channelDy(d));
+    });
+
+    if (state.measure) {
+      const a = toXY(state.measure.a), b = toXY(state.measure.b);
+      if (a && b) measure(a, b, measureLabel(state.measure.a.price, state.measure.b.price, barIndex(state.measure.b) - barIndex(state.measure.a)));
+    }
+
+    // Unfinished drawing: its shape follows the mouse
+    const h = state.hover;
+    const a = state.pending && h ? toXY(state.pending) : null;
+    if (a) {
+      ctx.globalAlpha = 0.75;
+      const tool = state.tool;
+      if (tool === 'c' && state.pending2) {
+        const b = toXY(state.pending2);
+        if (b) channel(a, b, h.y - yOnLine(a, b, h.x));
+      } else if (tool === 'c' || tool === 't' || tool === 'f') { ink(); seg(a, h, tool === 'f' ? [4, 4] : []); }
+      else if (tool === 'y') { ink(); seg(a, rayEnd(a, h, size.width)); }
+      else if (tool === 'r') rect(a, h);
+      else if (tool === 'm' && h.price != null) {
+        const logical = state.chart.timeScale().coordinateToLogical(h.x);
+        measure(a, h, measureLabel(state.pending.price, h.price, logical == null ? 0 : Math.round(logical) - barIndex(state.pending)));
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+
+  /** Series primitive that paints paintOverlay() above the candles. */
+  function makeOverlay() {
+    let request = null;
+    const renderer = { draw: target => target.useMediaCoordinateSpace(({ context, mediaSize }) => paintOverlay(context, mediaSize)) };
+    const view = { renderer: () => renderer, zOrder: () => 'top' };
+    return {
+      attached: p => { request = p.requestUpdate; },
+      detached: () => { request = null; },
+      updateAllViews: () => {},
+      paneViews: () => [view],
+      redraw: () => { if (request) request(); }
+    };
+  }
+  const redrawOverlay = () => { if (state.overlay) state.overlay.redraw(); };
+
+  function trackHover(param) {
+    if (!state.pending) { if (state.hover) { state.hover = null; redrawOverlay(); } return; }
+    state.hover = param.point
+      ? { x: param.point.x, y: param.point.y, time: param.time ?? null, price: state.main.coordinateToPrice(param.point.y) }
+      : null;
+    redrawOverlay();
+  }
+
   /** Index of the drawing closest to a click (within 8 px on screen), or -1. */
   function drawingAt(point) {
-    const ts = state.chart.timeScale();
     const y = price => state.main.priceToCoordinate(price);
+    const width = $('proChart') ? $('proChart').clientWidth : 0;
     let best = -1, bestDist = 8;
-    drawings().forEach((d, i) => {
+    state.drawList.forEach((d, i) => {
       let dist = Infinity;
       if (d.type === 'h') dist = Math.abs(y(d.price) - point.y);
       else if (d.type === 'f') {
         const span = d.b.price - d.a.price;
         dist = Math.min(...FIB.map(r => Math.abs(y(d.b.price - span * r) - point.y)));
-      } else if (d.type === 't') {
-        const ta = snapTime(state.bars, d.a.time), tb = snapTime(state.bars, d.b.time);
-        const xa = ta == null ? null : ts.timeToCoordinate(ta), xb = tb == null ? null : ts.timeToCoordinate(tb);
-        if (xa != null && xb != null) dist = segmentDistance(point, { x: xa, y: y(d.a.price) }, { x: xb, y: y(d.b.price) });
+      } else if (d.type === 'n') {
+        const a = toXY(d.a);
+        const box = a && noteBox(a, d.text);
+        if (box && point.x >= box.x && point.x <= box.x + box.w && point.y >= box.y && point.y <= box.y + box.h) dist = 0;
+        else if (a) dist = Math.hypot(point.x - a.x, point.y - a.y);
+      } else {
+        const a = toXY(d.a), b = toXY(d.b);
+        if (!a || !b) return;
+        if (d.type === 't') dist = segmentDistance(point, a, b);
+        else if (d.type === 'y') dist = segmentDistance(point, a, rayEnd(a, b, width));
+        else if (d.type === 'r') {
+          const inside = point.x >= Math.min(a.x, b.x) && point.x <= Math.max(a.x, b.x) && point.y >= Math.min(a.y, b.y) && point.y <= Math.max(a.y, b.y);
+          dist = inside ? 0 : Math.min(...[[a, { x: b.x, y: a.y }], [{ x: b.x, y: a.y }, b], [b, { x: a.x, y: b.y }], [{ x: a.x, y: b.y }, a]].map(([p, q]) => segmentDistance(point, p, q)));
+        } else if (d.type === 'c') {
+          const dy = channelDy(d);
+          const lo = Math.min(yOnLine(a, b, point.x), yOnLine(a, b, point.x) + dy), hi = Math.max(yOnLine(a, b, point.x), yOnLine(a, b, point.x) + dy);
+          const within = point.x >= Math.min(a.x, b.x) && point.x <= Math.max(a.x, b.x);
+          dist = within && point.y >= lo && point.y <= hi ? 0
+            : Math.min(segmentDistance(point, a, b), segmentDistance(point, { x: a.x, y: a.y + dy }, { x: b.x, y: b.y + dy }));
+        }
       }
       if (Number.isFinite(dist) && dist < bestDist) { best = i; bestDist = dist; }
     });
     return best;
   }
 
+  const SECOND_CLICK = {
+    t: 'Trend çizgisi: ikinci noktaya tıkla',
+    f: 'Fibonacci: ikinci noktaya (diğer uç) tıkla',
+    y: 'Işın: yönü belirleyen ikinci noktaya tıkla',
+    r: 'Dikdörtgen: karşı köşeye tıkla',
+    c: 'Kanal: ana çizginin ikinci noktasına tıkla',
+    m: 'Ölç: bitiş noktasına tıkla'
+  };
+
   function onClick(param) {
-    if (state.tool === 'cursor' || !param.point) return;
+    if (!param.point) return;
+    if (state.tool === 'cursor') {
+      if (state.measure) { state.measure = null; redrawOverlay(); }
+      return;
+    }
     if (state.tool === 'x') {
       if (activeCompare().length) { hint('Karşılaştırma açıkken çizimler gizli; önce karşılaştırmayı kapat'); return; }
       const i = drawingAt(param.point);
@@ -464,15 +637,38 @@ const ProChart = (() => {
       return;
     }
     const list = drawings();
-    if (state.tool === 'h') {
+    if (state.tool === 'n') {
+      setTool('cursor');
+      const text = (window.prompt('Not metni (en fazla 80 karakter)', '') || '').trim().slice(0, 80);
+      if (!text) return;
+      list.push({ type: 'n', a: point, text });
+    } else if (state.tool === 'h') {
       list.push({ type: 'h', price: point.price });
     } else if (!state.pending) {
       state.pending = point;
-      hint(state.tool === 't' ? 'Trend çizgisi: ikinci noktaya tıkla' : 'Fibonacci: ikinci noktaya (diğer uç) tıkla');
+      hint(SECOND_CLICK[state.tool]);
+      return;
+    } else if (state.tool === 'm') {
+      state.measure = { a: state.pending, b: point };
+      setTool('cursor');
+      redrawOverlay();
       return;
     } else {
       if (state.pending.time === point.time) return;      // same bar: wait for a real second point
-      list.push({ type: state.tool, a: state.pending, b: point });
+      if (state.tool === 'c' && !state.pending2) {
+        state.pending2 = point;
+        hint('Kanal: genişlik için üçüncü noktaya tıkla');
+        return;
+      }
+      if (state.tool === 'c') {
+        // Width: the click's distance from the main line, measured where it was clicked
+        const a = toXY(state.pending), b = toXY(state.pending2);
+        const onLine = a && b ? state.main.coordinateToPrice(yOnLine(a, b, param.point.x)) : null;
+        if (onLine == null) return;
+        list.push({ type: 'c', a: state.pending, b: state.pending2, off: Math.round((price - onLine) * 10000) / 10000 });
+      } else {
+        list.push({ type: state.tool, a: state.pending, b: point });
+      }
       state.pending = null;
     }
     saveDrawings(list);
@@ -534,14 +730,23 @@ const ProChart = (() => {
   function setTool(tool) {
     state.tool = tool;
     state.pending = null;
+    state.pending2 = null;
+    state.hover = null;
+    if (tool !== 'cursor') state.measure = null;
     hint({
       h: 'Yatay seviye: fiyata tıkla',
       t: 'Trend çizgisi: ilk noktaya tıkla',
       f: 'Fibonacci: dip ya da zirveye tıkla',
+      y: 'Işın: başlangıç noktasına tıkla',
+      r: 'Dikdörtgen: bir köşeye tıkla',
+      c: 'Kanal: ana çizginin ilk noktasına tıkla',
+      n: 'Not: notun yerine tıkla',
+      m: 'Ölç: başlangıç noktasına tıkla',
       a: 'Alarm: hedef fiyata tıkla',
-      x: 'Sil: silmek istediğin çizgiye tıkla'
+      x: 'Sil: silmek istediğin çizime tıkla'
     }[tool] || '');
     paintToolbar();
+    redrawOverlay();
   }
 
   function paintToolbar() {
@@ -801,14 +1006,18 @@ const ProChart = (() => {
     }
     addIndicators(chart, comparing);
     // Levels, drawings and alert lines are prices; in percent mode they would sit in the wrong place
+    state.drawList = drawings();
+    state.overlay = null;
     if (!comparing) {
       paintDrawings(chart, main);
       paintAlerts(main);
+      state.overlay = makeOverlay();
+      main.attachPrimitive(state.overlay);
     }
     // Backtest trades, only on the stock and timeframe they were computed for
     if (state.marks && state.marks.key === viewKey()) L.createSeriesMarkers(main, state.marks.list);
 
-    chart.subscribeCrosshairMove(paintLegend);
+    chart.subscribeCrosshairMove(param => { paintLegend(param); trackHover(param); });
     // The percent base is the first visible bar, so scrolling changes the figures
     if (comparing) chart.timeScale().subscribeVisibleLogicalRangeChange(() => paintLegend(null));
     chart.subscribeClick(onClick);
@@ -871,7 +1080,11 @@ const ProChart = (() => {
         cmp.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'proChartCompareInput') addCompare(e.target.value); });
       }
       // Capture phase: the site's own shortcuts stop Escape before it bubbles up
-      document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.tool !== 'cursor') setTool('cursor'); }, true);
+      document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape' || (state.tool === 'cursor' && !state.measure)) return;
+        state.measure = null;
+        setTool('cursor');
+      }, true);
       setInterval(refresh, REFRESH_MS);
       // Alert added, deleted or triggered anywhere on the site: redraw the alert lines
       window.addEventListener('verity:alerts', () => { if (state.chart && state.pending == null) build(true); });
@@ -927,7 +1140,7 @@ const ProChart = (() => {
   /** Vertical position (px inside the chart) of a price on the price pane, or null. */
   const priceToY = price => (state.main ? state.main.priceToCoordinate(price) : null);
 
-  return { load, current, setMarkers, priceToY, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo };
+  return { load, current, setMarkers, priceToY, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel };
 })();
 
 window.ProChart = ProChart;

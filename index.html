@@ -1845,6 +1845,11 @@
                   <button type="button" data-pc="tool:h" title="Yatay seviye çiz"><i class="fa-solid fa-grip-lines text-[10px] mr-1"></i>Seviye</button>
                   <button type="button" data-pc="tool:t" title="İki nokta arasında trend çizgisi"><i class="fa-solid fa-chart-line text-[10px] mr-1"></i>Trend</button>
                   <button type="button" data-pc="tool:f" title="İki nokta arasında Fibonacci düzeltmesi"><i class="fa-solid fa-bezier-curve text-[10px] mr-1"></i>Fibonacci</button>
+                  <button type="button" data-pc="tool:y" title="İki noktadan geçip sağa (ya da sola) uzayan ışın"><i class="fa-solid fa-arrow-right-long text-[10px] mr-1"></i>Işın</button>
+                  <button type="button" data-pc="tool:r" title="İki köşe arasında dikdörtgen (bölge)"><i class="fa-solid fa-vector-square text-[10px] mr-1"></i>Dikdörtgen</button>
+                  <button type="button" data-pc="tool:c" title="Paralel kanal: iki nokta ana çizgi, üçüncü nokta genişlik"><i class="fa-solid fa-bars-staggered text-[10px] mr-1"></i>Kanal</button>
+                  <button type="button" data-pc="tool:n" title="Grafiğe metin notu ekle"><i class="fa-solid fa-font text-[10px] mr-1"></i>Not</button>
+                  <button type="button" data-pc="tool:m" title="İki nokta arasındaki fiyat farkını, yüzdeyi ve mum sayısını ölç"><i class="fa-solid fa-ruler text-[10px] mr-1"></i>Ölç</button>
                   <button type="button" data-pc="tool:a" title="Tıkladığın fiyata alarm kur"><i class="fa-solid fa-bell text-[10px] mr-1"></i>Alarm</button>
                   <button type="button" data-pc="tool:x" title="Tıkladığın çizimi sil"><i class="fa-solid fa-eraser text-[10px] mr-1"></i>Sil</button>
                   <button type="button" data-pc="undo" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Son çizimi geri al"><i class="fa-solid fa-rotate-left text-[10px]"></i></button>
@@ -1869,7 +1874,7 @@
                 <div id="proChartLegend" class="absolute top-1 left-2 right-20 z-10 pointer-events-none text-[11px] font-mono text-slate-300"></div>
                 <div id="proChartHint" class="hidden absolute top-1 right-16 z-10 pointer-events-none text-[11px] font-mono text-amber-300 bg-[#070B14]/90 border border-amber-800/50 rounded px-2 py-0.5"></div>
               </div>
-              <p class="text-[10px] text-slate-500 font-mono">Saatler İstanbul saatidir; fiyatlar Yahoo Finance'ten gecikmeli gelir, grafik dakikada bir yenilenir. Fare tekerleğiyle yakınlaştır, sürükleyerek kaydır; panelleri aradaki çizgiden boyutlandır. Çizimler yalnızca bu tarayıcıda saklanır; trend çizgisi, iki ucu yüklenen geçmişin içindeyse diğer zaman dilimlerinde de görünür. Esc çizim aracını kapatır.</p>
+              <p class="text-[10px] text-slate-500 font-mono">Saatler İstanbul saatidir; fiyatlar Yahoo Finance'ten gecikmeli gelir, grafik dakikada bir yenilenir. Fare tekerleğiyle yakınlaştır, sürükleyerek kaydır; panelleri aradaki çizgiden boyutlandır. Çizimler yalnızca bu tarayıcıda saklanır; iki noktalı çizimler, uçları yüklenen geçmişin içindeyse diğer zaman dilimlerinde de görünür. Esc çizim aracını ve ölçümü kapatır.</p>
             </div>
 
             <!-- Strategy backtest on the chart's stock and timeframe (assets/js/backtest.js, backtest-ui.js) -->

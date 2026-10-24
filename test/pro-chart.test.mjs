@@ -10,7 +10,7 @@ import vm from 'node:vm';
 const context = { window: {} };
 vm.createContext(context);
 vm.runInContext(readFileSync(new URL('../assets/js/pro-chart.js', import.meta.url), 'utf8'), context);
-const { toBars, heikinAshi, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo } = context.window.ProChart;
+const { toBars, heikinAshi, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel } = context.window.ProChart;
 // Arrays from the vm context have another realm's prototype, so compare plain copies
 const plain = v => JSON.parse(JSON.stringify(v));
 
@@ -103,6 +103,18 @@ test('indicator settings fall back to defaults, are clamped, and name the indica
   assert.equal(indLabel('bb', s), 'BB 20,2,5');
   assert.equal(indLabel('macd', s), 'MACD 12,26,9');
   assert.equal(indLabel('volume', s), 'Hacim');
+});
+
+test('a ray runs to the pane edge on the side of its second point', () => {
+  assert.deepEqual(plain(rayEnd({ x: 0, y: 100 }, { x: 10, y: 90 }, 200)), { x: 200, y: -100 });
+  assert.deepEqual(plain(rayEnd({ x: 50, y: 0 }, { x: 40, y: 10 }, 200)), { x: 0, y: 50 });
+  // Vertical: nowhere to extend, the second point is the end
+  assert.deepEqual(plain(rayEnd({ x: 5, y: 0 }, { x: 5, y: 10 }, 200)), { x: 5, y: 10 });
+});
+
+test('the measure label gives the change, the percent and the bar count', () => {
+  assert.equal(measureLabel(100, 112.4, 23), '+12,40 (+12,40%) · 23 mum');
+  assert.equal(measureLabel(200, 150, -5), '-50,00 (-25,00%) · 5 mum');
 });
 
 test('drawing points snap to the nearest bar, and outside the loaded bars to nothing', () => {
