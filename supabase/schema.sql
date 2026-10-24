@@ -1,4 +1,5 @@
--- ONCAL accounts: one row of synced data per user (profile, portfolios, watchlist, alerts).
+-- ONCAL accounts: one row of synced data per user (profile, portfolios, watchlist, alerts),
+-- and the public Topluluk posts further down.
 --
 -- Run once in the Supabase dashboard: SQL Editor -> New query -> paste this file -> Run.
 -- Running it again is safe (everything is "if not exists" / "or replace").
@@ -61,3 +62,95 @@ grant execute on function public.delete_my_account() to authenticated;
 -- Anonymous visitors get no access at all (RLS would already return nothing)
 revoke all on public.user_data from anon;
 grant select, insert, update, delete on public.user_data to authenticated;
+
+-- ---------------------------------------------------------------------------------------------
+-- Topluluk (assets/js/community.js): public posts. Everyone, signed in or not, can read; a
+-- signed-in user can post, like and report, and delete only their own posts and likes. Posts are
+-- never edited. At most 20 posts per user per hour; a post three users reported is hidden.
+
+create table if not exists public.posts (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  author     text not null check (char_length(author) between 2 and 30),
+  ticker     text check (ticker ~ '^[A-Z0-9]{2,8}$'),
+  stance     text check (stance in ('al', 'sat', 'notr')),
+  body       text not null check (char_length(body) between 3 and 1000),
+  idea       text check (char_length(idea) <= 20000 and idea ~ '^[A-Za-z0-9_-]+$'),   -- chart idea (pro-chart.js)
+  created_at timestamptz not null default now()
+);
+create index if not exists posts_created on public.posts (created_at desc);
+create index if not exists posts_ticker on public.posts (ticker, created_at desc);
+create index if not exists posts_user on public.posts (user_id, created_at desc);
+
+create table if not exists public.post_likes (
+  post_id bigint not null references public.posts (id) on delete cascade,
+  user_id uuid   not null default auth.uid() references auth.users (id) on delete cascade,
+  primary key (post_id, user_id)
+);
+
+create table if not exists public.post_reports (
+  post_id bigint not null references public.posts (id) on delete cascade,
+  user_id uuid   not null default auth.uid() references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+
+alter table public.posts enable row level security;
+alter table public.post_likes enable row level security;
+alter table public.post_reports enable row level security;
+
+drop policy if exists "posts read" on public.posts;
+drop policy if exists "posts own insert" on public.posts;
+drop policy if exists "posts own delete" on public.posts;
+create policy "posts read" on public.posts for select to anon, authenticated using (true);
+create policy "posts own insert" on public.posts for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy "posts own delete" on public.posts for delete to authenticated using ((select auth.uid()) = user_id);
+
+drop policy if exists "likes read" on public.post_likes;
+drop policy if exists "likes own insert" on public.post_likes;
+drop policy if exists "likes own delete" on public.post_likes;
+create policy "likes read" on public.post_likes for select to anon, authenticated using (true);
+create policy "likes own insert" on public.post_likes for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy "likes own delete" on public.post_likes for delete to authenticated using ((select auth.uid()) = user_id);
+
+-- Who reported what stays private: a user sees only their own reports
+drop policy if exists "reports own" on public.post_reports;
+drop policy if exists "reports own insert" on public.post_reports;
+create policy "reports own" on public.post_reports for select to authenticated using ((select auth.uid()) = user_id);
+create policy "reports own insert" on public.post_reports for insert to authenticated with check ((select auth.uid()) = user_id);
+
+-- Flood guard
+create or replace function public.posts_rate_limit() returns trigger
+  language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.posts where user_id = new.user_id and created_at > now() - interval '1 hour') >= 20 then
+    raise exception 'Saatte en fazla 20 paylaşım yapılabilir';
+  end if;
+  return new;
+end $$;
+drop trigger if exists posts_rate_limit on public.posts;
+create trigger posts_rate_limit before insert on public.posts
+  for each row execute function public.posts_rate_limit();
+
+-- The feed: like counts, and posts with three or more reports left out. security definer so
+-- the report count can be read without exposing who reported.
+create or replace function public.community_feed(p_ticker text default null, p_tickers text[] default null,
+                                                 p_sort text default 'new', p_limit int default 30, p_offset int default 0)
+  returns table (id bigint, user_id uuid, author text, ticker text, stance text, body text, idea text,
+                 created_at timestamptz, likes bigint)
+  language sql stable security definer set search_path = '' as $$
+  select p.id, p.user_id, p.author, p.ticker, p.stance, p.body, p.idea, p.created_at,
+         (select count(*) from public.post_likes l where l.post_id = p.id) as likes
+  from public.posts p
+  where (select count(*) from public.post_reports r where r.post_id = p.id) < 3
+    and (p_ticker is null or p.ticker = p_ticker)
+    and (p_tickers is null or p.ticker = any (p_tickers))
+  order by case when p_sort = 'top' then (select count(*) from public.post_likes l where l.post_id = p.id) end desc nulls last,
+           p.created_at desc
+  limit least(greatest(p_limit, 1), 50) offset greatest(p_offset, 0);
+$$;
+grant execute on function public.community_feed(text, text[], text, int, int) to anon, authenticated;
+
+grant select on public.posts, public.post_likes to anon, authenticated;
+grant insert, delete on public.posts, public.post_likes to authenticated;
+grant select, insert on public.post_reports to authenticated;

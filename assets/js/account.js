@@ -191,6 +191,7 @@ const Account = (() => {
     const next = session && session.user ? session.user : null;
     const changed = (next && next.id) !== (user && user.id);
     user = next;
+    if (changed) window.dispatchEvent(new Event('verity:session'));   // the Topluluk view repaints
     if (!user) { setStatus('out'); paintMenuHint(); return; }
     paintMenuHint();
     if (!changed) return;
@@ -233,7 +234,7 @@ const Account = (() => {
       const r = await fetch('/api/config');
       cfg = r.ok ? (await r.json()).supabase : null;
     } catch (e) { cfg = null; }
-    if (!cfg) { setStatus('off'); return; }
+    if (!cfg) { setStatus('off'); window.dispatchEvent(new Event('verity:session')); return; }
     try {
       await loadLib();
       sb = window.supabase.createClient(cfg.url, cfg.anonKey, {
@@ -253,6 +254,7 @@ const Account = (() => {
     });
     const { data } = await sb.auth.getSession();
     onSession(data && data.session);
+    window.dispatchEvent(new Event('verity:session'));   // the client is ready, signed in or not
     cleanUrl();
     document.addEventListener('visibilitychange', () => { if (!document.hidden && user) serial(pullNow); });
     window.addEventListener('online', () => { if (user) serial(meta.dirty ? pushNow : pullNow); });
@@ -592,6 +594,9 @@ const Account = (() => {
     init, submit, resendCode, google, signOut, deleteAccount, choose, openModal, closeModal,
     syncNow() { if (user) serial(meta.dirty ? pushNow : pullNow); },
     email() { return user ? user.email : null; },
+    userId() { return user ? user.id : null; },
+    /** The Supabase client (signed in or anonymous), for the public Topluluk tables; null when accounts are off. */
+    client() { return sb; },
     enabled() { return !!sb; },
     paint
   };

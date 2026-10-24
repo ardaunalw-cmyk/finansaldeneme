@@ -1310,17 +1310,22 @@ const ProChart = (() => {
   let pendingIdea = typeof location !== 'undefined' && location.hash.startsWith(IDEA_KEY)
     ? decodeIdea(location.hash.slice(IDEA_KEY.length)) : null;
 
+  /** The chart as an idea, encoded for a link or a Topluluk post; null before a chart is shown. */
+  function currentIdea(note = '') {
+    if (!state.chart || !state.ticker) return null;
+    return encodeIdea({
+      v: 1, t: state.ticker, i: state.interval, note: String(note).slice(0, 280),
+      d: state.drawList, f: state.formulas.filter(f => f.expr.trim()), on: [...state.on]
+    });
+  }
+
   async function shareIdea() {
     const note = window.prompt('Fikrine kısa bir not ekle (isteğe bağlı, en fazla 280 karakter)', '');
     if (note === null) return;
-    const idea = {
-      v: 1, t: state.ticker, i: state.interval, note: note.trim().slice(0, 280),
-      d: state.drawList, f: state.formulas.filter(f => f.expr.trim()), on: [...state.on]
-    };
-    const url = `${location.origin}/hisse/${state.ticker}${IDEA_KEY}${encodeIdea(idea)}`;
+    const url = `${location.origin}/hisse/${state.ticker}${IDEA_KEY}${currentIdea(note.trim())}`;
     const title = `${state.ticker} fikri · ONCAL`;
     if (navigator.share) {
-      try { await navigator.share({ title, text: idea.note || title, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      try { await navigator.share({ title, text: note.trim() || title, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
     try {
       await navigator.clipboard.writeText(url);
@@ -1880,7 +1885,7 @@ const ProChart = (() => {
   /** Vertical position (px inside the chart) of a price on the price pane, or null. */
   const priceToY = price => (state.main ? state.main.priceToCoordinate(price) : null);
 
-  return { load, current, setMarkers, priceToY, subscribe, exportData, importData, encodeIdea, decodeIdea, cleanIdea, visibleRange, fetchBars, chartOptions, COLORS, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
+  return { load, current, setMarkers, priceToY, subscribe, exportData, importData, encodeIdea, decodeIdea, cleanIdea, currentIdea, visibleRange, fetchBars, chartOptions, COLORS, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
 })();
 
 window.ProChart = ProChart;

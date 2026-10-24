@@ -294,6 +294,9 @@
         <a href="#social" data-view-target="social" class="menu-item">
           <i class="fa-solid fa-comments"></i><span>Sosyal Medya</span>
         </a>
+        <a href="#community" data-view-target="community" class="menu-item">
+          <i class="fa-solid fa-people-group"></i><span>Topluluk</span>
+        </a>
       </div>
 
       <div class="menu-group">
@@ -1902,6 +1905,9 @@
               </div>
               <aside id="proChartWatch" class="flex-col w-60 shrink-0 min-h-0 rounded-xl border border-[#1A2540] bg-[#0A101C] text-[11px] font-mono" aria-label="İzleme listesi"></aside>
               </div>
+              <button type="button" onclick="Community.openFor(appState.currentStock)" class="pc-footnote self-start text-[11px] font-semibold text-[#7FA6FF] hover:text-white">
+                <i class="fa-solid fa-people-group text-[10px] mr-1"></i>Toplulukta bu hisse hakkında yazılanlar →
+              </button>
               <p class="pc-footnote text-[10px] text-slate-500 font-mono">Saatler İstanbul saatidir; fiyatlar Yahoo Finance'ten gecikmeli gelir, grafik dakikada bir yenilenir. Fare tekerleğiyle yakınlaştır, sürükleyerek kaydır; panelleri aradaki çizgiden boyutlandır. Çizimler ve grafik ayarları bu tarayıcıda saklanır, hesabınla giriş yaptıysan cihazlar arasında eşitlenir; iki noktalı çizimler, uçları yüklenen geçmişin içindeyse diğer zaman dilimlerinde de görünür. Esc çizim aracını ve ölçümü kapatır; tüm kısayollar için ? tuşuna bas.</p>
             </div>
 
@@ -2225,6 +2231,26 @@
           <!-- Populated via renderNewsCenter() -->
         </div>
 
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         VIEW: TOPLULUK (users' own posts, assets/js/community.js)
+         ==================================================================== -->
+    <div id="view-community" class="view-panel">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+        <div class="space-y-3 pb-4 border-b border-[#121A2E]">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2F6BFF]/10 border border-[#2F6BFF]/40 text-[#7FA6FF] text-[11px] font-mono">
+            <i class="fa-solid fa-people-group text-[10px]"></i><span>TOPLULUK</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-serif text-white tracking-tight leading-tight">Yatırımcıların Fikirleri</h1>
+          <p class="text-sm text-slate-400 font-light leading-relaxed">
+            Hisseler hakkındaki görüşlerini paylaş, grafiğindeki çizimleri ekle, başkalarının fikirlerini oku ve beğen. Paylaşımlar kullanıcılara aittir ve yatırım tavsiyesi değildir.
+          </p>
+        </div>
+        <section id="cmComposer" class="p-4 rounded-2xl bg-oa-card border border-oa-border"></section>
+        <div id="cmFilters"></div>
+        <div id="cmFeed" class="space-y-3"></div>
       </div>
     </div>
 
@@ -3133,6 +3159,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/news.js"></script>
 <script src="assets/js/social-tags.js"></script>
 <script src="assets/js/social.js"></script>
+  <script src="assets/js/community.js"></script>
   <script src="assets/js/live-data.js"></script>
   <script src="assets/js/verity-score.js"></script>
   <script src="assets/js/plain-summary.js"></script>
