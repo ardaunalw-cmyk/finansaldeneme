@@ -98,8 +98,8 @@ async function main() {
   const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', ...(dry ? [] : ['GMAIL_USER', 'GMAIL_APP_PASSWORD'])].filter(k => !env[k]);
   if (missing.length) { console.log(`Skipped: not configured (${missing.join(', ')} missing).`); return; }
   const site = (env.SITE_URL || 'https://finansaldeneme.vercel.app').replace(/\/+$/, '');
-  // A pasted secret often carries a stray space, newline or quotes
-  const key = env.SUPABASE_SERVICE_ROLE_KEY.trim().replace(/^["']|["']$/g, '');
+  // A pasted secret often carries quotes or a line break, even in the middle; keys have no spaces
+  const key = env.SUPABASE_SERVICE_ROLE_KEY.replace(/\s+/g, '').replace(/^["']|["']$/g, '');
   if (/^sb_publishable_/.test(key)) { console.error('SUPABASE_SERVICE_ROLE_KEY is the publishable (anon) key; the secret / service_role key is needed.'); process.exit(1); }
   const db = supabase(url, key);
 
