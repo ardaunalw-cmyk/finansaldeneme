@@ -316,6 +316,9 @@
         <a href="#screener" data-view-target="screener" class="menu-item">
           <i class="fa-solid fa-filter"></i><span>Teknik Tarayıcı</span>
         </a>
+        <a href="#lab" data-view-target="lab" class="menu-item">
+          <i class="fa-solid fa-flask-vial"></i><span>Strateji Laboratuvarı</span>
+        </a>
         <a href="#ipo" data-view-target="ipo" class="menu-item">
           <i class="fa-solid fa-rocket"></i><span>Halka Arzlar</span>
         </a>
@@ -2270,6 +2273,23 @@
     </div>
 
     <!-- ====================================================================
+         VIEW: STRATEJİ LABORATUVARI (assets/js/lab.js on backtest.js)
+         ==================================================================== -->
+    <div id="view-lab" class="view-panel">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+        <div class="space-y-3 pb-4 border-b border-[#121A2E]">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2F6BFF]/10 border border-[#2F6BFF]/40 text-[#7FA6FF] text-[11px] font-mono">
+            <i class="fa-solid fa-flask-vial text-[10px]"></i><span>STRATEJİ LABORATUVARI</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-serif text-white tracking-tight leading-tight">Stratejin Kaç Hissede Çalışıyor?</h1>
+          <p class="text-sm text-slate-400 font-light leading-relaxed">Bir stratejiyi tek hissede değil, BIST 30 ya da en büyük 50/100 şirketin hepsinde aynı anda test et; al-tut'u kaç hissede geçtiğini gör.</p>
+        </div>
+        <section id="labForm" class="p-4 rounded-2xl border border-[#1A2540] bg-[#0C1322] space-y-3"></section>
+        <div id="labResults" class="space-y-4"></div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
          VIEW: HALKA ARZLAR (assets/js/ipo.js, assets/data/ipos.json)
          ==================================================================== -->
     <div id="view-ipo" class="view-panel">
@@ -3284,6 +3304,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/screener.js"></script>
   <script src="assets/js/contest.js"></script>
   <script src="assets/js/ipo.js"></script>
+  <script src="assets/js/lab.js"></script>
   <script src="assets/js/live-data.js"></script>
   <script src="assets/js/verity-score.js"></script>
   <script src="assets/js/plain-summary.js"></script>

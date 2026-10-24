@@ -1446,6 +1446,8 @@ function switchView(viewName, stockCode = null) {
       if (window.Contest) Contest.render();
     } else if (viewName === 'ipo') {
       if (window.Ipos) Ipos.render();
+    } else if (viewName === 'lab') {
+      if (window.StrategyLab) StrategyLab.render();
     } else if (viewName === 'stock-detail') {
       if (appState.loadedStock !== appState.currentStock) {
         // First visit (or a different stock): loadStockDetails renders the view and its charts
