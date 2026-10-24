@@ -1864,6 +1864,7 @@
                   </span>
                   <button type="button" data-pc="replay" aria-controls="proChartReplay" title="Bar Replay: geçmişte bir mumdan başlayıp grafiği mum mum oynat (Shift + R)"><i class="fa-solid fa-backward-fast text-[10px] mr-1"></i>Replay</button>
                   <button type="button" data-pc="compare" aria-expanded="false" aria-controls="proChartCompare" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Başka bir hisse, BIST 100, dolar veya altınla karşılaştır"><i class="fa-solid fa-code-compare text-[10px] mr-1"></i>Karşılaştır</button>
+                  <button type="button" data-pc="formula" aria-expanded="false" aria-controls="proChartFormula" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Kendi indikatörünü formülle yaz (ör. ema(close, 9) - ema(close, 21))"><i class="fa-solid fa-square-root-variable text-[10px] mr-1"></i>Formül</button>
                   <button type="button" data-pc="settings" aria-expanded="false" aria-controls="proChartSettings" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="İndikatör ayarları (periyotlar, eşikler)"><i class="fa-solid fa-sliders text-[10px]"></i></button>
                   <button type="button" data-pc="shot" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Grafiği PNG olarak indir ve panoya kopyala (Alt + S)"><i class="fa-solid fa-camera text-[10px]"></i></button>
                   <button type="button" data-pc="keys" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Klavye kısayolları (?)" aria-controls="proChartKeys"><i class="fa-solid fa-keyboard text-[10px]"></i></button>
@@ -1876,6 +1877,9 @@
 
               <!-- Compare mode: symbols drawn against the stock in percent (pro-chart.js) -->
               <div id="proChartCompare" class="hidden text-[11px] font-mono"></div>
+
+              <!-- Formula indicators (formula.js), filled by pro-chart.js when opened -->
+              <div id="proChartFormula" class="hidden p-3 rounded-xl border border-[#1A2540] bg-[#0A101C] text-[11px] font-mono"></div>
 
               <!-- Indicator settings, filled by pro-chart.js when opened -->
               <div id="proChartSettings" class="hidden p-3 rounded-xl border border-[#1A2540] bg-[#0A101C] text-[11px] font-mono"></div>
@@ -3112,6 +3116,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/app.js"></script>
   <script src="assets/js/indicators.js"></script>
   <script src="assets/js/alert-rules.js"></script>
+  <script src="assets/js/formula.js"></script>
   <script src="assets/js/technicals.js"></script>
   <script src="assets/lib/lightweight-charts-5.2.1/lightweight-charts.standalone.production.js"></script>
   <script src="assets/js/pro-chart.js"></script>

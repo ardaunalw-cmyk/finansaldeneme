@@ -109,6 +109,14 @@ const ProChart = (() => {
     }
   };
 
+  /** Custom formula indicators (formula.js): up to three, each a line or, for a condition, signal arrows. */
+  const MAX_FORMULAS = 3;
+  const FORMULA_COLORS = ['#22D3EE', '#F472B6', '#A3E635'];
+  const cleanFormulas = list => (Array.isArray(list) ? list : [])
+    .filter(f => f && typeof f.expr === 'string')
+    .slice(0, MAX_FORMULAS)
+    .map(f => ({ expr: f.expr.slice(0, 300), pane: !!f.pane }));
+
   const savedInterval = store.get('interval', '1d');
   const savedRange = store.get('range', '6A');
   const state = {
@@ -118,6 +126,8 @@ const ProChart = (() => {
     type: store.get('type', 'candle'),
     on: new Set(store.get('indicators', DEFAULT_ON)),
     cfg: cleanSettings(store.get('settings', {})),
+    formulas: cleanFormulas(store.get('formulas', [])),
+    formulaOpen: false,
     compare: store.get('compare', []).filter(s => /^[A-Z0-9]{2,8}$/.test(s)).slice(0, MAX_COMPARE),
     compareBars: { key: null, data: {} },   // bars of the compared symbols for state.barsKey
     compareOpen: false,
@@ -380,8 +390,80 @@ const ProChart = (() => {
       guide(k, cfg.stoch.upper, COLORS.down); guide(k, cfg.stoch.lower, COLORS.up);
       legend('%K', COLORS.sky, k); legend('%D', COLORS.violet, d);
     }
+    // Formula lines: on the price, or in a pane of their own (conditions become markers, see formulaMarks)
+    formulaList().forEach(({ f, i, compiled }) => {
+      if (!compiled || compiled.type !== 'number' || (!f.pane && comparing)) return;
+      if (f.pane) pane++;
+      const color = FORMULA_COLORS[i];
+      const s = bind(chart.addSeries(L.LineSeries, { color, lineWidth: 1.5, ...(f.pane ? { priceLineVisible: false } : quiet) }, f.pane ? pane : 0),
+        () => line(compiled.run(state.bars)));
+      legend(`F${i + 1}`, color, s);
+    });
     // Price pane keeps most of the height; each oscillator pane gets a share of it
     chart.panes().forEach((p, i) => p.setStretchFactor(i === 0 ? 3 : 1));
+  }
+
+  /** The saved formulas, compiled; a formula with a mistake has compiled null and its message. */
+  function formulaList() {
+    return state.formulas.map((f, i) => {
+      if (!window.Formula || !f.expr.trim()) return { f, i, compiled: null, error: f.expr.trim() ? 'Formül modülü yüklenmedi' : null };
+      try { return { f, i, compiled: Formula.compile(f.expr), error: null }; } catch (e) { return { f, i, compiled: null, error: e.message }; }
+    });
+  }
+
+  /** Arrows where a condition formula turns true (false or unknown on the bar before). */
+  function formulaMarks() {
+    const out = [];
+    formulaList().forEach(({ i, compiled }) => {
+      if (!compiled || compiled.type !== 'condition') return;
+      const v = compiled.run(state.bars);
+      v.forEach((x, k) => {
+        if (x === true && k > 0 && v[k - 1] !== true) out.push({ time: state.bars[k].time, position: 'belowBar', shape: 'arrowUp', color: FORMULA_COLORS[i], text: `F${i + 1}` });
+      });
+    });
+    return out;
+  }
+
+  function paintFormulas() {
+    const el = $('proChartFormula');
+    if (!el) return;
+    el.classList.toggle('hidden', !state.formulaOpen);
+    if (!state.formulaOpen) return;
+    const rows = formulaList().map(({ f, i, compiled, error }) => `
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded-sm shrink-0" style="background:${FORMULA_COLORS[i]}"></span>
+        <span class="text-slate-300 font-bold">F${i + 1}</span>
+        <input type="text" data-pc-formula="${i}" maxlength="300" spellcheck="false" autocomplete="off" aria-label="F${i + 1} formülü"
+          placeholder="ör. ema(close, 9) - ema(close, 21) ya da crossover(close, sma(close, 50))"
+          class="flex-1 min-w-[12rem] px-2 py-1 bg-[#070B14] border ${error ? 'border-rose-700' : 'border-[#1A2540]'} rounded text-white text-[11px] font-mono">
+        <label class="flex items-center gap-1 text-slate-400" title="Değerleri fiyattan çok farklıysa (RSI gibi) ayrı panelde çiz">
+          <input type="checkbox" data-pc-formula-pane="${i}" ${f.pane ? 'checked' : ''} class="accent-[#2F6BFF]">Ayrı panel</label>
+        <span class="text-[10px] ${error ? 'text-rose-400' : 'text-slate-500'}">${error ? '' : compiled ? (compiled.type === 'condition' ? 'koşul: doğru olduğu mumda ok' : 'çizgi') : ''}</span>
+        <button type="button" data-pc="formula-del:${i}" class="px-1 text-slate-500 hover:text-white" aria-label="F${i + 1} formülünü sil">×</button>
+        ${error ? '<p data-pc-formula-error class="basis-full text-[10px] text-rose-400"></p>' : ''}
+      </div>`).join('');
+    el.innerHTML = `
+      <div class="space-y-2">
+        ${rows || '<p class="text-slate-500">Henüz formül yok.</p>'}
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          ${state.formulas.length < MAX_FORMULAS ? '<button type="button" data-pc="formula-add" class="px-2 py-0.5 rounded-md border border-[#2F6BFF] text-white bg-[#2F6BFF]/20 hover:bg-[#2F6BFF]/40">+ Formül ekle</button>' : `<span class="text-[10px] text-slate-500">En fazla ${MAX_FORMULAS} formül</span>`}
+          <span class="text-[10px] text-slate-500">Değerler: open high low close volume · Fonksiyonlar: ${window.Formula ? Object.keys(Formula.FUNCTIONS).join(', ') : ''} · and or not</span>
+        </div>
+      </div>`;
+    // Texts go in as values: they are the viewer's own (or a shared idea's) input
+    const errors = el.querySelectorAll('[data-pc-formula-error]');
+    let e = 0;
+    formulaList().forEach(({ f, i, error }) => {
+      el.querySelector(`[data-pc-formula="${i}"]`).value = f.expr;
+      if (error) errors[e++].textContent = error;
+    });
+  }
+
+  function saveFormulas(list) {
+    state.formulas = cleanFormulas(list);
+    store.set('formulas', state.formulas);
+    paintFormulas();
+    build(true);
   }
 
   /* ---------- drawings ---------- */
@@ -1039,6 +1121,24 @@ const ProChart = (() => {
     if (kind === 'undo') { const list = drawings(); list.pop(); saveDrawings(list); build(true); return; }
     if (kind === 'clear') { saveDrawings([]); build(true); return; }
     if (kind === 'shot' && state.chart) { snapshot(); return; }
+    if (kind === 'formula') {
+      state.formulaOpen = !state.formulaOpen;
+      btn.setAttribute('aria-expanded', String(state.formulaOpen));
+      if (state.formulaOpen && !state.formulas.length) state.formulas = [{ expr: '', pane: false }];
+      paintFormulas();
+      const first = document.querySelector('[data-pc-formula="0"]');
+      if (state.formulaOpen && first && !first.value) first.focus();
+      return;
+    }
+    if (kind === 'formula-add') {
+      if (state.formulas.length >= MAX_FORMULAS) return;
+      state.formulas.push({ expr: '', pane: false });
+      paintFormulas();
+      const input = document.querySelector(`[data-pc-formula="${state.formulas.length - 1}"]`);
+      if (input) input.focus();
+      return;
+    }
+    if (kind === 'formula-del') { saveFormulas(state.formulas.filter((_, i) => i !== Number(value))); return; }
     if (kind === 'replay') {
       if (state.replay) replayExit();
       else setTool(state.tool === 'p' ? 'cursor' : 'p');
@@ -1431,8 +1531,16 @@ const ProChart = (() => {
       main.attachPrimitive(state.overlay);
       if (state.on.has('vp')) main.attachPrimitive(makeOverlay(paintProfile, 'bottom'));
     }
-    // Backtest trades, only on the stock and timeframe they were computed for
-    if (state.marks && state.marks.key === viewKey()) L.createSeriesMarkers(main, state.marks.list);
+    // Backtest trades (only on the stock and timeframe they were computed for) and formula signals,
+    // re-set with the bars so a replay never shows an arrow from a bar still hidden
+    const markers = L.createSeriesMarkers(main, []);
+    const applyMarks = () => {
+      const last = state.bars[state.bars.length - 1].time;
+      const backtest = state.marks && state.marks.key === viewKey() ? state.marks.list.filter(m => m.time <= last) : [];
+      markers.setMarkers([...backtest, ...(comparing ? [] : formulaMarks())].sort((a, b) => a.time - b.time));
+    };
+    applyMarks();
+    state.binds.push(applyMarks);
 
     chart.subscribeCrosshairMove(param => { paintLegend(param); trackHover(param); emit({ type: 'crosshair', time: param.time ?? null }); });
     // The side charts of a multi-chart layout follow the visible dates
@@ -1517,6 +1625,20 @@ const ProChart = (() => {
       document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && isFull()) setFull(false); });
       const replay = $('proChartReplay');
       if (replay) replay.addEventListener('click', onToolbar);
+      const formula = $('proChartFormula');
+      if (formula) {
+        formula.addEventListener('click', onToolbar);
+        // A formula applies when its field is left or Enter is pressed, not on every keystroke
+        formula.addEventListener('change', e => {
+          const i = e.target.dataset.pcFormula ?? e.target.dataset.pcFormulaPane;
+          if (i == null) return;
+          const list = state.formulas.map(f => ({ ...f }));
+          if (e.target.dataset.pcFormula != null) list[i].expr = e.target.value.trim();
+          else list[i].pane = e.target.checked;
+          saveFormulas(list);
+        });
+        formula.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.pcFormula != null) e.target.blur(); });
+      }
       const keys = $('proChartKeys');
       if (keys) keys.addEventListener('click', e => { if (e.target.closest('[data-pc="keys"]')) paintKeys(false); });
       const watch = $('proChartWatch');
@@ -1616,6 +1738,8 @@ const ProChart = (() => {
     state.on = new Set(store.get('indicators', DEFAULT_ON));
     state.cfg = cleanSettings(store.get('settings', {}));
     state.compare = store.get('compare', []).filter(s => /^[A-Z0-9]{2,8}$/.test(s)).slice(0, MAX_COMPARE);
+    state.formulas = cleanFormulas(store.get('formulas', []));
+    paintFormulas();
     if (window.ProChartMulti) ProChartMulti.refresh();
     if (state.chart && state.pending == null) build(true);
   }

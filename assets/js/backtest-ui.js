@@ -27,9 +27,28 @@ const BacktestUI = (() => {
 
   /* ---------- form ---------- */
 
+  const FORMULA_DEFAULTS = { entry: 'crossover(ema(close, 9), ema(close, 21))', exit: 'crossunder(ema(close, 9), ema(close, 21))' };
+
   function paintParams(strategy, values = {}) {
     const def = Backtest.STRATEGIES[strategy];
     $('btDesc').textContent = def.desc;
+    if (def.formulas) {
+      const f = { ...FORMULA_DEFAULTS, ...(store.get().formula || {}) };
+      const field = (key, label) => `
+        <label class="block col-span-full">
+          <span class="text-[10px] text-slate-400 block mb-1">${label}</span>
+          <input type="text" data-bt-formula="${key}" maxlength="300" spellcheck="false" autocomplete="off"
+            class="w-full px-2.5 py-1.5 bg-[#070B14] border border-[#1A2540] rounded-lg text-white text-xs font-mono">
+        </label>`;
+      $('btParams').innerHTML = `${field('entry', 'Giriş koşulu (doğru olunca al)')}${field('exit', 'Çıkış koşulu (doğru olunca sat)')}
+        <p class="col-span-full text-[10px] text-slate-500 font-mono leading-relaxed">
+          Değerler: open high low close volume · Fonksiyonlar: ${Object.keys(Formula.FUNCTIONS).join(', ')} · Bağlaçlar: and or not (ve veya değil)
+        </p>`;
+      // Set as values, not markup: the saved text is the viewer's own input
+      $('btParams').querySelector('[data-bt-formula="entry"]').value = f.entry;
+      $('btParams').querySelector('[data-bt-formula="exit"]').value = f.exit;
+      return;
+    }
     $('btParams').innerHTML = def.params.map(p => `
       <label class="block">
         <span class="text-[10px] text-slate-400 block mb-1">${p.label}</span>
@@ -43,8 +62,10 @@ const BacktestUI = (() => {
     const params = {};
     document.querySelectorAll('#btParams [data-bt-param]').forEach(el => { params[el.dataset.btParam] = parseFloat(el.value); });
     const num = id => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : null; };
+    const text = key => { const el = document.querySelector(`#btParams [data-bt-formula="${key}"]`); return el ? el.value.trim() : ''; };
     return {
       strategy,
+      formula: Backtest.STRATEGIES[strategy].formulas ? { entry: text('entry'), exit: text('exit') } : null,
       params: Backtest.cleanParams(strategy, params),
       commission: Math.max(0, num('btCommission') ?? 0),
       stopLoss: num('btStop'),
@@ -57,6 +78,11 @@ const BacktestUI = (() => {
   function formError(f) {
     if (['sma_cross', 'ema_cross', 'macd'].includes(f.strategy) && f.params.fast >= f.params.slow) return 'Hızlı periyot yavaş periyottan küçük olmalı.';
     if (f.strategy === 'rsi' && f.params.low >= f.params.high) return 'Alt eşik üst eşikten küçük olmalı.';
+    if (f.formula) {
+      const entry = Formula.check(f.formula.entry, 'condition'), exit = Formula.check(f.formula.exit, 'condition');
+      if (entry) return `Giriş formülü: ${entry}`;
+      if (exit) return `Çıkış formülü: ${exit}`;
+    }
     if (f.stopLoss != null && (f.stopLoss <= 0 || f.stopLoss >= 100)) return 'Zarar-kes 0 ile 100 arasında bir yüzde olmalı.';
     if (f.takeProfit != null && f.takeProfit <= 0) return 'Kâr-al sıfırdan büyük bir yüzde olmalı.';
     if (f.commission >= 5) return 'Komisyon yüzde olarak girilir (ör. 0,1).';
@@ -196,11 +222,13 @@ const BacktestUI = (() => {
     store.set({
       strategy: form.strategy,
       params: { ...(saved.params || {}), [form.strategy]: form.params },
+      formula: form.formula || saved.formula,
       commission: form.commission, stopLoss: form.stopLoss, takeProfit: form.takeProfit, capital: form.capital
     });
 
     const result = Backtest.run(cur.bars, form.strategy, {
       params: form.params,
+      formula: form.formula,
       commission: form.commission / 100,
       stopLoss: form.stopLoss != null ? form.stopLoss / 100 : null,
       takeProfit: form.takeProfit != null ? form.takeProfit / 100 : null,

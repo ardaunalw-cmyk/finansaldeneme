@@ -25,8 +25,9 @@ test('every strategy runs and keeps its books straight', () => {
   let p = 100;
   const closes = Array.from({ length: 500 }, (_, i) => (p *= 1 + Math.sin(i / 7) * 0.02 + Math.cos(i / 31) * 0.01));
   const bars = fromCloses(closes);
+  const formula = { entry: 'crossover(ema(close, 9), ema(close, 21))', exit: 'rsi(close) > 70' };
   for (const key of Object.keys(Backtest.STRATEGIES)) {
-    const r = Backtest.run(bars, key, { commission: 0.001 });
+    const r = Backtest.run(bars, key, { commission: 0.001, formula });
     assert.ok(r.ok, key);
     assert.equal(r.equity.length, bars.length - r.start, `${key} equity length`);
     // Compounding the trades reproduces the final value (all capital in, one position at a time)
@@ -117,9 +118,23 @@ test('inputs are clamped to their limits and too little history is reported', ()
   assert.throws(() => Backtest.run([], 'nope', {}));
 });
 
+test('a formula strategy trades like the built-in one it spells out', () => {
+  let p = 100;
+  const bars = fromCloses(Array.from({ length: 300 }, (_, i) => (p *= 1 + Math.sin(i / 6) * 0.02)));
+  const built = Backtest.run(bars, 'sma_cross', { params: { fast: 5, slow: 20 } });
+  const written = Backtest.run(bars, 'formula', { formula: { entry: 'crossover(sma(close, 5), sma(close, 20))', exit: 'crossunder(sma(close, 5), sma(close, 20))' } });
+  assert.ok(built.trades.length > 2);
+  assert.deepEqual(written.trades, built.trades);
+  // A mistake in the text is reported, not thrown
+  const bad = Backtest.run(bars, 'formula', { formula: { entry: 'sma(close, 5)', exit: 'close > 1' } });
+  assert.equal(bad.ok, false);
+  assert.match(bad.reason, /^Giriş formülü: .*koşul/);
+});
+
 test('the page loads the backtester after the indicators', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const at = file => html.indexOf(`<script src="assets/js/${file}"`);
   assert.ok(at('indicators.js') > 0 && at('indicators.js') < at('backtest.js'));
+  assert.ok(at('indicators.js') < at('formula.js') && at('formula.js') < at('backtest.js'));
   assert.ok(at('backtest.js') < at('backtest-ui.js'));
 });

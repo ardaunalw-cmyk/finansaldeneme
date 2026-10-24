@@ -12,6 +12,7 @@
  */
 (function (root) {
   const Ind = root.Ind || (typeof require === 'function' ? require('./indicators.js') : null);
+  const Formula = root.Formula || (typeof require === 'function' ? require('./formula.js') : null);
 
   const rollingMax = (a, n) => a.map((_, i) => (i < n ? null : Math.max(...a.slice(i - n, i))));
   const rollingMin = (a, n) => a.map((_, i) => (i < n ? null : Math.min(...a.slice(i - n, i))));
@@ -104,6 +105,25 @@
           exit: c.map((v, i) => ok(lo[i]) && v < lo[i])
         };
       }
+    },
+    formula: {
+      label: 'Kendi formülün',
+      desc: 'Giriş ve çıkış koşulunu formülle yaz; koşul doğru olduğu mumun kapanışında sinyal oluşur. Ör. giriş crossover(ema(close, 9), ema(close, 21)), çıkış rsi(close) > 70.',
+      params: [],
+      formulas: true,
+      /** f: { entry, exit } formula texts (formula.js); a mistake throws a FormulaError. */
+      build(b, p, f = {}) {
+        const rule = (text, what) => {
+          const msg = Formula.check(text, 'condition');
+          if (msg) throw new Formula.FormulaError(`${what} formülü: ${msg}`);
+          return Formula.compile(text).run(b);
+        };
+        const enter = rule(f.entry, 'Giriş'), exit = rule(f.exit, 'Çıkış');
+        const has = i => enter[i] != null && exit[i] != null;
+        let warmup = b.length;
+        for (let i = 1; i < b.length; i++) if (has(i) && has(i - 1)) { warmup = i; break; }
+        return { warmup, enter: enter.map(v => v === true), exit: exit.map(v => v === true) };
+      }
     }
   };
 
@@ -130,7 +150,7 @@
   /**
    * Runs a strategy over the bars.
    * opts: { params, commission (fraction per side, 0.001 = %0,1), stopLoss and takeProfit
-   * (fractions of the entry price, or null), capital }.
+   * (fractions of the entry price, or null), capital, formula: { entry, exit } for 'formula' }.
    */
   function run(bars, strategy, opts = {}) {
     const def = STRATEGIES[strategy];
@@ -142,7 +162,11 @@
     const capital = opts.capital > 0 ? opts.capital : 100000;
     const n = bars.length;
 
-    const sig = def.build(bars, params);
+    let sig;
+    try { sig = def.build(bars, params, opts.formula); } catch (e) {
+      if (Formula && e instanceof Formula.FormulaError) return { ok: false, reason: e.message, params };
+      throw e;
+    }
     const start = Math.min(sig.warmup, n - 1);
     if (n < 3 || start >= n - 1) return { ok: false, reason: 'Bu strateji için yeterli fiyat geçmişi yok.', params };
 
