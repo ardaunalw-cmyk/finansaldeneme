@@ -2,10 +2,37 @@
 
 export const SPECIAL = {
   BIST100: 'XU100.IS',
+  BIST30: 'XU030.IS',
   USDTRY: 'USDTRY=X',
   EURTRY: 'EURTRY=X',
+  GBPTRY: 'GBPTRY=X',
   ALTIN: 'GC=F',
-  BRENT: 'BZ=F'
+  BRENT: 'BZ=F',
+  // Dünya Piyasaları (assets/js/markets.js); keys stay 2-8 letters like a ticker
+  SP500: '^GSPC',
+  NASDAQ: '^IXIC',
+  DOWJONES: '^DJI',
+  DAX: '^GDAXI',
+  FTSE: '^FTSE',
+  CAC40: '^FCHI',
+  NIKKEI: '^N225',
+  HANGSENG: '^HSI',
+  VIX: '^VIX',
+  EURUSD: 'EURUSD=X',
+  GBPUSD: 'GBPUSD=X',
+  USDJPY: 'JPY=X',
+  DXY: 'DX-Y.NYB',
+  GUMUS: 'SI=F',
+  WTI: 'CL=F',
+  DOGALGAZ: 'NG=F',
+  BAKIR: 'HG=F',
+  PLATIN: 'PL=F',
+  BTC: 'BTC-USD',
+  ETH: 'ETH-USD',
+  SOL: 'SOL-USD',
+  US10Y: '^TNX',
+  US5Y: '^FVX',
+  US30Y: '^TYX'
 };
 
 export function toYahoo(key) {

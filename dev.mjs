@@ -15,6 +15,8 @@ import disclosuresHandler from './api/disclosures.mjs';
 import newsHandler from './api/news.mjs';
 import socialHandler from './api/social.mjs';
 import configHandler from './api/config.mjs';
+import marketsHandler from './api/markets.mjs';
+import calendarHandler from './api/calendar.mjs';
 
 const PORT = Number(process.env.PORT) || 8080;
 const ROOT = resolve('.');
@@ -86,6 +88,14 @@ createServer(async (req, res) => {
     }
     if (path === '/api/quote') {
       await quoteHandler(req, res);
+      return;
+    }
+    if (path === '/api/markets') {
+      await marketsHandler(req, res);
+      return;
+    }
+    if (path === '/api/calendar') {
+      await calendarHandler(req, res);
       return;
     }
     // Accounts: needs SUPABASE_URL and SUPABASE_ANON_KEY in this shell

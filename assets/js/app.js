@@ -1434,6 +1434,8 @@ function switchView(viewName, stockCode = null) {
       if (window.SocialFeed) SocialFeed.render();
     } else if (viewName === 'community') {
       if (window.Community) Community.render();
+    } else if (viewName === 'calendar') {
+      if (window.EconCalendar) EconCalendar.render();
     } else if (viewName === 'stock-detail') {
       if (appState.loadedStock !== appState.currentStock) {
         // First visit (or a different stock): loadStockDetails renders the view and its charts

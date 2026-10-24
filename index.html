@@ -297,6 +297,9 @@
         <a href="#community" data-view-target="community" class="menu-item">
           <i class="fa-solid fa-people-group"></i><span>Topluluk</span>
         </a>
+        <a href="#calendar" data-view-target="calendar" class="menu-item">
+          <i class="fa-solid fa-calendar-day"></i><span>Ekonomik Takvim</span>
+        </a>
       </div>
 
       <div class="menu-group">
@@ -2235,6 +2238,23 @@
     </div>
 
     <!-- ====================================================================
+         VIEW: EKONOMİK TAKVİM (assets/js/calendar.js, /api/calendar)
+         ==================================================================== -->
+    <div id="view-calendar" class="view-panel">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+        <div class="space-y-3 pb-4 border-b border-[#121A2E]">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2F6BFF]/10 border border-[#2F6BFF]/40 text-[#7FA6FF] text-[11px] font-mono">
+            <i class="fa-solid fa-calendar-day text-[10px]"></i><span>EKONOMİK TAKVİM</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-serif text-white tracking-tight leading-tight">Piyasayı Oynatacak Veriler</h1>
+          <p class="text-sm text-slate-400 font-light leading-relaxed">TCMB faiz kararları, TÜİK enflasyonu ve ABD, Avrupa, Asya'nın önemli verileri; beklenti ve önceki değerleriyle, İstanbul saatine göre.</p>
+        </div>
+        <div id="calFilters"></div>
+        <div id="calBody" class="space-y-4"></div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
          VIEW: TOPLULUK (users' own posts, assets/js/community.js)
          ==================================================================== -->
     <div id="view-community" class="view-panel">
@@ -3160,6 +3180,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
 <script src="assets/js/social-tags.js"></script>
 <script src="assets/js/social.js"></script>
   <script src="assets/js/community.js"></script>
+  <script src="assets/js/calendar.js"></script>
   <script src="assets/js/live-data.js"></script>
   <script src="assets/js/verity-score.js"></script>
   <script src="assets/js/plain-summary.js"></script>
