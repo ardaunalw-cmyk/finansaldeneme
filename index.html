@@ -40,6 +40,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Wordmark font: Unbounded, only the letters of ONCAL -->
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&text=ONCAL&display=swap" rel="stylesheet">
 
   <!-- Font Awesome Icons (Local High-Speed Bundle with CDN Fallback) -->
   <link rel="stylesheet" href="assets/lib/fa/all.min.css?v=2">
@@ -82,7 +84,8 @@
 <body class="bg-oa-base text-slate-100 antialiased">
   <noscript><div style="padding:16px;background:#0A101D;color:#E6EDF8;font-family:sans-serif">Bu uygulama JavaScript gerektirir.</div></noscript>
 
-  <!-- Giriş animasyonu: sütunlar tek tek yükselir, ok çizilir, logo sola kayar ve ONCAL belirir -->
+  <!-- Giriş animasyonu: sütunlar tek tek yükselir, ok çizilir, logo sola kayar; ONCAL harfleri bir
+       çizginin altından yükselir, altına çizgi çekilir ve kelimeden bir ışık geçer -->
   <div id="introSplash" class="intro-splash" aria-hidden="true">
     <div class="intro-lockup">
       <svg class="intro-mark" viewBox="16 14 68 68" width="176" height="176">
@@ -109,73 +112,23 @@
         </g>
       </svg>
       <div class="intro-text">
-        <!-- ONCAL: Once and Always. The bar over the word spreads out from its middle -->
-        <div class="intro-word got-word"><span style="--i:0">O</span><span style="--i:1">N</span><span style="--i:2">C</span><span style="--i:3">A</span><span style="--i:4">L</span></div>
-        <div class="intro-tag">ONCE AND ALWAYS</div>
+        <!-- ONCAL: ONCe And aLways, the letters of the name are lit in the tagline -->
+        <div class="intro-word wordmark"><span style="--i:0">O</span><span style="--i:1">N</span><span style="--i:2">C</span><span style="--i:3">A</span><span style="--i:4">L</span></div>
+        <div class="intro-rule"></div>
+        <div class="intro-tag"><b>ONC</b>E <b>A</b>ND A<b>L</b>WAYS</div>
       </div>
     </div>
   </div>
   <script>
-    /**
-     * Game of Thrones style wordmark (.got-word): the T's crossbar runs over the whole word a
-     * little above the letters, and the T (.got-t, drawn as an I) gets a stem up to it. Measures the
-     * rendered font on a canvas: the T's bar thickness, the cap top and the I's stem columns.
-     */
-    window.paintGotBar = function (el) {
-      try {
-        var cs = getComputedStyle(el), size = parseFloat(cs.fontSize);
-        var c = document.createElement('canvas'), ctx = c.getContext('2d', { willReadFrequently: true });
-        c.width = Math.ceil(size * 1.5); c.height = Math.ceil(size * 2);
-        ctx.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + size + 'px ' + cs.fontFamily;
-        ctx.textBaseline = 'alphabetic';
-        var base = Math.ceil(size * 1.3);
-        var alpha = function (x, y) { return ctx.getImageData(x, y, 1, 1).data[3] > 128; };
-        // Thickness of the T's crossbar: the run of ink down its left end
-        var mt = ctx.measureText('T');
-        ctx.fillText('T', 0, base);
-        var x = Math.max(1, Math.round(-mt.actualBoundingBoxLeft + 2)), top = -1, bottom = -1;
-        for (var y = 0; y < c.height; y++) {
-          if (alpha(x, y)) { if (top < 0) top = y; bottom = y; } else if (top >= 0) break;
-        }
-        if (top < 0) return;
-        var barH = bottom - top + 1;
-        // The I: cap top and the stem's left/right columns from the pen position
-        ctx.clearRect(0, 0, c.width, c.height);
-        ctx.fillText('I', 0, base);
-        var mid = Math.round(base - size * .3), l = -1, r = -1;
-        for (var xi = 0; xi < c.width; xi++) { if (alpha(xi, mid)) { if (l < 0) l = xi; r = xi; } }
-        var capTop = -1;
-        for (var yi = 0; yi < c.height && l >= 0; yi++) { if (alpha(Math.round((l + r) / 2), yi)) { capTop = yi; break; } }
-        if (capTop < 0) return;
-        // Canvas rows -> the element's box: baseline sits at half the leading plus the ascent
-        var asc = mt.fontBoundingBoxAscent, desc = mt.fontBoundingBoxDescent;
-        var lh = cs.lineHeight === 'normal' ? asc + desc : parseFloat(cs.lineHeight);
-        var baseline = (lh - (asc + desc)) / 2 + asc;
-        var cap = baseline - (base - capTop);
-        var gap = Math.max(1, Math.round(barH * .75));
-        var barTop = cap - gap - barH;
-        el.style.setProperty('--bar-top', barTop + 'px');
-        el.style.setProperty('--bar-h', barH + 'px');
-        var t = el.querySelector('.got-t');
-        if (t) {
-          t.style.setProperty('--stem-l', l + 'px');
-          t.style.setProperty('--stem-w', (r - l + 1) + 'px');
-          t.style.setProperty('--stem-top', (barTop - t.offsetTop) + 'px');
-          t.style.setProperty('--stem-h', (gap + barH + 1) + 'px');
-        }
-      } catch (e) { /* the CSS fallback position is used */ }
-    };
     (function () {
       var splash = document.getElementById('introSplash');
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { splash.remove(); return; }
       document.documentElement.classList.add('intro-active');
-      var word = splash.querySelector('.intro-word');
       var text = splash.querySelector('.intro-text');
       var lockup = splash.querySelector('.intro-lockup');
       function measure() {
         // Logo starts centred: shift the lockup right by half of the wordmark it will reveal
         lockup.style.setProperty('--shift', (text.offsetWidth + parseFloat(getComputedStyle(lockup).columnGap || 0)) / 2 + 'px');
-        window.paintGotBar(word);
       }
       measure();
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
@@ -277,8 +230,8 @@
         <img src="assets/icons/logo-animated.svg" alt="ONCAL" class="brand-logo" width="44" height="44">
         <div class="flex flex-col text-left leading-[0.95] select-none font-serif text-white">
           <span class="sr-only">ONCAL</span>
-          <span class="brand-got got-word self-start text-[17px] sm:text-[20px] font-black tracking-[0.08em]" aria-hidden="true">ONCAL</span>
-          <span class="text-[8.5px] sm:text-[9.5px] font-bold tracking-[0.2em] text-[#4F86FF] mt-1">ONCE AND ALWAYS</span>
+          <span class="brand-word wordmark self-start text-[16px] sm:text-[19px]" aria-hidden="true">ONCAL</span>
+          <span class="brand-tag text-[8.5px] sm:text-[9.5px] font-bold tracking-[0.2em] text-[#4F86FF] mt-1"><b>ONC</b>E <b>A</b>ND A<b>L</b>WAYS</span>
         </div>
       </div>
 
@@ -319,7 +272,7 @@
       <div class="flex items-center gap-3">
         <img src="assets/icons/logo-animated.svg" alt="" class="brand-logo" width="40" height="40">
         <div>
-          <div class="font-serif font-bold text-sm text-white tracking-[0.06em]">ONCAL</div>
+          <div class="wordmark text-sm text-white">ONCAL</div>
           <div class="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Menü</div>
         </div>
       </div>

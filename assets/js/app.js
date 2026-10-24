@@ -619,14 +619,6 @@ async function initApp() {
     }
   });
 
-  // Header wordmark: the T's crossbar over the whole word (paintGotBar is in index.html)
-  if (typeof window.paintGotBar === 'function') {
-    const paintBrand = () => document.querySelectorAll('.brand-got').forEach(el => window.paintGotBar(el));
-    paintBrand();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintBrand);
-    window.addEventListener('resize', paintBrand);   // the size changes at the sm breakpoint
-  }
-
   try {
     initKapCompanyIndex();
     initClock();

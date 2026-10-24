@@ -1608,91 +1608,67 @@ html.intro-active, html.intro-active body { overflow: hidden; }
   transform: scale(.3); opacity: 0;
   animation: intro-head .45s var(--ease) 1.78s forwards;
 }
-.intro-word {
-  display: flex; font-family: var(--font-display); font-weight: 700;
-  font-size: 64px; letter-spacing: .1em; color: #fff; line-height: 1;
-  text-shadow: 0 0 24px rgba(79, 134, 255, .35);
-  position: relative;
+/* ONCAL wordmark (intro, header, menu): Unbounded, wide tracking. The letters are filled with a
+   gradient clipped to the text, so a band of light can sweep across them (wordmark-sheen). In the
+   intro each letter moves on its own, so each one carries the gradient (a clipped background on
+   the word would not follow its moved letters) and the sweep runs letter by letter. */
+.wordmark {
+  font-family: 'Unbounded', var(--font-display); font-weight: 700; letter-spacing: .14em;
 }
-/* Game of Thrones style wordmark: a bar as thick as a T's crossbar runs over the whole word, a
-   little above the letters. A letter drawn as .got-t gets a stem up to it (unused by ONCAL).
-   Positions come from the rendered font (paintGotBar in index.html): --bar-top / --bar-h on the
-   word, --stem-* on the .got-t. The bar overshoots and tapers. */
-.got-word { position: relative; }
-.got-word::before {
-  content: ""; position: absolute; z-index: 1; pointer-events: none;
-  left: -.08em; right: calc(var(--got-track, 0em) - .08em);
-  top: var(--bar-top, -.1em); height: var(--bar-h, .13em);
-  background: currentColor;
-  clip-path: polygon(0 50%, 1.6% 0, 98.4% 0, 100% 50%, 98.4% 100%, 1.6% 100%);
+.intro-word span, .brand-word {
+  color: transparent;
+  background: linear-gradient(100deg, #fff 0%, #fff 40%, #9DBDFF 47%, #fff 50%, #9DBDFF 53%, #fff 60%, #fff 100%) 100% 0 / 260% 100% no-repeat;
+  -webkit-background-clip: text; background-clip: text;
 }
-.got-t { position: relative; display: inline-block; }
-.got-t::before {
-  content: ""; position: absolute; pointer-events: none;
-  left: var(--stem-l, .05em); width: var(--stem-w, .14em);
-  top: var(--stem-top, -.2em); height: var(--stem-h, .3em);
-  background: currentColor;
-}
-/* A point of light running along the bar: a flat ellipse centred on it */
-.got-word::after {
-  content: ""; position: absolute; z-index: 2; pointer-events: none;
-  left: -.08em; right: calc(var(--got-track, 0em) - .08em);
-  top: calc(var(--bar-top, -.1em) + var(--bar-h, .13em) / 2 - .09em); height: .18em;
-  background: radial-gradient(closest-side, rgba(220, 232, 255, 1), rgba(79, 134, 255, .55) 45%, transparent) no-repeat;
-  background-size: 1.6em 100%; background-position: -20% 0;
-  mix-blend-mode: screen; opacity: 0;
-}
-.brand-got { --got-track: .08em; }
-.group:hover .brand-got::after { animation: got-shine .9s ease-out; }
+.brand-word { margin-right: -.14em; filter: drop-shadow(0 0 6px rgba(79, 134, 255, .35)); }
+.group:hover .brand-word { animation: wordmark-sheen .9s ease-in-out; }
+.brand-tag b, .intro-tag b { color: #fff; font-weight: 800; }
 
 .intro-text { display: flex; flex-direction: column; align-items: flex-start; }
-.intro-word.got-word { --got-track: .1em; }
-/* Glow on the whole word, bar included (the bar's clip-path would cut a glow of its own) */
-.intro-word.got-word { text-shadow: none; filter: drop-shadow(0 0 14px rgba(79, 134, 255, .5)); }
-.intro-word.got-word::before {
-  transform: scaleX(0); transform-origin: var(--bar-origin, 50%) 50%;
-  animation: intro-strike .7s cubic-bezier(.2, .9, .25, 1.12) 3.05s forwards;
+/* Each letter rises from below the baseline through a soft-edged mask (the padding lets the glow
+   above and beside the letters through); the mask goes once they are in */
+.intro-word {
+  display: flex; font-size: 58px; line-height: 1.05;
+  padding: .4em .4em 0; margin: -.4em -.54em 0 -.4em;
+  filter: drop-shadow(0 0 16px rgba(79, 134, 255, .45));
+  -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, #000 82%, transparent);
+  animation: intro-unmask .01s linear 3.6s forwards;
 }
-.intro-word.got-word::after { animation: got-shine 1.1s ease-out 3.7s forwards; }
-/* The T's stem rises to meet the bar just before the bar spreads out from it */
-.intro-word .got-t::before {
-  transform: scaleY(0); transform-origin: 50% 100%;
-  animation: intro-rise .35s var(--ease) 2.8s forwards;
-}
-@keyframes intro-rise { to { transform: scaleY(1); } }
 .intro-word span {
-  display: inline-block; opacity: 0;
-  transform: translateY(-.35em); filter: blur(6px);
-  animation: intro-letter .7s var(--ease) calc(2.45s + var(--i) * .07s) forwards;
+  display: inline-block; transform: translateY(110%);
+  animation: intro-letter .9s cubic-bezier(.16, 1, .3, 1) calc(2.4s + var(--i) * .08s) forwards,
+             wordmark-sheen .8s cubic-bezier(.65, 0, .35, 1) calc(3.6s + var(--i) * .1s) forwards;
 }
-/* The T arrives first and a touch brighter: the bar grows out of it */
-.intro-word .got-t { animation-delay: 2.35s; }
+.intro-rule {
+  width: 100%; height: 2px; margin-top: 14px; border-radius: 2px;
+  background: linear-gradient(90deg, #2468FF, #9DBDFF 55%, rgba(157, 189, 255, 0));
+  transform: scaleX(0); transform-origin: 0 50%;
+  animation: intro-strike .9s cubic-bezier(.65, 0, .35, 1) 3.05s forwards;
+}
 .intro-tag {
-  margin-top: .9em; font-family: var(--font-mono, ui-monospace, monospace); font-weight: 700;
+  margin-top: 12px; font-family: var(--font-mono, ui-monospace, monospace); font-weight: 700;
   font-size: 13px; letter-spacing: .9em; color: #4F86FF; white-space: nowrap;
   opacity: 0; filter: blur(4px);
-  animation: intro-tag 1s var(--ease) 3.55s forwards;
+  animation: intro-tag 1s var(--ease) 3.4s forwards;
 }
-@keyframes got-shine {
-  0% { opacity: 0; background-position: -20% 0; }
-  15% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { opacity: 0; background-position: 120% 0; }
-}
+@keyframes wordmark-sheen { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@keyframes intro-unmask { to { -webkit-mask-image: none; mask-image: none; } }
 @keyframes intro-tag { to { opacity: 1; letter-spacing: .42em; filter: blur(0); } }
 @keyframes intro-bar { to { transform: scaleY(1); opacity: 1; } }
 @keyframes intro-draw { to { stroke-dashoffset: 0; } }
 @keyframes intro-head { to { transform: scale(1); opacity: 1; } }
 @keyframes intro-slide { to { transform: translateX(0); } }
-@keyframes intro-letter { to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes intro-letter { to { transform: none; } }
 @keyframes intro-strike { to { transform: scaleX(1); } }
 @media (max-width: 767px) {
   .intro-mark { width: 104px; height: 104px; }
-  .intro-word { font-size: 40px; }
-  .intro-tag { font-size: 8.5px; }
+  .intro-word { font-size: 34px; }
+  .intro-rule { margin-top: 9px; }
+  .intro-tag { font-size: 8.5px; margin-top: 8px; }
   .intro-lockup { column-gap: 12px; }
 }
-@media (prefers-reduced-motion: reduce) { .group:hover .brand-got::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .group:hover .brand-word { animation: none; } }
 
 .oa-chat-actions { margin-top: 10px; }
 .oa-chat-action { padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(79,134,255,0.5); background: rgba(47,107,255,0.15); color: #CFE0FF; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .15s ease; }
