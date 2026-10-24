@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Verity Asistan - floating chat widget (bottom-right)
+   ONCAL Asistan - floating chat widget (bottom-right)
 
    Talks to the /api/chat serverless function (api/chat.mjs), which calls
    Claude with the API key from a server-side environment variable:
@@ -10,10 +10,10 @@
 (function () {
   const config = Object.assign({
     endpoint: '/api/chat',
-    title: 'Verity Asistan',
+    title: 'ONCAL Asistan',
     avatar: 'assets/images/chat-assistant-96.jpg',
     avatarLarge: 'assets/images/chat-assistant-256.jpg',
-    greeting: 'Merhaba! Ben Verity Asistan. Bir hisse kodu veya şirket adı yazarsan (örn. THYAO, Aselsan) kısa bir özet çıkarırım; rasyoları ve BIST 100’ü de açıklayabilirim.',
+    greeting: 'Merhaba! Ben ONCAL Asistan. Bir hisse kodu veya şirket adı yazarsan (örn. THYAO, Aselsan) kısa bir özet çıkarırım; rasyoları ve BIST 100’ü de açıklayabilirim.',
     suggestions: ['THYAO hakkında bilgi ver', 'ASELS ne iş yapar?', 'F/K oranı nedir?', 'BIST 100 bugün nasıl?']
   }, window.OA_CHAT_CONFIG || {});
   window.OA_CHAT_CONFIG = config;
@@ -324,7 +324,7 @@
         }
       } catch (err) {
         reply = 'Şu anda yanıt veremiyorum. Bir hisse kodu veya şirket adı yazarak tekrar deneyebilirsin.';
-        console.warn('[Verity Chat]', err);
+        console.warn('[ONCAL Chat]', err);
       }
       typing.remove();
       history.push({ role: 'assistant', content: reply });

@@ -1,4 +1,4 @@
-# Verity
+# ONCAL
 
 Borsa İstanbul şirketleri için bağımsız bilanço ve piyasa analizi sitesi. Fiyatlar, bilançolar,
 KAP bildirimleri ve temettüler gerçek kaynaklardan gelir; hesaplanamayan bir değerin yerine
@@ -11,7 +11,7 @@ Canlı site Vercel'de; `main` dalına her push otomatik yayınlanır.
 | Bölüm | İçerik | Veri |
 |---|---|---|
 | Piyasa özeti | BIST 100 grafiği ve seviyeleri, USD/TL, tüm hisseler tablosu ve tarayıcı (değerleme, kârlılık ve teknik koşullar: RSI, SMA 50/200, 52 hafta zirvesi, 1 ay getiri, hacim, MACD) | Yahoo Finance (gecikmeli), `fundamentals.json`, `technicals.json` |
-| Hisse sayfası | Fiyat, F/K, PD/DD, FD/FAVÖK, ROE, Verity skoru ve model değer | Fiyat + gerçek bilanço, sektör medyanları |
+| Hisse sayfası | Fiyat, F/K, PD/DD, FD/FAVÖK, ROE, ONCAL skoru ve model değer | Fiyat + gerçek bilanço, sektör medyanları |
 | | DuPont, Altman Z'', Piotroski F | KAP bilançoları (`assets/data/statements`) |
 | | Bilanço, gelir tablosu, çeyreklik grafikler | KAP bilançoları (İş Yatırım derlemesi) |
 | | Bedelsiz potansiyeli, temettü verimi, dağıtım oranı | Bilanço, nakit akışı, `dividends.json` |
@@ -78,7 +78,7 @@ Kayıt ve şifre sıfırlamada kullanıcıya bağlantı değil, siteye yazacağ�
    uygulama şifresi oluşturun (16 harf).
 2. Supabase **Authentication → Emails → SMTP Settings**: Enable custom SMTP; host
    `smtp.gmail.com`, port `465`, kullanıcı adı ve gönderen adresi Gmail adresi, şifre uygulama
-   şifresi, gönderen adı `Verity`.
+   şifresi, gönderen adı `ONCAL`.
 3. **Authentication → Emails → Templates**: *Confirm signup* ve *Reset password* şablonlarına
    `supabase/email-templates/` altındaki dosyaların içeriğini yapıştırın (konu satırı dosyanın
    ilk satırında).
@@ -107,7 +107,7 @@ sekmesinden "Data refresh" iş akışını çalıştırın.
 ```
 index.html              Tek sayfa uygulama (görünümler: #overview, #stock-detail, #compare, #dividends, ...)
 assets/js/calc.js       Saf hesaplamalar: DuPont, Altman, Piotroski, dağıtım oranı, oranlar, temettü verimi
-assets/js/verity-score.js  Verity skoru ve sektör çarpanına göre model değer
+assets/js/verity-score.js  ONCAL skoru ve sektör çarpanına göre model değer
 assets/js/statements.js Bilanço sekmesi ve finansal sağlık kartları
 assets/js/live-data.js  Fiyatlar ve fiyata bağlı oranlar
 assets/js/indicators.js Saf teknik indikatör hesapları (RSI, MACD, ADX, Ichimoku, Supertrend, MFI, ...)

@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * Verity - core controller: views, search, overview table, stock page, charts
+ * ONCAL - core controller: views, search, overview table, stock page, charts
  * ==============================================================================
  * Market and balance-sheet figures come only from real sources (live-data.js,
  * statements.js, technicals.js, dividends.js). Where a figure cannot be fetched or
@@ -581,7 +581,7 @@ function updateDocumentTitle(name) {
   if (appState.activeView !== 'stock-detail') { document.title = BASE_TITLE; return; }
   const code = appState.currentStock;
   const company = name || (appState.currentCompanyData && appState.currentCompanyData.code === code ? appState.currentCompanyData.name : '');
-  document.title = `${code}${company ? ` · ${company}` : ''} | Verity`;
+  document.title = `${code}${company ? ` · ${company}` : ''} | ONCAL`;
 }
 
 window.addEventListener('popstate', () => {
@@ -596,7 +596,7 @@ async function shareCurrentStock() {
   const url = `${window.location.origin}/hisse/${encodeURIComponent(appState.currentStock)}`;
   const name = appState.currentCompanyData ? appState.currentCompanyData.name : appState.currentStock;
   try {
-    if (navigator.share) { await navigator.share({ title: `${appState.currentStock} · Verity`, text: `${name} analizi`, url }); return; }
+    if (navigator.share) { await navigator.share({ title: `${appState.currentStock} · ONCAL`, text: `${name} analizi`, url }); return; }
     await navigator.clipboard.writeText(url);
     showToast(`Bağlantı kopyalandı: ${url}`);
   } catch (e) {
@@ -660,7 +660,7 @@ async function initApp() {
       }
     }, 40);
   } catch (err) {
-    console.warn('[Verity Init Warning]:', err);
+    console.warn('[ONCAL Init Warning]:', err);
   }
 }
 
@@ -2110,7 +2110,7 @@ function resolveSectorPeers(activeTicker, activeSector) {
     .map(c => c.code);
 }
 
-/** Radar axes: the Verity score components (0-10, scaled to 100) and the 52-week range position. */
+/** Radar axes: the ONCAL score components (0-10, scaled to 100) and the 52-week range position. */
 const RADAR_AXES = [
   ['valuation', 'Değerleme'],
   ['profitability', 'Kârlılık'],
@@ -3249,7 +3249,7 @@ function onScreenerInputChange() {
 }
 
 /**
- * Slider for Minimum Verity Alpha Score
+ * Slider for Minimum ONCAL Alpha Score
  */
 function onScreenerScoreSlider(val) {
   overviewTableState.screener.scoreMin = parseFloat(val) || 5.0;
@@ -3457,7 +3457,7 @@ function exportOverviewTableToCsv() {
     'FD/FAVÖK',
     'ROE (%)',
     'Net Borç/FAVÖK',
-    'Verity Alpha Skoru'
+    'ONCAL Alpha Skoru'
   ];
 
   const rows = filtered.map(s => {
@@ -4150,7 +4150,7 @@ function renderCommandPaletteResults(query) {
     if ('hakkımızda'.startsWith(cmd) || cmd === 'hakkimizda' || cmd === 'about' || cmd === 'iletisim' || cmd === 'iletişim' || cmd === 'yardım' || cmd === 'yardim') {
       actions.push({
         title: '/hakkımızda',
-        desc: 'Verity Platform Misyonu, Bilanço Analitik Metodolojisi and İletişim Masası',
+        desc: 'ONCAL Platform Misyonu, Bilanço Analitik Metodolojisi and İletişim Masası',
         icon: 'fa-solid fa-circle-info text-blue-400',
         badge: 'HAKKIMIZDA',
         run: () => switchView('about')
@@ -4226,7 +4226,7 @@ function renderCommandPaletteResults(query) {
     if (q.includes('hakk') || q.includes('iletisim') || q.includes('iletişim') || q.includes('about') || q.includes('yardım') || q.includes('yardim')) {
       actions.push({
         title: 'Hakkımızda and İletişim',
-        desc: 'Verity Platform Misyonu, Analitik Mimarisi and Resmi İletişim: onceandalways.help@gmail.com',
+        desc: 'ONCAL Platform Misyonu, Analitik Mimarisi and Resmi İletişim: onceandalways.help@gmail.com',
         icon: 'fa-solid fa-circle-info text-blue-400',
         badge: 'SAYFA',
         run: () => switchView('about')
@@ -4795,7 +4795,7 @@ function checkActivePriceAlerts(ticker, currentPrice, currentRsi) {
       // Show Toast Notification
       showTerminalToast(`FİYAT ALARMI: ${t}`, `${hitText} &bull; ${alt.note || 'Canlı BIST Seansı'}`, t, 'alert');
       // and a system notification when nobody is looking at the page
-      if (document.hidden || !document.hasFocus()) notifyAlert(`Verity alarmı: ${t}`, `${hitText}${alt.note ? ` · ${alt.note}` : ''}`, t);
+      if (document.hidden || !document.hasFocus()) notifyAlert(`ONCAL alarmı: ${t}`, `${hitText}${alt.note ? ` · ${alt.note}` : ''}`, t);
     }
   });
 

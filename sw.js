@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Verity - PWA Service Worker
+   ONCAL - PWA Service Worker
    - API calls (/api/*) are never touched: prices, history, statements and KAP data must be fresh.
    - App files and data (HTML, JS, CSS, JSON): network first, cached copy only when offline,
      so a new deploy is never mixed with stale scripts.
@@ -7,7 +7,7 @@
    ========================================================================== */
 
 // The build replaces this with a hash of the deployed files, so every deploy gets a fresh cache
-const CACHE_NAME = 'verity-dev';
+const CACHE_NAME = 'oncal-dev';
 const STATIC_ASSETS = [
   './',
   './index.html',

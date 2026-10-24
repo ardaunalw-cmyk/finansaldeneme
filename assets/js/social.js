@@ -184,7 +184,7 @@ const SocialFeed = (() => {
 
   function methodology(ok) {
     return para(`Bu bülten; herkese açık Telegram kanal önizlemeleri, Reddit r/Borsa topluluğu ve Mastodon #bist100 etiketinden son 7 güne ait paylaşımların otomatik olarak taranmasıyla hazırlanmaktadır. Paylaşımlarda geçen Borsa İstanbul işlem kodları KAP şirket listesiyle eşleştirilerek sayılmakta; bireysel paylaşımlar yayımlanmamakta ve alıntılanmamaktadır. Kapalı veya özel gruplar kapsam dışıdır; X (Twitter) ücretli erişim gerektirdiğinden dahil edilmemiştir. Bu derlemede ${ok.length} kaynaktan veri alınabilmiştir.`) +
-      `<p class="text-xs text-slate-500 leading-6 text-justify pt-2 border-t border-[#162238]"><strong class="text-slate-400">Yasal uyarı:</strong> Burada yer alan bilgiler üçüncü kişilerin herkese açık paylaşımlarından otomatik olarak türetilmiş istatistiklerdir; Verity tarafından doğrulanmamıştır ve yatırım tavsiyesi niteliği taşımaz. Sermaye piyasası araçlarına ilişkin yanıltıcı yönlendirmeler 6362 sayılı Sermaye Piyasası Kanunu kapsamında piyasa dolandırıcılığı sayılabilir. Yatırım kararlarınızı resmi kaynaklara dayanarak veriniz.</p>`;
+      `<p class="text-xs text-slate-500 leading-6 text-justify pt-2 border-t border-[#162238]"><strong class="text-slate-400">Yasal uyarı:</strong> Burada yer alan bilgiler üçüncü kişilerin herkese açık paylaşımlarından otomatik olarak türetilmiş istatistiklerdir; ONCAL tarafından doğrulanmamıştır ve yatırım tavsiyesi niteliği taşımaz. Sermaye piyasası araçlarına ilişkin yanıltıcı yönlendirmeler 6362 sayılı Sermaye Piyasası Kanunu kapsamında piyasa dolandırıcılığı sayılabilir. Yatırım kararlarınızı resmi kaynaklara dayanarak veriniz.</p>`;
   }
 
   function paint() {

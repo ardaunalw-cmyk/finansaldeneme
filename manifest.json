@@ -1,6 +1,6 @@
 {
-  "name": "Verity | BIST Finansal Terminal",
-  "short_name": "Verity",
+  "name": "ONCAL | BIST Finansal Terminal",
+  "short_name": "ONCAL",
   "description": "Borsa İstanbul ve kurumsal varlıklar için bağımsız kantitatif rasyo analitiği, bilanço skorlaması ve resmi KAP istihbaratı.",
   "start_url": "./index.html",
   "scope": "./",

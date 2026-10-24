@@ -7,7 +7,7 @@
 // verified. Each source is fetched independently: one failing is reported, not hidden.
 import { parseMastodon, parseRedditAtom, parseTelegram } from './_social-parse.mjs';
 
-const UA = 'Mozilla/5.0 (compatible; Verity/1.0; +https://finansaldeneme.vercel.app)';
+const UA = 'Mozilla/5.0 (compatible; ONCAL/1.0; +https://finansaldeneme.vercel.app)';
 const SOURCES = [
   { id: 'tg:borsa', kind: 'telegram', name: '@borsa', home: 'https://t.me/borsa', url: 'https://t.me/s/borsa', parse: t => parseTelegram(t, 'borsa') },
   { id: 'tg:ekonomi', kind: 'telegram', name: '@ekonomi', home: 'https://t.me/ekonomi', url: 'https://t.me/s/ekonomi', parse: t => parseTelegram(t, 'ekonomi') },

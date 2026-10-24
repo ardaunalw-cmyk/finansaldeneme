@@ -507,7 +507,7 @@ const Account = (() => {
       <div class="w-full max-w-md mt-10 sm:mt-0 rounded-2xl border border-oa-border bg-oa-card shadow-2xl">
         <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <div class="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#7FA6FF]"><i class="fa-solid fa-cloud"></i> <span lang="en">Verity</span> hesabı</div>
+            <div class="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#7FA6FF]"><i class="fa-solid fa-cloud"></i> <span lang="en">ONCAL</span> hesabı</div>
             <h2 class="font-serif font-bold text-white text-xl mt-1">${b.title}</h2>
             <p class="text-xs text-slate-400 font-sans mt-1 leading-relaxed">${b.sub}</p>
           </div>

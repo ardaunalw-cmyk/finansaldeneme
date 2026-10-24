@@ -78,7 +78,7 @@ execSync(
 {
   const hash = createHash('sha256').update(readFileSync(`${OUT}/index.html`)).update(readFileSync('sw.js')).digest('hex').slice(0, 10);
   const sw = readFileSync(`${OUT}/sw.js`, 'utf8');
-  const named = sw.replace(/const CACHE_NAME = '[^']*';/, `const CACHE_NAME = 'verity-${hash}';`);
+  const named = sw.replace(/const CACHE_NAME = '[^']*';/, `const CACHE_NAME = 'oncal-${hash}';`);
   if (named === sw) throw new Error('sw.js: CACHE_NAME not found');
   writeFileSync(`${OUT}/sw.js`, named);
 }

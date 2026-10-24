@@ -14,7 +14,7 @@
  *  - Gündem ve günlük: portföydeki şirketlerin KAP bildirimleri, yatırım günlüğü ve zaman çizelgesi.
  *  - İncelenen hisseler, komut satırı ve komut geçmişi, yedekleme (JSON/CSV), yazdırma.
  *
- * Her şey bu tarayıcıda saklanır (localStorage). Komutlar yalnızca Verity içindeki kayıtları
+ * Her şey bu tarayıcıda saklanır (localStorage). Komutlar yalnızca ONCAL içindeki kayıtları
  * değiştirir: hiçbir aracı kuruma emir iletilmez. Hesaplar portfolio.js'te (test/portfolio.test.mjs).
  */
 const Profile = (() => {
@@ -1584,7 +1584,7 @@ const Profile = (() => {
     return `
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <div class="lg:col-span-3 min-w-0">
-          ${card(`${cardHead('Komut rehberi', 'Komut satırına ya da Ctrl K paletine yazın (palette başına / koyun: /al THYAO 100). Satıra tıklayınca örnek komut kutuya yazılır. Komutlar yalnızca Verity içindeki kayıtları değiştirir; aracı kuruma emir iletilmez.')}
+          ${card(`${cardHead('Komut rehberi', 'Komut satırına ya da Ctrl K paletine yazın (palette başına / koyun: /al THYAO 100). Satıra tıklayınca örnek komut kutuya yazılır. Komutlar yalnızca ONCAL içindeki kayıtları değiştirir; aracı kuruma emir iletilmez.')}
             ${HELP.map(([group, rows]) => `
               <div class="px-4 sm:px-5 pt-3 pb-1 text-[10px] font-mono uppercase tracking-widest text-slate-500 border-t border-oa-border/60">${group}</div>
               <div class="divide-y divide-oa-border/40">
@@ -2078,12 +2078,12 @@ const Profile = (() => {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   function exportJson() {
-    download(`verity-profil-${today()}.json`, JSON.stringify(store, null, 1), 'application/json');
+    download(`oncal-profil-${today()}.json`, JSON.stringify(store, null, 1), 'application/json');
   }
   function exportCsv() {
     const rows = [['tarih', 'tur', 'kod', 'adet', 'fiyat', 'komisyon', 'tutar', 'portfoy']]
       .concat([...pfTxs()].sort((a, b) => a.date.localeCompare(b.date)).map(t => [t.date, t.type === 'buy' ? 'alis' : 'satis', t.code, t.qty, String(t.price).replace('.', ','), String(t.fee || 0).replace('.', ','), (t.qty * t.price).toFixed(2).replace('.', ','), pfName(t.pf).replace(/;/g, ',')]));
-    download(`verity-islemler-${today()}.csv`, `﻿${rows.map(r => r.join(';')).join('\r\n')}`, 'text/csv;charset=utf-8');
+    download(`oncal-islemler-${today()}.csv`, `﻿${rows.map(r => r.join(';')).join('\r\n')}`, 'text/csv;charset=utf-8');
   }
   function readFile(input, then) {
     const file = input.files && input.files[0];
@@ -2107,7 +2107,7 @@ const Profile = (() => {
         if (msg) msg.textContent = 'Yedek yüklendi.';
         rebuild();
       } catch (e) {
-        if (msg) msg.textContent = 'Dosya bir Verity profil yedeği değil.';
+        if (msg) msg.textContent = 'Dosya bir ONCAL profil yedeği değil.';
       }
     });
   }

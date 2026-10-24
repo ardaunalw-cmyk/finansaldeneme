@@ -1,4 +1,4 @@
--- Verity accounts: one row of synced data per user (profile, portfolios, watchlist, alerts).
+-- ONCAL accounts: one row of synced data per user (profile, portfolios, watchlist, alerts).
 --
 -- Run once in the Supabase dashboard: SQL Editor -> New query -> paste this file -> Run.
 -- Running it again is safe (everything is "if not exists" / "or replace").

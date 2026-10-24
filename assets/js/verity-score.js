@@ -1,5 +1,5 @@
 /**
- * Verity balance-sheet score and sector-multiple model value, both computed from real statements.
+ * ONCAL balance-sheet score and sector-multiple model value, both computed from real statements.
  *
  *  - Score (0-10): profitability, operating strength, leverage and valuation versus the sector.
  *  - Model value: earnings per share x sector median P/E and book value per share x sector
