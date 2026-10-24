@@ -217,7 +217,10 @@ const Community = (() => {
     const el = $('cmComposer');
     if (!el) return;
     if (!db()) {
-      el.innerHTML = '<p class="text-xs text-slate-400">Topluluk için hesap altyapısı bu sitede kurulu değil.</p>';
+      // Accounts still starting: their verity:session event repaints this
+      el.innerHTML = window.Account && Account.ready && !Account.ready()
+        ? '<p class="text-xs text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Yükleniyor...</p>'
+        : '<p class="text-xs text-slate-400">Topluluk için hesap altyapısı bu sitede kurulu değil.</p>';
       return;
     }
     if (!me()) {

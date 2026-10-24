@@ -233,7 +233,8 @@ const Contest = (() => {
   }
 
   function render() {
-    if (!db()) { state.status = window.Account && Account.enabled ? 'loading' : 'off'; paint(); return; }
+    // Before accounts have started, wait for their verity:session event
+    if (!db()) { state.status = window.Account && Account.ready && !Account.ready() ? 'loading' : 'off'; paint(); return; }
     load();
   }
 

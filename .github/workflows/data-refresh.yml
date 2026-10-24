@@ -37,6 +37,8 @@ jobs:
         run: npm run data:dividends
       - name: Technical snapshot
         run: npm run data:technicals
+      - name: Recent listings (Halka Arzlar)
+        run: npm run data:ipos
 
       - name: Check that no dataset collapsed
         run: node scripts/check-data.mjs

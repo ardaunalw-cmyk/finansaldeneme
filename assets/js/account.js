@@ -597,6 +597,8 @@ const Account = (() => {
     userId() { return user ? user.id : null; },
     /** The Supabase client (signed in or anonymous), for the public Topluluk tables; null when accounts are off. */
     client() { return sb; },
+    /** True once start-up is over: accounts are on (client set) or known to be off. */
+    ready() { return status.kind !== 'loading'; },
     enabled() { return !!sb; },
     paint
   };
