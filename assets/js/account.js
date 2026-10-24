@@ -1,8 +1,8 @@
 /**
  * Hesap: Supabase ile giriş ve cihazlar arası eşitleme.
  *
- * Eşitlenen veri: Profilim (portföyler, işlemler, notlar, günlük, plan, geçmiş), izleme listesi ve
- * alarmlar. Hepsi tek satırda tutulur (supabase/schema.sql, user_data tablosu); satırı yalnızca
+ * Eşitlenen veri: Profilim (portföyler, işlemler, notlar, günlük, plan, geçmiş), izleme listesi,
+ * alarmlar ve grafik (çizimler, indikatörler, ayarlar, düzen). Hepsi tek satırda tutulur (supabase/schema.sql, user_data tablosu); satırı yalnızca
  * sahibi okuyup yazabilir (row level security).
  *
  * Akış: yerel bir değişiklik (verity:data / verity:alerts olayları) 1,5 sn sonra hesaba yazılır.
@@ -28,7 +28,7 @@ const Account = (() => {
   function readMeta() {
     try { return JSON.parse(localStorage.getItem(META_KEY) || 'null') || {}; } catch (e) { return {}; }
   }
-  let meta = readMeta();   // { uid, rev, dirty, watchAt, alertsAt }
+  let meta = readMeta();   // { uid, rev, dirty, watchAt, alertsAt, chartsAt }
   function writeMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch (e) { /* storage blocked */ } }
 
   function setStatus(kind, text = '') {
@@ -40,13 +40,18 @@ const Account = (() => {
 
   /* ---------- the data that travels ---------- */
   function collect() {
+    const charts = window.ProChart ? ProChart.exportData() : null;
+    // Chart keys from before chart sync carry no time: the smallest stamp, so any real change wins
+    if (charts && Object.keys(charts).length && !meta.chartsAt) meta.chartsAt = 1;
     return {
       v: 1,
       profile: window.Profile ? Profile.snapshot() : null,
       watchlist: typeof getWatchlist === 'function' ? getWatchlist() : [],
       alerts: typeof getAlerts === 'function' ? getAlerts() : [],
+      charts,
       watchAt: meta.watchAt || 0,
-      alertsAt: meta.alertsAt || 0
+      alertsAt: meta.alertsAt || 0,
+      chartsAt: meta.chartsAt || 0
     };
   }
 
@@ -63,6 +68,11 @@ const Account = (() => {
         if (typeof updateWatchlistHeaderBadges === 'function') updateWatchlistHeaderBadges();
         window.dispatchEvent(new Event('verity:alerts'));
       }
+      // A device that never had chart keys (chartsAt 0) must not wipe this one's drawings
+      if (b.charts && window.ProChart && b.chartsAt > 0) {
+        ProChart.importData(b.charts);
+        meta.chartsAt = b.chartsAt;
+      }
       meta.watchAt = b.watchAt || 0;
       meta.alertsAt = b.alertsAt || 0;
       writeMeta();
@@ -75,6 +85,7 @@ const Account = (() => {
     if (applying) return;
     if (kind === 'watchlist') meta.watchAt = Date.now();
     if (kind === 'alerts') meta.alertsAt = Date.now();
+    if (kind === 'charts') meta.chartsAt = Date.now();
     meta.dirty = true;
     writeMeta();
     if (user) {
@@ -162,7 +173,7 @@ const Account = (() => {
     else if (Sync.isEmptyBundle(local)) choice = 'remote';
     else if (Sync.isEmptyBundle(remote)) choice = 'local';
     else choice = await ask(local, remote);
-    meta = { uid: user.id, rev: row ? row.rev : 0, dirty: false, watchAt: local.watchAt, alertsAt: local.alertsAt };
+    meta = { uid: user.id, rev: row ? row.rev : 0, dirty: false, watchAt: local.watchAt, alertsAt: local.alertsAt, chartsAt: local.chartsAt };
     if (choice === 'remote') {
       apply(remote);
       writeMeta();

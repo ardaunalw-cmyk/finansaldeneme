@@ -13,12 +13,19 @@ const ProChartMulti = (() => {
 
   const store = {
     get(key, fallback) { try { const v = localStorage.getItem(`verity.chart.${key}`); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
-    set(key, value) { try { localStorage.setItem(`verity.chart.${key}`, JSON.stringify(value)); } catch { /* private mode: keep in memory only */ } }
+    set(key, value) {
+      try { localStorage.setItem(`verity.chart.${key}`, JSON.stringify(value)); } catch { return; /* private mode: keep in memory only */ }
+      window.dispatchEvent(new CustomEvent('verity:data', { detail: 'charts' }));   // account sync
+    }
   };
 
-  let layout = SIDE[store.get('layout', 1)] !== undefined ? store.get('layout', 1) : 1;
-  const saved = store.get('multi', DEFAULT_SYMBOLS);
-  const symbols = DEFAULT_SYMBOLS.map((s, i) => (SYMBOL.test(saved[i]) ? saved[i] : s));
+  const savedLayout = () => (SIDE[store.get('layout', 1)] !== undefined ? store.get('layout', 1) : 1);
+  const savedSymbols = () => {
+    const saved = store.get('multi', DEFAULT_SYMBOLS);
+    return DEFAULT_SYMBOLS.map((s, i) => (Array.isArray(saved) && SYMBOL.test(saved[i]) ? saved[i] : s));
+  };
+  let layout = savedLayout();
+  const symbols = savedSymbols();
   let panels = [];                             // { i, el, chart, candles, vol, sma20, sma50, bars, request }
   let interval = null;
   const fmt2 = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -140,6 +147,13 @@ const ProChartMulti = (() => {
     render();
   }
 
+  /** Layout and symbols changed in storage (account sync from another device). */
+  function refresh() {
+    layout = savedLayout();
+    symbols.splice(0, symbols.length, ...savedSymbols());
+    render();
+  }
+
   function init() {
     if (!window.ProChart || !L || !$('proChartGrid')) return;
     document.querySelectorAll('#proChartToolbar').forEach(bar => bar.addEventListener('click', e => {
@@ -166,7 +180,7 @@ const ProChartMulti = (() => {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  return { setLayout };
+  return { setLayout, refresh };
 })();
 
 window.ProChartMulti = ProChartMulti;

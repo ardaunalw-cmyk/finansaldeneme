@@ -69,11 +69,26 @@ test('bundles: the watchlist and alerts come from the side that changed them las
   assert.equal(S.mergeBundles(null, remote), remote);
 });
 
+test('bundles: chart keys come whole from the side that changed them last', () => {
+  const a = { 'drawings.THYAO': [{ type: 'h', price: 1 }], interval: '1d' };
+  const b = { 'drawings.GARAN': [{ type: 'h', price: 2 }] };
+  const base = { v: 1, profile: profile({}) };
+  assert.deepEqual(S.mergeBundles({ ...base, charts: a, chartsAt: 9 }, { ...base, charts: b, chartsAt: 4 }).charts, a);
+  const m = S.mergeBundles({ ...base, charts: a, chartsAt: 1 }, { ...base, charts: b, chartsAt: 4 });
+  assert.deepEqual(m.charts, b);
+  assert.equal(m.chartsAt, 4);
+  // A bundle from before chart sync has no charts and never wins them
+  assert.deepEqual(S.mergeBundles({ ...base, charts: a, chartsAt: 0 }, { ...base }).charts, a);
+  assert.deepEqual(S.mergeBundles({ ...base }, { ...base, charts: b, chartsAt: 0 }).charts, b);
+});
+
 test('an untouched browser counts as empty', () => {
   assert.equal(S.isEmptyBundle(null), true);
   assert.equal(S.isEmptyBundle({ profile: profile({}), watchlist: ['THYAO', 'GARAN'], alerts: [] }), true);
   assert.equal(S.isEmptyBundle({ profile: profile({ txs: [tx('tx_1', 'A')] }), alerts: [] }), false);
   assert.equal(S.isEmptyBundle({ profile: profile({}), alerts: [], watchAt: 7 }), false);
+  assert.equal(S.isEmptyBundle({ profile: profile({}), alerts: [], charts: { interval: '1h', 'drawings.A': [] } }), true);
+  assert.equal(S.isEmptyBundle({ profile: profile({}), alerts: [], charts: { 'drawings.A': [{ type: 'h', price: 1 }] } }), false);
   assert.deepEqual(S.summary({ profile: profile({ txs: [tx('tx_1', 'A')] }), alerts: [{}], watchlist: ['A', 'B'] }), { txs: 1, portfolios: 1, journal: 0, alerts: 1, watchlist: 2 });
 });
 

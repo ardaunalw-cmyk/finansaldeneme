@@ -99,9 +99,14 @@ const ProChart = (() => {
   }
   const fmtNum = v => String(v).replace('.', ',');
 
+  /** Chart preferences and drawings; a change is announced so a signed-in account syncs it (account.js). */
+  const PREFIX = 'verity.chart.';
   const store = {
-    get(key, fallback) { try { const v = localStorage.getItem(`verity.chart.${key}`); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
-    set(key, value) { try { localStorage.setItem(`verity.chart.${key}`, JSON.stringify(value)); } catch { /* private mode: keep in memory only */ } }
+    get(key, fallback) { try { const v = localStorage.getItem(PREFIX + key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
+    set(key, value) {
+      try { localStorage.setItem(PREFIX + key, JSON.stringify(value)); } catch { return; /* private mode: keep in memory only */ }
+      window.dispatchEvent(new CustomEvent('verity:data', { detail: 'charts' }));
+    }
   };
 
   const savedInterval = store.get('interval', '1d');
@@ -1584,13 +1589,44 @@ const ProChart = (() => {
   function emit(e) { viewListeners.forEach(fn => { try { fn(e); } catch (err) { console.warn('[ProChart] listener:', err); } }); }
   function subscribe(fn) { viewListeners.add(fn); return () => viewListeners.delete(fn); }
 
+  /** Every chart key of this browser ({ 'drawings.THYAO': [...], interval: '1d', ... }) for account sync. */
+  function exportData() {
+    const out = {};
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith(PREFIX)).forEach(k => {
+        try { out[k.slice(PREFIX.length)] = JSON.parse(localStorage.getItem(k)); } catch { /* not ours */ }
+      });
+    } catch { /* storage blocked */ }
+    return out;
+  }
+
+  /**
+   * Takes the chart keys of another device: drawings of stocks it does not have are removed (they
+   * were deleted there), everything it has replaces ours. Written without announcing a change.
+   */
+  function importData(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+    try {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith(`${PREFIX}drawings.`) && !(k.slice(PREFIX.length) in data))
+        .forEach(k => localStorage.removeItem(k));
+      Object.entries(data).forEach(([k, v]) => localStorage.setItem(PREFIX + k, JSON.stringify(v)));
+    } catch { return; }
+    state.type = store.get('type', 'candle');
+    state.on = new Set(store.get('indicators', DEFAULT_ON));
+    state.cfg = cleanSettings(store.get('settings', {}));
+    state.compare = store.get('compare', []).filter(s => /^[A-Z0-9]{2,8}$/.test(s)).slice(0, MAX_COMPARE);
+    if (window.ProChartMulti) ProChartMulti.refresh();
+    if (state.chart && state.pending == null) build(true);
+  }
+
   /** Visible date range of the main chart, or null before it is built. */
   const visibleRange = () => (state.chart ? state.chart.timeScale().getVisibleRange() : null);
 
   /** Vertical position (px inside the chart) of a price on the price pane, or null. */
   const priceToY = price => (state.main ? state.main.priceToCoordinate(price) : null);
 
-  return { load, current, setMarkers, priceToY, subscribe, visibleRange, fetchBars, chartOptions, COLORS, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
+  return { load, current, setMarkers, priceToY, subscribe, exportData, importData, visibleRange, fetchBars, chartOptions, COLORS, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
 })();
 
 window.ProChart = ProChart;

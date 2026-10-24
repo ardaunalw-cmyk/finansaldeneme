@@ -2,7 +2,9 @@
  * Pure merge rules for account sync (assets/js/account.js), shared with test/sync.test.mjs.
  * No DOM, no storage, no network.
  *
- * A bundle is what one device keeps: { v: 1, profile, watchlist, alerts, watchAt, alertsAt }.
+ * A bundle is what one device keeps: { v: 1, profile, watchlist, alerts, charts, watchAt, alertsAt,
+ * chartsAt }. charts holds the price chart's keys (pro-chart.js exportData): drawings per stock,
+ * indicators, settings and layout.
  * profile is the Profilim store (profile.js); profile.updatedAt is when it last changed and
  * profile.gone lists ids deleted on purpose (transactions, journal entries, portfolios), so a merge
  * does not bring them back from the other side.
@@ -74,19 +76,25 @@
     };
   }
 
-  /** Two device bundles -> one. The watchlist and the alerts come whole from the side that changed them last. */
+  /**
+   * Two device bundles -> one. The watchlist, the alerts and the chart keys each come whole from
+   * the side that changed them last (a side without chart keys yet never wins them).
+   */
   function mergeBundles(local, remote) {
     if (!remote) return local;
     if (!local) return remote;
     const watchLocal = (local.watchAt || 0) >= (remote.watchAt || 0);
     const alertsLocal = (local.alertsAt || 0) >= (remote.alertsAt || 0);
+    const chartsLocal = !remote.charts || (local.charts && (local.chartsAt || 0) >= (remote.chartsAt || 0));
     return {
       v: 1,
       profile: mergeProfiles(local.profile, remote.profile),
       watchlist: watchLocal ? local.watchlist : remote.watchlist,
       watchAt: Math.max(local.watchAt || 0, remote.watchAt || 0),
       alerts: alertsLocal ? local.alerts : remote.alerts,
-      alertsAt: Math.max(local.alertsAt || 0, remote.alertsAt || 0)
+      alertsAt: Math.max(local.alertsAt || 0, remote.alertsAt || 0),
+      charts: chartsLocal ? local.charts || null : remote.charts,
+      chartsAt: Math.max(local.chartsAt || 0, remote.chartsAt || 0)
     };
   }
 
@@ -96,7 +104,8 @@
     const p = obj(b.profile);
     const touched = arr(p.txs).length || arr(p.journal).length || Object.keys(obj(p.notes)).length
       || Object.keys(obj(p.levels)).length || (p.name || '').trim() || arr(p.portfolios).length > 1;
-    return !touched && !arr(b.alerts).length && !(b.watchAt > 0);
+    const drawn = Object.entries(obj(b.charts)).some(([k, v]) => k.startsWith('drawings.') && arr(v).length);
+    return !touched && !drawn && !arr(b.alerts).length && !(b.watchAt > 0);
   }
 
   /** Short counts for the "merge or replace" question: { txs, portfolios, journal, alerts, watchlist }. */
