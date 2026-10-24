@@ -1438,6 +1438,8 @@ function switchView(viewName, stockCode = null) {
       if (window.EconCalendar) EconCalendar.render();
     } else if (viewName === 'markets') {
       if (window.Markets) Markets.render();
+    } else if (viewName === 'funds') {
+      if (window.Funds) Funds.render();
     } else if (viewName === 'stock-detail') {
       if (appState.loadedStock !== appState.currentStock) {
         // First visit (or a different stock): loadStockDetails renders the view and its charts

@@ -300,6 +300,9 @@
         <a href="#markets" data-view-target="markets" class="menu-item">
           <i class="fa-solid fa-earth-americas"></i><span>Dünya Piyasaları</span>
         </a>
+        <a href="#funds" data-view-target="funds" class="menu-item">
+          <i class="fa-solid fa-sack-dollar"></i><span>Fonlar</span>
+        </a>
         <a href="#calendar" data-view-target="calendar" class="menu-item">
           <i class="fa-solid fa-calendar-day"></i><span>Ekonomik Takvim</span>
         </a>
@@ -2258,6 +2261,23 @@
     </div>
 
     <!-- ====================================================================
+         VIEW: FONLAR (assets/js/funds.js: BYF prices, TEFAS lookup)
+         ==================================================================== -->
+    <div id="view-funds" class="view-panel">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+        <div class="space-y-3 pb-4 border-b border-[#121A2E]">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2F6BFF]/10 border border-[#2F6BFF]/40 text-[#7FA6FF] text-[11px] font-mono">
+            <i class="fa-solid fa-sack-dollar text-[10px]"></i><span>YATIRIM FONLARI</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-serif text-white tracking-tight leading-tight">Fonlar</h1>
+          <p class="text-sm text-slate-400 font-light leading-relaxed">Borsada işlem gören altın, gümüş, endeks ve dolar fonları; TEFAS'taki yatırım fonlarına da kodla ulaşın.</p>
+        </div>
+        <div id="fdChart" class="hidden p-4 rounded-2xl border border-[#1A2540] bg-[#0C1322]"></div>
+        <div id="fdBody" class="space-y-4"></div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
          VIEW: EKONOMİK TAKVİM (assets/js/calendar.js, /api/calendar)
          ==================================================================== -->
     <div id="view-calendar" class="view-panel">
@@ -3202,6 +3222,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/community.js"></script>
   <script src="assets/js/calendar.js"></script>
   <script src="assets/js/markets.js"></script>
+  <script src="assets/js/funds.js"></script>
   <script src="assets/js/live-data.js"></script>
   <script src="assets/js/verity-score.js"></script>
   <script src="assets/js/plain-summary.js"></script>
