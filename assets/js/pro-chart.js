@@ -123,6 +123,7 @@ const ProChart = (() => {
     hover: null,                // { x, y, time, price } under the mouse while a drawing is unfinished
     measure: null,              // { a, b } of the last measurement, shown until the next click or Esc
     overlay: null,              // canvas primitive on the price series
+    replay: null,               // { all, idx, playing, speed, timer }: bars after idx are hidden
     drawList: [],               // drawings of the stock on screen, as last saved
     chart: null,
     main: null,
@@ -689,6 +690,11 @@ const ProChart = (() => {
       return;
     }
     if (param.time == null) return;
+    if (state.tool === 'p') {
+      const i = state.bars.findIndex(b => b.time === param.time);
+      if (i >= 0) replayEnter(i);
+      return;
+    }
     const price = state.main.coordinateToPrice(param.point.y);
     if (price == null) return;
     const point = { time: param.time, price: Math.round(price * 100) / 100 };
@@ -805,6 +811,7 @@ const ProChart = (() => {
       c: 'Kanal: ana çizginin ilk noktasına tıkla',
       n: 'Not: notun yerine tıkla',
       m: 'Ölç: başlangıç noktasına tıkla',
+      p: 'Replay: oynatmanın başlayacağı muma tıkla',
       a: 'Alarm: hedef fiyata tıkla',
       x: 'Sil: silmek istediğin çizime tıkla'
     }[tool] || '');
@@ -819,8 +826,9 @@ const ProChart = (() => {
     document.querySelectorAll('#proChartToolbar [data-pc], #proChartLeft [data-pc]').forEach(btn => {
       const [kind, value] = btn.dataset.pc.split(':');
       const active = (kind === 'iv' && state.interval === value) || (kind === 'range' && state.range === value)
-        || (kind === 'type' && state.type === value) || (kind === 'ind' && state.on.has(value)) || (kind === 'tool' && state.tool === value);
-      if (['iv', 'range', 'type', 'ind', 'tool'].includes(kind)) {
+        || (kind === 'type' && state.type === value) || (kind === 'ind' && state.on.has(value)) || (kind === 'tool' && state.tool === value)
+        || (kind === 'replay' && (!!state.replay || state.tool === 'p'));
+      if (['iv', 'range', 'type', 'ind', 'tool', 'replay'].includes(kind)) {
         btn.className = `px-2 py-0.5 rounded-md border text-[11px] font-semibold transition-all ${active ? on : off}`;
         btn.setAttribute('aria-pressed', String(active));
       }
@@ -1026,10 +1034,121 @@ const ProChart = (() => {
     if (kind === 'undo') { const list = drawings(); list.pop(); saveDrawings(list); build(true); return; }
     if (kind === 'clear') { saveDrawings([]); build(true); return; }
     if (kind === 'shot' && state.chart) { snapshot(); return; }
+    if (kind === 'replay') {
+      if (state.replay) replayExit();
+      else setTool(state.tool === 'p' ? 'cursor' : 'p');
+      paintReplay();
+      return;
+    }
+    if (kind === 'rp-pick') { replayExit(); setTool('p'); paintReplay(); return; }
+    if (kind === 'rp-play') { replayToggle(); return; }
+    if (kind === 'rp-step') { replayPause(); replayStep(); return; }
+    if (kind === 'rp-speed') { replaySpeed(value); return; }
+    if (kind === 'rp-exit') { replayExit(); return; }
     if (kind === 'keys') { paintKeys($('proChartKeys') && $('proChartKeys').classList.contains('hidden')); return; }
     if (kind === 'full') { setFull(!isFull()); return; }
     if (kind === 'go') { goTo(value); return; }
     if (kind === 'watch') { if (typeof toggleStockWatchlist === 'function') toggleStockWatchlist(state.ticker); paintWatch(); }
+  }
+
+  /* ---------- bar replay ---------- */
+
+  /** Milliseconds per bar at each speed. */
+  const REPLAY_SPEEDS = { 1: 1000, 2: 500, 5: 200, 10: 100 };
+
+  function paintReplay() {
+    const el = $('proChartReplay');
+    if (!el) return;
+    const r = state.replay;
+    el.classList.toggle('hidden', !r);
+    const btn = document.querySelector('#proChartToolbar [data-pc="replay"]');
+    if (btn) btn.setAttribute('aria-pressed', String(!!r || state.tool === 'p'));
+    if (!r) return;
+    const b = r.all[r.idx];
+    const when = new Date(b.time * 1000).toLocaleString('tr-TR', INTERVALS[state.interval].intraday
+      ? { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }
+      : { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    const ctl = 'px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-300 hover:text-white';
+    el.innerHTML = `
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-700/50 text-amber-300 font-bold">REPLAY</span>
+        <button type="button" data-pc="rp-pick" class="${ctl}" title="Başka bir başlangıç mumu seç"><i class="fa-solid fa-backward-fast text-[10px]"></i></button>
+        <button type="button" data-pc="rp-play" class="${ctl}" title="${r.playing ? 'Duraklat' : 'Oynat'} (Boşluk)"><i class="fa-solid ${r.playing ? 'fa-pause' : 'fa-play'} text-[10px]"></i></button>
+        <button type="button" data-pc="rp-step" class="${ctl}" title="Bir mum ileri (Shift + →)"><i class="fa-solid fa-forward-step text-[10px]"></i></button>
+        <span class="flex items-center gap-1" role="group" aria-label="Oynatma hızı">
+          ${Object.keys(REPLAY_SPEEDS).map(s => `<button type="button" data-pc="rp-speed:${s}" aria-pressed="${String(r.speed) === s}"
+            class="px-1.5 py-0.5 rounded-md border ${String(r.speed) === s ? 'bg-[#2F6BFF] text-white border-[#2F6BFF]' : 'border-[#1A2540] text-slate-400 hover:text-white'}">${s}x</button>`).join('')}
+        </span>
+        <span class="text-slate-400">${when} · ${r.idx + 1} / ${r.all.length}</span>
+        <button type="button" data-pc="rp-exit" class="${ctl} ml-auto" title="Replay'den çık, bugüne dön"><i class="fa-solid fa-xmark text-[10px] mr-1"></i>Çık</button>
+      </div>`;
+  }
+
+  /** Hides every bar after index i; indicators, drawings and the legend see only the past. */
+  function replayEnter(i) {
+    const all = state.replay ? state.replay.all : state.bars;
+    replayPause();
+    state.replay = { all, idx: Math.max(1, Math.min(i, all.length - 1)), playing: false, speed: store.get('replaySpeed', 2), timer: null };
+    state.bars = all.slice(0, state.replay.idx + 1);
+    setTool('cursor');
+    build(true);
+    state.chart.timeScale().scrollToRealTime();
+    paintReplay();
+  }
+
+  function replayStep() {
+    const r = state.replay;
+    if (!r) return;
+    if (r.idx >= r.all.length - 1) {
+      replayPause();
+      hint('Replay sonu: bugüne gelindi');
+      setTimeout(() => { if (state.tool === 'cursor') hint(''); }, 3000);
+      paintReplay();
+      return;
+    }
+    r.idx++;
+    state.bars = r.all.slice(0, r.idx + 1);
+    state.binds.forEach(apply => apply());
+    paintLegend(null);
+    paintReplay();
+  }
+
+  function replayPause() {
+    const r = state.replay;
+    if (!r) return;
+    clearInterval(r.timer);
+    r.timer = null;
+    r.playing = false;
+  }
+
+  function replayToggle() {
+    const r = state.replay;
+    if (!r) return;
+    if (r.playing) replayPause();
+    else {
+      r.playing = true;
+      r.timer = setInterval(replayStep, REPLAY_SPEEDS[r.speed] || 500);
+    }
+    paintReplay();
+  }
+
+  function replaySpeed(s) {
+    const r = state.replay;
+    if (!r || !REPLAY_SPEEDS[s]) return;
+    r.speed = Number(s);
+    store.set('replaySpeed', r.speed);
+    if (r.playing) { replayPause(); replayToggle(); } else paintReplay();
+  }
+
+  /** Back to the present. rebuild: false when a new load replaces the bars anyway. */
+  function replayExit(rebuild = true) {
+    const r = state.replay;
+    if (!r) return;
+    replayPause();
+    state.replay = null;
+    state.bars = r.all;
+    if (rebuild) build(true);
+    paintReplay();
   }
 
   /* ---------- snapshot ---------- */
@@ -1202,6 +1321,9 @@ const ProChart = (() => {
     ['Ctrl + Z', 'Son çizimi geri al'],
     ['Alt + S', 'Grafiği PNG indir'],
     ['Shift + F', 'Grafik modu (tam ekran)'],
+    ['Shift + R', 'Bar Replay aç / kapat'],
+    ['Boşluk', 'Replay: oynat / duraklat'],
+    ['Shift + →', 'Replay: bir mum ileri'],
     ['Esc', 'Aracı ve ölçümü kapat'],
     ['?', 'Bu listeyi aç / kapat']
   ];
@@ -1246,7 +1368,11 @@ const ProChart = (() => {
     if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;
     const press = sel => { const b = document.querySelector(`#proChartCard [data-pc="${sel}"]`); if (b) b.click(); };
     let handled = true;
-    if (e.altKey && !e.ctrlKey && !e.metaKey && TOOL_KEYS[e.code]) setTool(state.tool === TOOL_KEYS[e.code] ? 'cursor' : TOOL_KEYS[e.code]);
+    const plain = !e.ctrlKey && !e.metaKey && !e.altKey;
+    if (state.replay && plain && e.code === 'Space') replayToggle();
+    else if (state.replay && plain && e.shiftKey && e.key === 'ArrowRight') { replayPause(); replayStep(); }
+    else if (plain && e.shiftKey && e.code === 'KeyR') press('replay');
+    else if (e.altKey && !e.ctrlKey && !e.metaKey && TOOL_KEYS[e.code]) setTool(state.tool === TOOL_KEYS[e.code] ? 'cursor' : TOOL_KEYS[e.code]);
     else if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyS') press('shot');
     else if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === 'KeyZ') {
       if (!state.drawList.length) return;
@@ -1329,7 +1455,7 @@ const ProChart = (() => {
   /** New bars every minute while the chart is on screen; series update in place, the view stays. */
   async function refresh() {
     const el = $('proChart');
-    if (!state.chart || !state.ticker || document.hidden || !el || !el.clientWidth || state.pending) return;
+    if (!state.chart || !state.ticker || document.hidden || !el || !el.clientWidth || state.pending || state.replay) return;
     const { ticker, interval } = state;
     if (state.barsKey !== `${ticker}|${interval}`) return;     // a timeframe or stock is still loading
     let bars, cmp;
@@ -1382,6 +1508,8 @@ const ProChart = (() => {
       document.addEventListener('keydown', onKey);
       // Esc or the browser's own control left full screen: leave chart mode as well
       document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && isFull()) setFull(false); });
+      const replay = $('proChartReplay');
+      if (replay) replay.addEventListener('click', onToolbar);
       const keys = $('proChartKeys');
       if (keys) keys.addEventListener('click', e => { if (e.target.closest('[data-pc="keys"]')) paintKeys(false); });
       const watch = $('proChartWatch');
@@ -1419,6 +1547,7 @@ const ProChart = (() => {
     if (id !== state.request) return false;
     hint('');
     if (bars.length < 2) return false;
+    replayExit(false);
     const changed = state.ticker !== ticker;
     state.ticker = ticker;
     state.bars = bars;
