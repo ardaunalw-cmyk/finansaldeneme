@@ -1429,7 +1429,9 @@ const ProChart = (() => {
     // Backtest trades, only on the stock and timeframe they were computed for
     if (state.marks && state.marks.key === viewKey()) L.createSeriesMarkers(main, state.marks.list);
 
-    chart.subscribeCrosshairMove(param => { paintLegend(param); trackHover(param); });
+    chart.subscribeCrosshairMove(param => { paintLegend(param); trackHover(param); emit({ type: 'crosshair', time: param.time ?? null }); });
+    // The side charts of a multi-chart layout follow the visible dates
+    chart.timeScale().subscribeVisibleTimeRangeChange(range => emit({ type: 'range', range }));
     // The percent base is the first visible bar, so scrolling changes the figures
     if (comparing) chart.timeScale().subscribeVisibleLogicalRangeChange(() => paintLegend(null));
     chart.subscribeClick(onClick);
@@ -1577,10 +1579,18 @@ const ProChart = (() => {
     if (state.chart) build(true);
   }
 
+  /** View changes of the main chart ({ type: 'crosshair', time } or { type: 'range', range }). */
+  const viewListeners = new Set();
+  function emit(e) { viewListeners.forEach(fn => { try { fn(e); } catch (err) { console.warn('[ProChart] listener:', err); } }); }
+  function subscribe(fn) { viewListeners.add(fn); return () => viewListeners.delete(fn); }
+
+  /** Visible date range of the main chart, or null before it is built. */
+  const visibleRange = () => (state.chart ? state.chart.timeScale().getVisibleRange() : null);
+
   /** Vertical position (px inside the chart) of a price on the price pane, or null. */
   const priceToY = price => (state.main ? state.main.priceToCoordinate(price) : null);
 
-  return { load, current, setMarkers, priceToY, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
+  return { load, current, setMarkers, priceToY, subscribe, visibleRange, fetchBars, chartOptions, COLORS, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
 })();
 
 window.ProChart = ProChart;

@@ -1688,6 +1688,19 @@ html.intro-active, html.intro-active body { overflow: hidden; }
 #proChartLeft #proChartDraw button i { font-size: 12px; margin: 0; }
 @media (max-width: 767px) { #proChartCard.pc-full #proChartWatch { display: none; } }
 
+/* Multi-chart layout (assets/js/pro-chart-multi.js): the main chart is the first cell */
+#proChartGrid { display: grid; grid-template-columns: minmax(0, 1fr); }
+#proChartGrid .pc-cell { height: 520px; }
+#proChartGrid[data-layout="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#proChartGrid[data-layout="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#proChartGrid[data-layout="4"] > * { height: 380px; }
+#proChartCard.pc-full #proChartGrid { grid-auto-rows: minmax(0, 1fr); }
+#proChartCard.pc-full #proChartGrid > * { height: auto; }
+@media (max-width: 767px) {
+  #proChartGrid[data-layout="2"], #proChartGrid[data-layout="4"] { grid-template-columns: minmax(0, 1fr); }
+  #proChartGrid .pc-cell { height: 300px; }
+}
+
 /* Indicator list next to the candlestick chart (assets/js/app.js paintTechIndicatorList) */
 .tech-indicator-list { max-height: 470px; scrollbar-width: thin; }
 @media (max-width: 1023px) { .tech-indicator-list { max-height: 520px; } }

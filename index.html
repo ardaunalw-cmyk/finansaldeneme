@@ -1857,6 +1857,11 @@
                   <button type="button" data-pc="clear" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Bu hissedeki tüm çizimleri sil"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
                 </div>
                 <div class="flex items-center gap-1 ml-auto">
+                  <span class="flex items-center gap-1" role="group" aria-label="Grafik düzeni">
+                    <button type="button" data-pc="layout:1" title="Tek grafik"><i class="fa-solid fa-square text-[10px]"></i></button>
+                    <button type="button" data-pc="layout:2" title="İki grafik yan yana (zaman dilimi, tarih ve imleç ana grafikle senkron)"><i class="fa-solid fa-table-columns text-[10px]"></i></button>
+                    <button type="button" data-pc="layout:4" title="Dört grafik (zaman dilimi, tarih ve imleç ana grafikle senkron)"><i class="fa-solid fa-table-cells-large text-[10px]"></i></button>
+                  </span>
                   <button type="button" data-pc="replay" aria-controls="proChartReplay" title="Bar Replay: geçmişte bir mumdan başlayıp grafiği mum mum oynat (Shift + R)"><i class="fa-solid fa-backward-fast text-[10px] mr-1"></i>Replay</button>
                   <button type="button" data-pc="compare" aria-expanded="false" aria-controls="proChartCompare" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="Başka bir hisse, BIST 100, dolar veya altınla karşılaştır"><i class="fa-solid fa-code-compare text-[10px] mr-1"></i>Karşılaştır</button>
                   <button type="button" data-pc="settings" aria-expanded="false" aria-controls="proChartSettings" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-400 hover:text-white" title="İndikatör ayarları (periyotlar, eşikler)"><i class="fa-solid fa-sliders text-[10px]"></i></button>
@@ -1878,11 +1883,14 @@
               <!-- Chart mode (full screen): drawing tools move to #proChartLeft, the watchlist shows on the right -->
               <div id="proChartBody" class="flex gap-3 min-h-0">
               <div id="proChartLeft" role="toolbar" aria-label="Çizim araçları" aria-orientation="vertical"></div>
-              <div class="relative flex-1 min-w-0 h-[520px] pro-chart-wrap">
+              <!-- Multi-chart layout: side charts are added after the main one (pro-chart-multi.js) -->
+              <div id="proChartGrid" class="flex-1 min-w-0 gap-2" data-layout="1">
+              <div class="relative min-w-0 h-[520px] pro-chart-wrap">
                 <div id="proChart" class="absolute inset-0"></div>
                 <div id="proChartLegend" class="absolute top-1 left-2 right-20 z-10 pointer-events-none text-[11px] font-mono text-slate-300"></div>
                 <div id="proChartHint" class="hidden absolute top-1 right-16 z-10 pointer-events-none text-[11px] font-mono text-amber-300 bg-[#070B14]/90 border border-amber-800/50 rounded px-2 py-0.5"></div>
                 <div id="proChartKeys" class="hidden absolute top-8 right-16 z-20 p-3 rounded-xl border border-[#1A2540] bg-[#0A101C]/95 text-[11px] font-mono shadow-2xl"></div>
+              </div>
               </div>
               <aside id="proChartWatch" class="flex-col w-60 shrink-0 min-h-0 rounded-xl border border-[#1A2540] bg-[#0A101C] text-[11px] font-mono" aria-label="İzleme listesi"></aside>
               </div>
@@ -3085,6 +3093,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/technicals.js"></script>
   <script src="assets/lib/lightweight-charts-5.2.1/lightweight-charts.standalone.production.js"></script>
   <script src="assets/js/pro-chart.js"></script>
+  <script src="assets/js/pro-chart-multi.js"></script>
   <script src="assets/js/backtest.js"></script>
   <script src="assets/js/backtest-ui.js"></script>
   <script src="assets/js/statements.js"></script>
