@@ -73,6 +73,11 @@ function supabase(url, key) {
   const headers = { apikey: key, ...(key.startsWith('sb_') ? {} : { Authorization: `Bearer ${key}` }), 'Content-Type': 'application/json' };
   const call = async (path, init = {}) => {
     const r = await fetch(`${url}${path}`, { ...init, headers: { ...headers, ...init.headers } });
+    if (r.status === 401) {
+      // Which kind of key arrived, without revealing it
+      const kind = key.startsWith('sb_secret_') ? 'a secret key (sb_secret_)' : key.startsWith('eyJ') ? 'a JWT (legacy key)' : `an unknown format (${key.length} characters)`;
+      throw new Error(`Supabase refused the key: it looks like ${kind}. Check that it is this project's service_role / secret key.`);
+    }
     if (!r.ok) throw new Error(`${init.method || 'GET'} ${path.split('?')[0]}: ${r.status} ${await r.text()}`);
     return r.status === 204 ? null : r.json();
   };
@@ -89,11 +94,14 @@ function supabase(url, key) {
 async function main() {
   const dry = process.argv.includes('--dry');
   const env = process.env;
-  const url = (env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const url = (env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
   const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', ...(dry ? [] : ['GMAIL_USER', 'GMAIL_APP_PASSWORD'])].filter(k => !env[k]);
   if (missing.length) { console.log(`Skipped: not configured (${missing.join(', ')} missing).`); return; }
   const site = (env.SITE_URL || 'https://finansaldeneme.vercel.app').replace(/\/+$/, '');
-  const db = supabase(url, env.SUPABASE_SERVICE_ROLE_KEY);
+  // A pasted secret often carries a stray space, newline or quotes
+  const key = env.SUPABASE_SERVICE_ROLE_KEY.trim().replace(/^["']|["']$/g, '');
+  if (/^sb_publishable_/.test(key)) { console.error('SUPABASE_SERVICE_ROLE_KEY is the publishable (anon) key; the secret / service_role key is needed.'); process.exit(1); }
+  const db = supabase(url, key);
 
   const rows = await db.rows();
   const tickers = [...new Set(rows.flatMap(r => pendingEmailAlerts(r.data).map(a => a.ticker)))];
@@ -117,7 +125,7 @@ async function main() {
     if (!to) { console.warn(`${row.user_id}: no e-mail address.`); continue; }
     if (!mailer) {
       const nodemailer = (await import('nodemailer')).default;
-      mailer = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user: env.GMAIL_USER, pass: env.GMAIL_APP_PASSWORD } });
+      mailer = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user: env.GMAIL_USER.trim(), pass: env.GMAIL_APP_PASSWORD.replace(/\s+/g, '') } });
     }
     await mailer.sendMail({ from: `"ONCAL" <${env.GMAIL_USER}>`, to, ...mail });
     console.log(`${row.user_id}: sent ${hits.length} alert(s).`);
