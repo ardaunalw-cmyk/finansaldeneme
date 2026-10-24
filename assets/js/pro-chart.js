@@ -405,7 +405,7 @@ const ProChart = (() => {
 
   /** The saved formulas, compiled; a formula with a mistake has compiled null and its message. */
   function formulaList() {
-    return state.formulas.map((f, i) => {
+    return (state.idea ? state.idea.f : state.formulas).map((f, i) => {
       if (!window.Formula || !f.expr.trim()) return { f, i, compiled: null, error: f.expr.trim() ? 'Formül modülü yüklenmedi' : null };
       try { return { f, i, compiled: Formula.compile(f.expr), error: null }; } catch (e) { return { f, i, compiled: null, error: e.message }; }
     });
@@ -473,7 +473,7 @@ const ProChart = (() => {
   const saveDrawings = list => store.set(drawingsKey(), list);
 
   function paintDrawings(chart, main) {
-    drawings().forEach(d => {
+    state.drawList.forEach(d => {
       if (d.type === 'h') {
         main.createPriceLine({ price: d.price, color: COLORS.draw, lineWidth: 1, lineStyle: L.LineStyle.Solid, axisLabelVisible: true, title: '' });
       } else if (d.type === 't') {
@@ -884,6 +884,8 @@ const ProChart = (() => {
   }
 
   function setTool(tool) {
+    // A shared idea is on screen instead of the viewer's drawings: nothing may be saved over it
+    if (state.idea && SAVING_TOOLS.includes(tool)) { hint('Önce paylaşılan fikri grafiğine ekle ya da kapat'); return; }
     state.tool = tool;
     state.pending = null;
     state.pending2 = null;
@@ -1121,6 +1123,13 @@ const ProChart = (() => {
     if (kind === 'undo') { const list = drawings(); list.pop(); saveDrawings(list); build(true); return; }
     if (kind === 'clear') { saveDrawings([]); build(true); return; }
     if (kind === 'shot' && state.chart) { snapshot(); return; }
+    if (kind === 'share' && state.chart) { shareIdea(); return; }
+    if (kind === 'idea-keep') { closeIdea(true); return; }
+    if (kind === 'idea-close') { closeIdea(false); return; }
+    if (state.idea && ['formula', 'formula-add', 'formula-del', 'undo', 'clear'].includes(kind)) {
+      hint('Önce paylaşılan fikri grafiğine ekle ya da kapat');
+      return;
+    }
     if (kind === 'formula') {
       state.formulaOpen = !state.formulaOpen;
       btn.setAttribute('aria-expanded', String(state.formulaOpen));
@@ -1254,6 +1263,114 @@ const ProChart = (() => {
     state.bars = r.all;
     if (rebuild) build(true);
     paintReplay();
+  }
+
+  /* ---------- shared ideas: chart state in a link ---------- */
+
+  // An idea travels in the link's #fragment, so it never reaches a server: stock, timeframe,
+  // drawings, formulas, indicators and a note. Whoever opens it sees them on the chart without
+  // their own drawings, and can keep them or close the idea.
+  const IDEA_KEY = '#fikir=';
+  const MAX_IDEA_LINK = 20000;
+  const SAVING_TOOLS = ['h', 't', 'f', 'y', 'r', 'c', 'n', 'x'];
+
+  const toB64 = s => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const fromB64 = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)));
+
+  /** An idea from a link, checked field by field (it is someone else's data); null when unusable. */
+  function cleanIdea(raw) {
+    if (!raw || typeof raw !== 'object' || !/^[A-Z0-9]{2,8}$/.test(raw.t) || !INTERVALS[raw.i]) return null;
+    const num = v => typeof v === 'number' && Number.isFinite(v);
+    const pt = p => p && num(p.time) && num(p.price);
+    const point = p => ({ time: p.time, price: p.price });
+    const d = (Array.isArray(raw.d) ? raw.d : []).slice(0, 50).map(x => {
+      if (!x || !SAVING_TOOLS.includes(x.type)) return null;
+      if (x.type === 'h') return num(x.price) ? { type: 'h', price: x.price } : null;
+      if (x.type === 'n') return pt(x.a) && typeof x.text === 'string' && x.text.trim() ? { type: 'n', a: point(x.a), text: x.text.slice(0, 80) } : null;
+      if (!pt(x.a) || !pt(x.b)) return null;
+      if (x.type === 'c') return num(x.off) ? { type: 'c', a: point(x.a), b: point(x.b), off: x.off } : null;
+      return { type: x.type, a: point(x.a), b: point(x.b) };
+    }).filter(Boolean);
+    return {
+      t: raw.t, i: raw.i,
+      note: typeof raw.note === 'string' ? raw.note.slice(0, 280) : '',
+      d,
+      f: cleanFormulas(raw.f),
+      on: (Array.isArray(raw.on) ? raw.on : []).filter(k => INDICATORS[k])
+    };
+  }
+
+  const encodeIdea = idea => toB64(JSON.stringify(idea));
+  function decodeIdea(text) {
+    if (!text || text.length > MAX_IDEA_LINK) return null;
+    try { return cleanIdea(JSON.parse(fromB64(text))); } catch { return null; }
+  }
+
+  /** Idea in the address this page was opened with; applied when its stock loads. */
+  let pendingIdea = typeof location !== 'undefined' && location.hash.startsWith(IDEA_KEY)
+    ? decodeIdea(location.hash.slice(IDEA_KEY.length)) : null;
+
+  async function shareIdea() {
+    const note = window.prompt('Fikrine kısa bir not ekle (isteğe bağlı, en fazla 280 karakter)', '');
+    if (note === null) return;
+    const idea = {
+      v: 1, t: state.ticker, i: state.interval, note: note.trim().slice(0, 280),
+      d: state.drawList, f: state.formulas.filter(f => f.expr.trim()), on: [...state.on]
+    };
+    const url = `${location.origin}/hisse/${state.ticker}${IDEA_KEY}${encodeIdea(idea)}`;
+    const title = `${state.ticker} fikri · ONCAL`;
+    if (navigator.share) {
+      try { await navigator.share({ title, text: idea.note || title, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      hint('Fikir bağlantısı panoya kopyalandı');
+      setTimeout(() => { if (state.tool === 'cursor') hint(''); }, 3000);
+    } catch {
+      window.prompt('Bağlantıyı kopyala:', url);
+    }
+  }
+
+  function paintIdea() {
+    const el = $('proChartIdea');
+    if (!el) return;
+    el.classList.toggle('hidden', !state.idea);
+    if (!state.idea) return;
+    const idea = state.idea;
+    const parts = [`${idea.d.length} çizim`, idea.f.length ? `${idea.f.length} formül` : ''].filter(Boolean).join(', ');
+    el.innerHTML = `
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-700/50 text-amber-300 font-bold"><i class="fa-solid fa-lightbulb text-[10px] mr-1"></i>Paylaşılan fikir</span>
+        <span class="text-slate-400">${idea.t} · ${IV_NAMES[idea.i]} · ${parts}</span>
+        <span data-idea-note class="text-slate-200 basis-full sm:basis-auto"></span>
+        <span class="ml-auto flex gap-1">
+          <button type="button" data-pc="idea-keep" class="px-2 py-0.5 rounded-md border border-[#2F6BFF] text-white bg-[#2F6BFF]/20 hover:bg-[#2F6BFF]/40" title="Çizimleri ve formülleri kendi grafiğine ekle">Grafiğime ekle</button>
+          <button type="button" data-pc="idea-close" class="px-2 py-0.5 rounded-md border border-[#1A2540] text-slate-300 hover:text-white">Kapat</button>
+        </span>
+      </div>`;
+    // The note is someone else's text: never markup
+    el.querySelector('[data-idea-note]').textContent = idea.note ? `“${idea.note}”` : '';
+  }
+
+  /** Leaves the idea; keep: its drawings and formulas join the viewer's own first. */
+  function closeIdea(keep) {
+    const idea = state.idea;
+    if (!idea) return;
+    state.idea = null;
+    state.on = idea.userOn;
+    if (keep) {
+      saveDrawings([...drawings(), ...idea.d]);
+      const have = new Set(state.formulas.map(f => f.expr));
+      state.formulas = cleanFormulas([...state.formulas.filter(f => f.expr.trim()), ...idea.f.filter(f => !have.has(f.expr))]);
+      store.set('formulas', state.formulas);
+      state.on = new Set([...idea.userOn, ...idea.on]);
+      store.set('indicators', [...state.on]);
+    }
+    try { history.replaceState(history.state, '', location.pathname + location.search); } catch { /* sandboxed frame */ }
+    paintIdea();
+    paintFormulas();
+    build(true);
+    if (keep) { hint('Fikir grafiğine eklendi'); setTimeout(() => { if (state.tool === 'cursor') hint(''); }, 3000); }
   }
 
   /* ---------- snapshot ---------- */
@@ -1522,7 +1639,7 @@ const ProChart = (() => {
     }
     addIndicators(chart, comparing);
     // Levels, drawings and alert lines are prices; in percent mode they would sit in the wrong place
-    state.drawList = drawings();
+    state.drawList = state.idea ? state.idea.d : drawings();
     state.overlay = null;
     if (!comparing) {
       paintDrawings(chart, main);
@@ -1625,6 +1742,8 @@ const ProChart = (() => {
       document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && isFull()) setFull(false); });
       const replay = $('proChartReplay');
       if (replay) replay.addEventListener('click', onToolbar);
+      const ideaBar = $('proChartIdea');
+      if (ideaBar) ideaBar.addEventListener('click', onToolbar);
       const formula = $('proChartFormula');
       if (formula) {
         formula.addEventListener('click', onToolbar);
@@ -1656,6 +1775,17 @@ const ProChart = (() => {
       // Alert added, deleted or triggered anywhere on the site: redraw the alert lines
       window.addEventListener('verity:alerts', () => { if (state.chart && state.pending == null) build(true); });
       wired = true;
+    }
+    // A shared idea opens on its own stock and timeframe; another stock leaves it
+    if (state.idea && state.idea.t !== ticker) closeIdea(false);
+    if (pendingIdea && pendingIdea.t === ticker) {
+      state.idea = { ...pendingIdea, userOn: state.on };
+      pendingIdea = null;
+      state.interval = state.idea.i;
+      state.range = INTERVALS[state.interval].view;
+      state.on = new Set(state.idea.on);
+      if (typeof switchStockSubTab === 'function') switchStockSubTab('technical');
+      paintIdea();
     }
     const id = ++state.request;
     const interval = state.interval;
@@ -1750,7 +1880,7 @@ const ProChart = (() => {
   /** Vertical position (px inside the chart) of a price on the price pane, or null. */
   const priceToY = price => (state.main ? state.main.priceToCoordinate(price) : null);
 
-  return { load, current, setMarkers, priceToY, subscribe, exportData, importData, visibleRange, fetchBars, chartOptions, COLORS, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
+  return { load, current, setMarkers, priceToY, subscribe, exportData, importData, encodeIdea, decodeIdea, cleanIdea, visibleRange, fetchBars, chartOptions, COLORS, heikinAshi, toBars, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile };
 })();
 
 window.ProChart = ProChart;

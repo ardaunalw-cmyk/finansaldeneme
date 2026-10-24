@@ -7,10 +7,10 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 // The chart file is a classic browser script; run it with a bare window and no chart library
-const context = { window: {} };
+const context = { window: {}, btoa, atob, TextEncoder, TextDecoder };
 vm.createContext(context);
 vm.runInContext(readFileSync(new URL('../assets/js/pro-chart.js', import.meta.url), 'utf8'), context);
-const { toBars, heikinAshi, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile } = context.window.ProChart;
+const { toBars, heikinAshi, groupBars, startIndex, snapTime, cleanSettings, indLabel, alignTo, rayEnd, measureLabel, volumeProfile, encodeIdea, decodeIdea } = context.window.ProChart;
 // Arrays from the vm context have another realm's prototype, so compare plain copies
 const plain = v => JSON.parse(JSON.stringify(v));
 
@@ -129,6 +129,35 @@ test('volume profile spreads each bar over its price rows and finds the POC and 
   assert.deepEqual([p.vaLow, p.vaHigh], [1, 3]);
   assert.equal(volumeProfile([bar(1, 1, 1, 1, 1, 0)]), null);
   assert.equal(volumeProfile([bar(1, 5, 5, 5, 5, 10)]), null);
+});
+
+test('a shared idea survives the link and anything malformed in it is dropped', () => {
+  const idea = {
+    v: 1, t: 'THYAO', i: '1d', note: 'Kanal kırılımı: ğüşiöç',
+    d: [
+      { type: 'h', price: 300 },
+      { type: 'c', a: { time: 1, price: 2 }, b: { time: 3, price: 4 }, off: -1.5 },
+      { type: 'n', a: { time: 1, price: 2 }, text: 'x'.repeat(200) },
+      { type: 'r', a: { time: 1, price: 'NaN' }, b: { time: 2, price: 3 } },   // bad point
+      { type: 'zz', price: 1 },                                                // unknown tool
+      { type: 'h', price: 1, extra: '<script>' }
+    ],
+    f: [{ expr: 'sma(close, 5)', pane: 1 }],
+    on: ['rsi', 'nope']
+  };
+  const link = encodeIdea(idea);
+  assert.match(link, /^[A-Za-z0-9_-]+$/);   // safe in a URL fragment as is
+  const back = plain(decodeIdea(link));
+  assert.equal(back.note, idea.note);
+  assert.deepEqual(back.d.map(d => d.type), ['h', 'c', 'n', 'h']);
+  assert.equal(back.d[2].text.length, 80);
+  assert.deepEqual(back.d[3], { type: 'h', price: 1 });
+  assert.deepEqual(back.f, [{ expr: 'sma(close, 5)', pane: true }]);
+  assert.deepEqual(back.on, ['rsi']);
+  assert.equal(decodeIdea(encodeIdea({ ...idea, t: 'thy ao' })), null);
+  assert.equal(decodeIdea(encodeIdea({ ...idea, i: '2h' })), null);
+  assert.equal(decodeIdea('%%%'), null);
+  assert.equal(decodeIdea('a'.repeat(30000)), null);
 });
 
 test('drawing points snap to the nearest bar, and outside the loaded bars to nothing', () => {
