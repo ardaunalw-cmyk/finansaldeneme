@@ -68,8 +68,21 @@ tarayıcıda tutmaya devam eder. Bir kerelik kurulum:
 
 `anon` anahtarı herkese açık olacak şekilde tasarlanmıştır; kimin neyi okuyup yazabileceğini
 veritabanındaki RLS kuralları belirler. `service_role` anahtarını hiçbir yere koymayın.
-Supabase'in yerleşik e-posta göndericisi saatte birkaç e-postayla sınırlıdır; kullanıcı sayısı
-artınca **Authentication → SMTP Settings**'ten kendi e-posta servisinizi bağlayın.
+
+### Doğrulama e-postaları (kod ile, kendi Gmail adresimizden)
+
+Kayıt ve şifre sıfırlamada kullanıcıya bağlantı değil, siteye yazacağı bir kod gider.
+
+1. Gönderen Gmail hesabında 2 adımlı doğrulamayı açın, sonra
+   [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)'tan bir
+   uygulama şifresi oluşturun (16 harf).
+2. Supabase **Authentication → Emails → SMTP Settings**: Enable custom SMTP; host
+   `smtp.gmail.com`, port `465`, kullanıcı adı ve gönderen adresi Gmail adresi, şifre uygulama
+   şifresi, gönderen adı `Verity`.
+3. **Authentication → Emails → Templates**: *Confirm signup* ve *Reset password* şablonlarına
+   `supabase/email-templates/` altındaki dosyaların içeriğini yapıştırın (konu satırı dosyanın
+   ilk satırında).
+4. **Authentication → Rate Limits**: e-posta sınırını ihtiyaca göre yükseltin (Gmail günde ~500).
 
 ## Veri
 

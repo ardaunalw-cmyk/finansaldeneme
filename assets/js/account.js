@@ -236,8 +236,8 @@ const Account = (() => {
     // Supabase calls must not run inside this callback (they would wait on its own lock)
     sb.auth.onAuthStateChange((event, session) => {
       setTimeout(() => {
-        if (event === 'PASSWORD_RECOVERY') openModal('recovery');
         onSession(session);
+        if (event === 'PASSWORD_RECOVERY') openModal('recovery');   // after onSession, which closes the modal
       }, 0);
     });
     const { data } = await sb.auth.getSession();
@@ -250,10 +250,12 @@ const Account = (() => {
 
   /* ---------- auth actions ---------- */
   const redirect = () => `${window.location.origin}/`;
+  let pending = null;   // { email, kind: 'signup' | 'recovery' }: whose e-mailed code the 'code' form checks
   function trMessage(e) {
     const m = String((e && (e.message || e.error_description)) || e || '');
     if (/invalid login credentials/i.test(m)) return 'E-posta ya da şifre hatalı.';
-    if (/email not confirmed/i.test(m)) return 'E-postanız henüz onaylanmadı: gelen kutunuzdaki bağlantıya tıklayın.';
+    if (/email not confirmed/i.test(m)) return 'E-postanız henüz onaylanmadı: size gönderdiğimiz kodu girin.';
+    if (/token has expired|token.*invalid|otp/i.test(m)) return 'Kod hatalı ya da süresi dolmuş; yeni kod isteyin.';
     if (/already registered|already been registered/i.test(m)) return 'Bu e-postayla bir hesap var; giriş yapın ya da şifrenizi sıfırlayın.';
     if (/rate limit|too many/i.test(m)) return 'Çok fazla deneme yapıldı; birkaç dakika sonra tekrar deneyin.';
     if (/password/i.test(m) && /(characters|short|weak)/i.test(m)) return 'Şifre çok kısa ya da zayıf: en az 8 karakter kullanın.';
@@ -275,6 +277,14 @@ const Account = (() => {
     try {
       if (mode === 'login') {
         const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error && /email not confirmed/i.test(error.message || '')) {
+          // Signed up but never entered the code: send a fresh one and ask for it
+          try { sessionStorage.setItem(AFTER_AUTH, '1'); } catch (x) { /* storage blocked */ }
+          pending = { email, kind: 'signup' };
+          await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirect() } });
+          openModal('code', '', '', true);
+          return;
+        }
         if (error) throw error;
       } else if (mode === 'signup') {
         if (password.length < 8) throw new Error('Şifre en az 8 karakter olmalı.');
@@ -283,12 +293,20 @@ const Account = (() => {
         const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirect() } });
         if (error) throw error;
         if (data.user && Array.isArray(data.user.identities) && !data.user.identities.length) throw new Error('already registered');
-        if (!data.session) say(`${email} adresine onay bağlantısı gönderdik. Bağlantıya tıklayınca hesabınız açılır.`, true);
+        if (!data.session) { pending = { email, kind: 'signup' }; openModal('code', '', '', true); }
       } else if (mode === 'forgot') {
         try { sessionStorage.setItem(AFTER_AUTH, '1'); } catch (x) { /* storage blocked */ }
         const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect() });
         if (error) throw error;
-        say(`${email} adresine şifre sıfırlama bağlantısı gönderdik.`, true);
+        pending = { email, kind: 'recovery' };
+        openModal('code', '', '', true);
+      } else if (mode === 'code') {
+        if (!pending) throw new Error('Önce kod isteyin.');
+        const token = (f.code.value || '').replace(/\D/g, '');
+        // A recovery code signs the user in and fires PASSWORD_RECOVERY, which opens the new-password form
+        const { error } = await sb.auth.verifyOtp({ email: pending.email, token, type: pending.kind === 'recovery' ? 'recovery' : 'email' });
+        if (error) throw error;
+        pending = null;
       } else if (mode === 'recovery') {
         if (password.length < 8) throw new Error('Şifre en az 8 karakter olmalı.');
         const { error } = await sb.auth.updateUser({ password });
@@ -300,6 +318,19 @@ const Account = (() => {
       say(trMessage(err));
     } finally {
       if (btn) btn.disabled = false;
+    }
+  }
+
+  async function resendCode() {
+    if (!pending) return;
+    try {
+      const { error } = pending.kind === 'recovery'
+        ? await sb.auth.resetPasswordForEmail(pending.email, { redirectTo: redirect() })
+        : await sb.auth.resend({ type: 'signup', email: pending.email, options: { emailRedirectTo: redirect() } });
+      if (error) throw error;
+      openModal('code', 'Yeni kod gönderildi.', '', true);
+    } catch (err) {
+      openModal('code', trMessage(err));
     }
   }
 
@@ -375,8 +406,18 @@ const Account = (() => {
     <button type="button" onclick="Account.google()" class="${SECOND} flex items-center justify-center gap-2"><i class="fa-brands fa-google"></i> Google ile devam et</button>
     <div class="flex items-center gap-3 text-[10px] font-mono text-slate-600"><span class="flex-1 border-t border-[#1A2540]"></span>ya da<span class="flex-1 border-t border-[#1A2540]"></span></div>` : '');
 
-  function modalBody(mode, msg, extra) {
-    const note = msg ? `<p data-msg class="text-xs font-sans text-rose-400">${esc(msg)}</p>` : '<p data-msg class="text-xs font-sans"></p>';
+  function modalBody(mode, msg, extra, ok) {
+    const note = msg ? `<p data-msg class="text-xs font-sans ${ok ? 'text-emerald-400' : 'text-rose-400'}">${esc(msg)}</p>` : '<p data-msg class="text-xs font-sans"></p>';
+    if (mode === 'code') return {
+      title: pending && pending.kind === 'recovery' ? 'Sıfırlama kodu' : 'E-postanızı doğrulayın',
+      sub: `<b class="text-slate-200">${esc(pending ? pending.email : '')}</b> adresine bir kod gönderdik. Gelen kutunuzda yoksa spam klasörüne bakın.`,
+      html: `<form onsubmit="Account.submit(event, 'code')" class="space-y-3">
+          <label class="block"><span class="${LABEL}">Kod</span><input name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,12}" maxlength="12" required class="${INPUT} tracking-[0.4em] text-center text-lg font-mono"></label>
+          ${note}
+          <button type="submit" class="${PRIMARY}">Doğrula</button>
+        </form>
+        <div class="flex justify-between"><button type="button" onclick="Account.resendCode()" class="text-[11px] font-bold text-[#7FA6FF] hover:text-white">Kodu tekrar gönder</button>${link('login', 'Girişe dön')}</div>`
+    };
     if (mode === 'login') return {
       title: 'Giriş yap',
       sub: 'Portföyünüz, izleme listeniz ve alarmlarınız telefonda ve bilgisayarda aynı olsun.',
@@ -405,11 +446,11 @@ const Account = (() => {
     };
     if (mode === 'forgot') return {
       title: 'Şifremi unuttum',
-      sub: 'E-postanıza bir sıfırlama bağlantısı gönderelim; bağlantıya tıklayınca yeni şifrenizi belirlersiniz.',
+      sub: 'E-postanıza bir kod gönderelim; kodu girince yeni şifrenizi belirlersiniz.',
       html: `<form onsubmit="Account.submit(event, 'forgot')" class="space-y-3">
           <label class="block"><span class="${LABEL}">E-posta</span><input name="email" type="email" autocomplete="email" required class="${INPUT}"></label>
           ${note}
-          <button type="submit" class="${PRIMARY}">Bağlantı gönder</button>
+          <button type="submit" class="${PRIMARY}">Kod gönder</button>
         </form>
         <div>${link('login', 'Girişe dön')}</div>`
     };
@@ -446,7 +487,7 @@ const Account = (() => {
     };
   }
 
-  function openModal(mode, msg = '', extra = '') {
+  function openModal(mode, msg = '', extra = '', ok = false) {
     if (!sb && mode !== 'choose') return;
     let el = document.getElementById('accountModal');
     if (!el) {
@@ -459,7 +500,7 @@ const Account = (() => {
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('accountModal')?.dataset.closable === '1') closeModal(); });
       document.body.appendChild(el);
     }
-    const b = modalBody(mode, msg, extra);
+    const b = modalBody(mode, msg, extra, ok);
     el.dataset.closable = b.closable === false ? '0' : '1';
     el.setAttribute('aria-label', b.title);
     el.innerHTML = `
@@ -537,7 +578,7 @@ const Account = (() => {
   }
 
   return {
-    init, submit, google, signOut, deleteAccount, choose, openModal, closeModal,
+    init, submit, resendCode, google, signOut, deleteAccount, choose, openModal, closeModal,
     syncNow() { if (user) serial(meta.dirty ? pushNow : pullNow); },
     email() { return user ? user.email : null; },
     enabled() { return !!sb; },
