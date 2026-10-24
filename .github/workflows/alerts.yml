@@ -1,6 +1,7 @@
-# E-mail alerts: every 15 minutes in BIST trading hours, scripts/check-alerts.mjs checks the
-# alerts users marked "e-posta ile de haber ver" and mails the ones that fired. Skips quietly
-# until the secrets below are set (Settings -> Secrets and variables -> Actions).
+# Every 15 minutes in BIST trading hours: scripts/update-prices.mjs writes the latest prices the
+# Sanal Portföy Yarışması fills orders at, then scripts/check-alerts.mjs checks the alerts users
+# marked "e-posta ile de haber ver" and mails the ones that fired. Skips quietly until the
+# secrets below are set (Settings -> Secrets and variables -> Actions).
 name: E-mail alerts
 
 on:
@@ -26,6 +27,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --omit=dev --ignore-scripts
+      # Prices for the Sanal Portföy Yarışması (market_prices); a failure here does not stop the alerts
+      - run: node scripts/update-prices.mjs
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - run: node scripts/check-alerts.mjs
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

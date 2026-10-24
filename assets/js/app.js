@@ -1442,6 +1442,8 @@ function switchView(viewName, stockCode = null) {
       if (window.Funds) Funds.render();
     } else if (viewName === 'screener') {
       if (window.Screener) Screener.render();
+    } else if (viewName === 'contest') {
+      if (window.Contest) Contest.render();
     } else if (viewName === 'stock-detail') {
       if (appState.loadedStock !== appState.currentStock) {
         // First visit (or a different stock): loadStockDetails renders the view and its charts

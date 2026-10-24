@@ -332,6 +332,9 @@
         <a href="#profile" data-view-target="profile" class="menu-item">
           <i class="fa-solid fa-user"></i><span>Profilim ve Portföyüm</span>
         </a>
+        <a href="#contest" data-view-target="contest" class="menu-item">
+          <i class="fa-solid fa-trophy"></i><span>Sanal Portföy Yarışması</span>
+        </a>
         <button type="button" onclick="toggleWatchlistDrawer(true)" data-menu-close class="menu-item">
           <i class="fa-solid fa-bookmark"></i><span>İzleme Listesi ve Alarmlar</span>
           <span id="watchlistHeaderCountBadge" class="menu-badge">4</span>
@@ -2264,6 +2267,22 @@
     </div>
 
     <!-- ====================================================================
+         VIEW: SANAL PORTFÖY YARIŞMASI (assets/js/contest.js, Supabase paper_* tables)
+         ==================================================================== -->
+    <div id="view-contest" class="view-panel">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+        <div class="space-y-3 pb-4 border-b border-[#121A2E]">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-700/40 text-amber-300 text-[11px] font-mono">
+            <i class="fa-solid fa-trophy text-[10px]"></i><span>SANAL PORTFÖY YARIŞMASI</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-serif text-white tracking-tight leading-tight">Risk Almadan Yatırım Yap</h1>
+          <p class="text-sm text-slate-400 font-light leading-relaxed">100.000 TL sanal parayla Borsa İstanbul hisselerini al-sat, stratejini dene, diğer yatırımcılarla yarış.</p>
+        </div>
+        <div id="ctBody"></div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
          VIEW: TARAYICI (assets/js/screener.js, assets/data/technicals.json)
          ==================================================================== -->
     <div id="view-screener" class="view-panel">
@@ -3244,6 +3263,7 @@ Fiyatlar Yahoo Finance’ten gecikmeli olarak, bilançolar İş Yatırım’ın 
   <script src="assets/js/markets.js"></script>
   <script src="assets/js/funds.js"></script>
   <script src="assets/js/screener.js"></script>
+  <script src="assets/js/contest.js"></script>
   <script src="assets/js/live-data.js"></script>
   <script src="assets/js/verity-score.js"></script>
   <script src="assets/js/plain-summary.js"></script>

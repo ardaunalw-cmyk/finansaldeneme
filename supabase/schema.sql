@@ -154,3 +154,125 @@ grant execute on function public.community_feed(text, text[], text, int, int) to
 grant select on public.posts, public.post_likes to anon, authenticated;
 grant insert, delete on public.posts, public.post_likes to authenticated;
 grant select, insert on public.post_reports to authenticated;
+
+-- ---------------------------------------------------------------------------------------------
+-- Sanal Portföy Yarışması (assets/js/contest.js): every player starts with 100.000 TL of play
+-- money. The database fills each order itself: the price comes from market_prices (written only
+-- by scripts/update-prices.mjs with the service key), and a buy beyond the cash or a sell beyond
+-- the lots held is refused, so the leaderboard cannot be faked from the browser.
+
+create table if not exists public.market_prices (
+  ticker     text primary key check (ticker ~ '^[A-Z0-9]{2,8}$'),
+  price      numeric not null check (price > 0),
+  updated_at timestamptz not null default now()
+);
+alter table public.market_prices enable row level security;
+drop policy if exists "prices read" on public.market_prices;
+create policy "prices read" on public.market_prices for select to anon, authenticated using (true);
+grant select on public.market_prices to anon, authenticated;
+
+create table if not exists public.paper_players (
+  user_id    uuid primary key default auth.uid() references auth.users (id) on delete cascade,
+  author     text not null check (char_length(author) between 2 and 30),
+  started_at timestamptz not null default now()
+);
+alter table public.paper_players enable row level security;
+drop policy if exists "players own" on public.paper_players;
+drop policy if exists "players own insert" on public.paper_players;
+drop policy if exists "players own update" on public.paper_players;
+create policy "players own" on public.paper_players for select to authenticated using ((select auth.uid()) = user_id);
+create policy "players own insert" on public.paper_players for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy "players own update" on public.paper_players for update to authenticated using ((select auth.uid()) = user_id);
+grant select on public.paper_players to authenticated;
+grant insert (author) on public.paper_players to authenticated;
+grant update (author) on public.paper_players to authenticated;
+
+create table if not exists public.paper_trades (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  ticker     text not null check (ticker ~ '^[A-Z0-9]{2,8}$'),
+  side       text not null check (side in ('buy', 'sell')),
+  qty        integer not null check (qty > 0 and qty <= 10000000),
+  price      numeric,
+  created_at timestamptz not null default now()
+);
+create index if not exists paper_trades_user on public.paper_trades (user_id, created_at desc);
+alter table public.paper_trades enable row level security;
+drop policy if exists "trades own" on public.paper_trades;
+drop policy if exists "trades own insert" on public.paper_trades;
+create policy "trades own" on public.paper_trades for select to authenticated using ((select auth.uid()) = user_id);
+create policy "trades own insert" on public.paper_trades for insert to authenticated with check ((select auth.uid()) = user_id);
+grant select on public.paper_trades to authenticated;
+-- Only these three columns can be sent; the price and the time are the database's
+grant insert (ticker, side, qty) on public.paper_trades to authenticated;
+
+create or replace function public.paper_fill() returns trigger
+  language plpgsql security definer set search_path = '' as $$
+declare
+  p numeric;
+  cash numeric;
+  held bigint;
+begin
+  -- One order at a time per player, so two quick orders cannot both spend the same cash
+  perform pg_advisory_xact_lock(hashtext(new.user_id::text));
+  if not exists (select 1 from public.paper_players where user_id = new.user_id) then
+    raise exception 'Önce yarışmaya katılmalısın';
+  end if;
+  if (select count(*) from public.paper_trades where user_id = new.user_id and created_at > now() - interval '1 minute') >= 20 then
+    raise exception 'Dakikada en fazla 20 emir verilebilir';
+  end if;
+  select price into p from public.market_prices where ticker = new.ticker and updated_at > now() - interval '5 days';
+  if p is null then
+    raise exception 'Bu hisse için güncel fiyat yok';
+  end if;
+  new.price := p;
+  new.created_at := now();
+  select 100000 - coalesce(sum(case when side = 'buy' then qty * price else -qty * price end), 0) into cash
+    from public.paper_trades where user_id = new.user_id;
+  select coalesce(sum(case when side = 'buy' then qty else -qty end), 0) into held
+    from public.paper_trades where user_id = new.user_id and ticker = new.ticker;
+  if new.side = 'buy' and new.qty * p > cash then
+    raise exception 'Yetersiz nakit';
+  end if;
+  if new.side = 'sell' and new.qty > held then
+    raise exception 'Elinde bu kadar lot yok';
+  end if;
+  return new;
+end $$;
+drop trigger if exists paper_fill on public.paper_trades;
+create trigger paper_fill before insert on public.paper_trades
+  for each row execute function public.paper_fill();
+
+-- Start over: the caller's orders go, the clock restarts
+create or replace function public.paper_reset() returns void
+  language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  delete from public.paper_trades where user_id = auth.uid();
+  update public.paper_players set started_at = now() where user_id = auth.uid();
+end $$;
+revoke all on function public.paper_reset() from public, anon;
+grant execute on function public.paper_reset() to authenticated;
+
+-- Leaderboard: cash plus the holdings at the latest prices, for everyone; is_me marks the caller
+create or replace function public.paper_leaderboard(p_limit int default 50)
+  returns table (rank bigint, author text, value numeric, ret numeric, trades bigint, started_at timestamptz, is_me boolean)
+  language sql stable security definer set search_path = '' as $$
+  with pos as (
+    select user_id, ticker, sum(case when side = 'buy' then qty else -qty end) as q
+    from public.paper_trades group by user_id, ticker
+  ), money as (
+    select user_id, 100000 - sum(case when side = 'buy' then qty * price else -qty * price end) as cash, count(*) as n
+    from public.paper_trades group by user_id
+  ), val as (
+    select pl.user_id, pl.author, pl.started_at, coalesce(m.n, 0) as n,
+           coalesce(m.cash, 100000) + coalesce((select sum(pos.q * mp.price) from pos join public.market_prices mp on mp.ticker = pos.ticker
+                                                where pos.user_id = pl.user_id), 0) as v
+    from public.paper_players pl left join money m on m.user_id = pl.user_id
+  )
+  select row_number() over (order by v desc, started_at), author, round(v, 2), round((v / 100000 - 1) * 100, 2), n, started_at,
+         user_id = auth.uid()
+  from val order by v desc, started_at
+  limit least(greatest(p_limit, 1), 200);
+$$;
+grant execute on function public.paper_leaderboard(int) to anon, authenticated;
