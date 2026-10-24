@@ -1674,6 +1674,20 @@ html.intro-active, html.intro-active body { overflow: hidden; }
 .oa-chat-action { padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(79,134,255,0.5); background: rgba(47,107,255,0.15); color: #CFE0FF; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .15s ease; }
 .oa-chat-action:hover { background: rgba(47,107,255,0.32); }
 
+/* Chart mode (assets/js/pro-chart.js): the price chart card fills the screen, drawing tools on
+   the left, watchlist on the right. Native full screen where the browser allows it, else fixed. */
+#proChartLeft, #proChartWatch { display: none; }
+#proChartCard.pc-full { position: fixed; inset: 0; z-index: 80; margin: 0; max-width: none; border-radius: 0; padding: 12px; background: #070B14; overflow: hidden; }
+#proChartCard.pc-full #proChartBody { flex: 1 1 auto; }
+#proChartCard.pc-full .pro-chart-wrap { height: auto; }
+#proChartCard.pc-full .pc-footnote { display: none; }
+#proChartCard.pc-full #proChartLeft { display: flex; flex-direction: column; }
+#proChartCard.pc-full #proChartWatch { display: flex; }
+#proChartLeft #proChartDraw { flex-direction: column; flex-wrap: nowrap; overflow-y: auto; scrollbar-width: none; }
+#proChartLeft #proChartDraw button { font-size: 0; width: 32px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; }
+#proChartLeft #proChartDraw button i { font-size: 12px; margin: 0; }
+@media (max-width: 767px) { #proChartCard.pc-full #proChartWatch { display: none; } }
+
 /* Indicator list next to the candlestick chart (assets/js/app.js paintTechIndicatorList) */
 .tech-indicator-list { max-height: 470px; scrollbar-width: thin; }
 @media (max-width: 1023px) { .tech-indicator-list { max-height: 520px; } }

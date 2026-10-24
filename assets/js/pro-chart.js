@@ -753,7 +753,7 @@ const ProChart = (() => {
     const comparing = activeCompare().length > 0;
     const on = 'bg-[#2F6BFF] text-white border-[#2F6BFF]';
     const off = 'text-slate-400 border-[#1A2540] hover:text-white';
-    document.querySelectorAll('#proChartToolbar [data-pc]').forEach(btn => {
+    document.querySelectorAll('#proChartToolbar [data-pc], #proChartLeft [data-pc]').forEach(btn => {
       const [kind, value] = btn.dataset.pc.split(':');
       const active = (kind === 'iv' && state.interval === value) || (kind === 'range' && state.range === value)
         || (kind === 'type' && state.type === value) || (kind === 'ind' && state.on.has(value)) || (kind === 'tool' && state.tool === value);
@@ -970,11 +970,109 @@ const ProChart = (() => {
       return;
     }
     if (kind === 'keys') { paintKeys($('proChartKeys') && $('proChartKeys').classList.contains('hidden')); return; }
-    if (kind === 'full') {
-      const card = $('proChartCard');
-      if (document.fullscreenElement) document.exitFullscreen();
-      else if (card && card.requestFullscreen) card.requestFullscreen();
+    if (kind === 'full') { setFull(!isFull()); return; }
+    if (kind === 'go') { goTo(value); return; }
+    if (kind === 'watch') { if (typeof toggleStockWatchlist === 'function') toggleStockWatchlist(state.ticker); paintWatch(); }
+  }
+
+  /* ---------- chart mode (full screen with tools and watchlist) ---------- */
+
+  const isFull = () => !!$('proChartCard') && $('proChartCard').classList.contains('pc-full');
+  let drawHome = null;          // where the drawing tools sit outside chart mode
+  let cardHome = null;          // where the chart card sits outside chart mode
+  let watchTimer = null;
+
+  /** Native full screen where the browser allows it (not iPhone), else the card is just fixed. */
+  function setFull(on) {
+    const card = $('proChartCard'), tools = $('proChartDraw'), left = $('proChartLeft');
+    if (!card || on === isFull()) return;
+    // A transformed ancestor would pin a fixed card to itself, not the screen: lift it to <body>
+    if (on) {
+      cardHome = { parent: card.parentNode, next: card.nextSibling };
+      document.body.appendChild(card);
+    } else if (cardHome) {
+      cardHome.parent.insertBefore(card, cardHome.next);
+      cardHome = null;
     }
+    card.classList.toggle('pc-full', on);
+    document.body.classList.toggle('overflow-hidden', on);
+    if (on && tools && left) {
+      drawHome = { parent: tools.parentNode, next: tools.nextSibling };
+      left.appendChild(tools);
+    } else if (drawHome) {
+      drawHome.parent.insertBefore(tools, drawHome.next);
+      drawHome = null;
+    }
+    const icon = document.querySelector('#proChartCard [data-pc="full"] i');
+    if (icon) icon.className = `fa-solid ${on ? 'fa-compress' : 'fa-expand'} text-[10px]`;
+    clearInterval(watchTimer);
+    if (on) {
+      paintWatch();
+      watchTimer = setInterval(paintWatch, 30 * 1000);
+      if (card.requestFullscreen && !document.fullscreenElement) card.requestFullscreen().catch(() => { /* fixed layout is enough */ });
+    } else if (document.fullscreenElement === card) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  /** Another stock from chart mode: the whole stock page follows, so leaving shows the same stock. */
+  function goTo(code) {
+    if (!code || code === state.ticker) return;
+    if (typeof selectStock === 'function') selectStock(code); else load(code);
+  }
+
+  const fmtPrice = v => (Number.isFinite(v) ? fmt2.format(v) : '—');
+
+  function watchRow(code) {
+    const fin = typeof getOrGenerateStockFinancials === 'function' ? getOrGenerateStockFinancials(code) : null;
+    const live = fin && fin.liveTime;
+    const price = live ? String(fin.price).replace('₺', '') : '—';
+    const tone = !live ? 'text-slate-500' : fin.isPositive ? 'text-emerald-400' : 'text-rose-400';
+    const active = code === state.ticker ? 'bg-[#2F6BFF]/15 border-[#2F6BFF]/50' : 'border-transparent hover:bg-[#121C30]';
+    return `<li><button type="button" data-pc="go:${code}" class="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg border ${active} text-left">
+        <span class="text-white font-bold">${code}</span>
+        <span class="text-right"><span class="text-slate-200 block">${price}</span><span class="${tone} text-[10px]">${live ? fin.change : ''}</span></span>
+      </button></li>`;
+  }
+
+  function paintWatch() {
+    const el = $('proChartWatch');
+    if (!el || !isFull()) return;
+    const list = typeof getWatchlist === 'function' ? getWatchlist() : [];
+    const watched = list.includes(state.ticker);
+    const query = $('proChartSymbol') ? $('proChartSymbol').value : '';
+    el.innerHTML = `
+      <div class="p-2 border-b border-[#1A2540] space-y-2">
+        <label class="relative block">
+          <i class="fa-solid fa-magnifying-glass absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500"></i>
+          <input id="proChartSymbol" type="text" maxlength="30" placeholder="Hisse ara" aria-label="Grafikte açılacak hisse" autocomplete="off"
+            class="w-full pl-6 pr-2 py-1 bg-[#070B14] border border-[#1A2540] rounded text-white text-[11px]">
+        </label>
+        <ul id="proChartSymbolHits" class="space-y-0.5"></ul>
+      </div>
+      <div class="flex items-center justify-between px-2 pt-2">
+        <span class="text-slate-400 text-[10px] uppercase tracking-widest">İzleme listesi</span>
+        <button type="button" data-pc="watch" class="px-1.5 py-0.5 rounded border border-[#1A2540] ${watched ? 'text-amber-300' : 'text-slate-400 hover:text-white'}" title="${state.ticker} ${watched ? 'listeden çıkar' : 'listeye ekle'}">
+          <i class="fa-${watched ? 'solid' : 'regular'} fa-star text-[10px]"></i></button>
+      </div>
+      <ul class="flex-1 min-h-0 overflow-y-auto p-2 space-y-0.5">${list.length ? list.map(watchRow).join('') : '<li class="text-slate-500 px-2">Liste boş; yıldızla ekle.</li>'}</ul>`;
+    if (query) { $('proChartSymbol').value = query; paintHits(query); }
+  }
+
+  /** Stocks matching the chart-mode search: ticker first, then name. */
+  function paintHits(q) {
+    const el = $('proChartSymbolHits');
+    if (!el) return;
+    const n = String(q || '').trim().toLocaleUpperCase('tr-TR');
+    if (!n || typeof getFullBistStockList !== 'function') { el.innerHTML = ''; return; }
+    const all = getFullBistStockList();
+    const rank = s => (s.code === n ? 0 : s.code.startsWith(n) ? 1 : s.code.includes(n) ? 2 : String(s.name || '').toLocaleUpperCase('tr-TR').includes(n) ? 3 : -1);
+    const hits = all.map(s => ({ s, r: rank(s) })).filter(x => x.r >= 0)
+      .sort((a, b) => a.r - b.r || (b.s.capRaw || 0) - (a.s.capRaw || 0)).slice(0, 8);
+    el.innerHTML = hits.length
+      ? hits.map(({ s }) => `<li><button type="button" data-pc="go:${s.code}" class="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-[#121C30] text-left">
+          <span class="text-white font-bold">${s.code}</span><span class="text-slate-500 truncate">${s.name || ''}</span></button></li>`).join('')
+      : '<li class="text-slate-500 px-2">Eşleşme yok</li>';
   }
 
   /* ---------- keyboard ---------- */
@@ -991,7 +1089,7 @@ const ProChart = (() => {
     ['Del', 'Silgi'],
     ['Ctrl + Z', 'Son çizimi geri al'],
     ['Alt + S', 'Grafiği PNG indir'],
-    ['Shift + F', 'Tam ekran'],
+    ['Shift + F', 'Grafik modu (tam ekran)'],
     ['Esc', 'Aracı ve ölçümü kapat'],
     ['?', 'Bu listeyi aç / kapat']
   ];
@@ -1021,7 +1119,8 @@ const ProChart = (() => {
 
   /** Opens the site search with the first letter typed on the chart. */
   function openSearch(letter) {
-    const input = [...document.querySelectorAll('.global-search-input')].find(i => i.offsetParent !== null);
+    // Chart mode covers the site header: its own search box takes the letter
+    const input = isFull() ? $('proChartSymbol') : [...document.querySelectorAll('.global-search-input')].find(i => i.offsetParent !== null);
     if (!input) return false;
     input.focus();
     input.value = letter;
@@ -1143,6 +1242,9 @@ const ProChart = (() => {
     if (!wired) {
       const bar = $('proChartToolbar');
       if (bar) bar.addEventListener('click', onToolbar);
+      // Chart mode moves the drawing tools here
+      const left = $('proChartLeft');
+      if (left) left.addEventListener('click', onToolbar);
       const panel = $('proChartSettings');
       if (panel) {
         panel.addEventListener('click', onToolbar);
@@ -1155,13 +1257,31 @@ const ProChart = (() => {
       }
       // Capture phase: the site's own shortcuts stop Escape before it bubbles up
       document.addEventListener('keydown', e => {
-        if (e.key !== 'Escape' || (state.tool === 'cursor' && !state.measure)) return;
+        if (e.key !== 'Escape') return;
+        if (state.tool === 'cursor' && !state.measure) {
+          // Native full screen exits on Esc by itself; the fixed fallback needs this
+          if (isFull() && !document.fullscreenElement && !(e.target && e.target.id === 'proChartSymbol')) setFull(false);
+          return;
+        }
         state.measure = null;
         setTool('cursor');
       }, true);
       document.addEventListener('keydown', onKey);
+      // Esc or the browser's own control left full screen: leave chart mode as well
+      document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && isFull()) setFull(false); });
       const keys = $('proChartKeys');
       if (keys) keys.addEventListener('click', e => { if (e.target.closest('[data-pc="keys"]')) paintKeys(false); });
+      const watch = $('proChartWatch');
+      if (watch) {
+        watch.addEventListener('click', onToolbar);
+        watch.addEventListener('input', e => { if (e.target.id === 'proChartSymbol') paintHits(e.target.value); });
+        watch.addEventListener('keydown', e => {
+          if (e.target.id !== 'proChartSymbol') return;
+          if (e.key === 'Enter') { const first = watch.querySelector('#proChartSymbolHits [data-pc]'); if (first) first.click(); }
+          if (e.key === 'Escape') { e.target.value = ''; paintHits(''); e.target.blur(); }
+        });
+      }
+      window.addEventListener('verity:data', e => { if (e.detail === 'watchlist') paintWatch(); });
       setInterval(refresh, REFRESH_MS);
       // Alert added, deleted or triggered anywhere on the site: redraw the alert lines
       window.addEventListener('verity:alerts', () => { if (state.chart && state.pending == null) build(true); });
@@ -1194,6 +1314,7 @@ const ProChart = (() => {
     if (changed) setTool('cursor');
     build(!changed && !reframe);
     ensureCompare();
+    if (changed) paintWatch();
     window.dispatchEvent(new CustomEvent('verity:chart', { detail: { ticker, interval } }));
     return true;
   }
